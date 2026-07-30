@@ -1,0 +1,83 @@
+{
+  "name": "vscode-sfl-preview",
+  "displayName": "SFL Preview",
+  "description": "Live preview for SFL (.sfl) diagrams — renders the sticky-flow board in a webview using stickyflow.js.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "stickyflow-PLACEHOLDER-REPLACE-BEFORE-PUBLISHING",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/D-Queck/StickyFlow.git",
+    "directory": "packages/vscode-sfl-preview"
+  },
+  "bugs": {
+    "url": "https://github.com/D-Queck/StickyFlow/issues"
+  },
+  "keywords": [
+    "sfl",
+    "sticky flow",
+    "preview",
+    "diagram",
+    "visualization"
+  ],
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Visualization"
+  ],
+  "activationEvents": [
+    "onLanguage:sfl"
+  ],
+  "extensionDependencies": [
+    "stickyflow-PLACEHOLDER-REPLACE-BEFORE-PUBLISHING.vscode-sfl"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "sfl.showPreview",
+        "title": "SFL: Open Preview",
+        "category": "SFL",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "sfl.showPreviewToSide",
+        "title": "SFL: Open Preview to the Side",
+        "category": "SFL",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "sfl.showPreviewToSide",
+          "when": "editorLangId == sfl",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "sfl.showPreview",
+          "when": "editorLangId == sfl"
+        },
+        {
+          "command": "sfl.showPreviewToSide",
+          "when": "editorLangId == sfl"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "copy-media": "node ./scripts/copy-media.mjs",
+    "compile": "npm run copy-media && tsc -p ./",
+    "watch": "tsc -p ./ --watch",
+    "package": "npm run compile && vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.9.2",
+    "typescript": "^5.5.4"
+  }
+}
