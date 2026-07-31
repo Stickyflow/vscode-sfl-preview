@@ -23,11 +23,34 @@ Open an `.sfl` file, then run one of:
 
 The preview updates as you type (debounced ~150ms).
 
+The toolbar in the top-right corner of the preview offers:
+
+- **&minus; / + / Fit** — zoom out, zoom in, and fit the diagram to the
+  panel. (Ctrl/Cmd+scroll and Ctrl/Cmd+drag also work directly on the canvas,
+  same convention as the main app — the toolbar buttons are there because
+  that's not obvious at a glance.)
+- **Editing: Off/On** — toggles edit mode. When on, you can drag shapes to
+  move or resize them, double-click to edit text, drag a link's endpoint to
+  reconnect it, and press Delete/Backspace on a selection to remove it.
+  Each change is turned into new SFL text (via stickyflow.js's
+  `stickyflow/interaction` patchers) and written back into the real
+  document as a normal edit — so it's on the undo stack (Ctrl+Z) like
+  anything you'd type by hand. Off by default so panning/selecting in the
+  preview never risks mutating the file.
+
+  Not wired up yet: inserting new entities/links (quick-duplicate bubbles,
+  drag-to-connect onto empty canvas) — those require inventing new ids and
+  copying style/size, which is a host decision stickyflow.js deliberately
+  leaves to the caller (see `insertEntity`/`insertLink` in
+  `stickyflow/interaction`).
+
 ## Development
 
-The webview loads a prebuilt copy of stickyflow.js's IIFE bundle rather than
-bundling the renderer itself, so `packages/stickyflow.js` must be built
-first:
+The webview loads a prebuilt copy of stickyflow.js's `dist/` output rather
+than bundling the renderer itself — both the IIFE (`stickyflow-diagram.global.js`,
+for the `<stickyflow-diagram>` element) and the ESM `interaction` tier
+(edit-mode) are copied in wholesale by `scripts/copy-media.mjs`, so
+`packages/stickyflow.js` must be built first:
 
 ```bash
 cd ../stickyflow.js && npm run build

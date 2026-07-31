@@ -47,6 +47,11 @@ export class SflPreviewPanel {
   ) {
     this.key = document.uri.toString();
     this.panel.webview.html = getWebviewHtml(this.panel.webview, extensionUri, document.getText());
+    this.panel.webview.onDidReceiveMessage((message) => {
+      if (message?.type === 'sfl/edit' && typeof message.source === 'string') {
+        void applyEditToDocument(document.uri, message.source);
+      }
+    });
     this.panel.onDidDispose(() => {
       this.disposed = true;
       clearTimeout(this.updateTimer);
@@ -65,4 +70,21 @@ export class SflPreviewPanel {
 
 function baseName(fileName: string): string {
   return fileName.split(/[\\/]/).pop() ?? fileName;
+}
+
+// Writes an edit-mode change (drag-to-move/resize, text edit, link
+// reconnect, delete — already turned into full new SFL text by the
+// webview's `applyXChange` patchers) back into the real document as a
+// standard WorkspaceEdit, so it lands on the normal undo stack like any
+// other edit. Whole-document replace is deliberate, not a diff: the
+// patchers already preserve everything untouched (comments, formatting,
+// unrelated blocks — see stickyflow.js's patchSfl.ts), so there's no
+// narrower range to compute that would be worth the complexity.
+async function applyEditToDocument(uri: vscode.Uri, newSource: string): Promise<void> {
+  const document = await vscode.workspace.openTextDocument(uri);
+  if (document.getText() === newSource) return;
+  const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length));
+  const edit = new vscode.WorkspaceEdit();
+  edit.replace(uri, fullRange, newSource);
+  await vscode.workspace.applyEdit(edit);
 }

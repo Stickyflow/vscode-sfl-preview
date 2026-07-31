@@ -19,3 +19,10 @@ First working version. Not yet published to the Marketplace (`publisher` in
   panel per source file.
 - Bundled with `vscode-sfl` via `extensionPack` / `extensionDependencies` so
   installing either extension installs both.
+- Toolbar zoom controls (&minus; / + / Fit), since Ctrl/Cmd+scroll-to-zoom
+  isn't discoverable inside a webview panel.
+- Edit mode (toggle button): drag-to-move, drag-to-resize, double-click
+  text edit, drag-to-reconnect link endpoints, and delete — wired to
+  stickyflow.js's `stickyflow/interaction` tier, patched into SFL text, and
+  written back to the document as a normal (undoable) edit. Off by default.
+  Inserting new entities/links isn't wired up yet.
