@@ -88,6 +88,23 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     // stickyflow.js/src/model), so this picks a generic size in the same
     // ballpark as the rendered shapes a doc already has.
     const NEW_ENTITY_SIZE = { width: 160, height: 80 };
+    // A newly created entity has no Style reference and no local style{} —
+    // the renderer leaves an unset fill/stroke fully transparent on purpose
+    // (matches the interactive canvas: an unstyled shape isn't secretly
+    // opaque white), and the default text color (#111827, near-black) is
+    // tuned for a light canvas. Combined, a bare new entity was an invisible
+    // box with barely-visible text — effectively unreadable on VS Code's dark
+    // theme. This default style keeps it visible against either theme: white
+    // fill so it never blends into a dark webview background, a blue stroke
+    // (matching the existing selection-highlight color) so its bounds are
+    // always legible, dark text on the white fill.
+    const NEW_ENTITY_STYLE = [
+      'style {',
+      '    fill: "#FFFFFF"',
+      '    stroke: "#2563eb"',
+      '    textColor: "#111827"',
+      '}',
+    ].join('\\n');
 
     function applyPatch(next) {
       if (next === currentSource) return;
@@ -172,6 +189,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         y: viewport.y + viewport.h / 2 - NEW_ENTITY_SIZE.height / 2,
         width: NEW_ENTITY_SIZE.width,
         height: NEW_ENTITY_SIZE.height,
+        body: NEW_ENTITY_STYLE,
       });
       if (next === currentSource) {
         // insertEntity no-ops (rather than throwing) on an id collision or a
