@@ -14,6 +14,13 @@
 //    patched SFL text via that tier's pure `applyXChange` patchers, and
 //    posts the result back to the extension host to write into the real
 //    document (see panel.ts's `sfl/edit` handler).
+//  - wires the viewer's own (always-on, independent of edit mode)
+//    `selectionChange` event to the extension host as `sfl/reveal`, and
+//    applies incoming `sfl/select` messages via `viewer.select()` — the two
+//    halves of canvas<->editor selection sync (see panel.ts).
+//  - wires "+ Entity"/"+ Link" toolbar buttons to `insertEntity`/
+//    `insertLink`, the same pure patchers `applyXChange` uses, so canvas-side
+//    creation round-trips into the document exactly like a drag-to-move does.
 import * as vscode from 'vscode';
 
 export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri, initialSource: string): string {
@@ -60,12 +67,16 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <button id="sf-zoom-out" title="Zoom out">&minus;</button>
     <button id="sf-zoom-in" title="Zoom in">+</button>
     <button id="sf-zoom-fit" title="Fit to view">Fit</button>
+    <button id="sf-add-entity" title="Add a new entity">+ Entity</button>
+    <button id="sf-add-link" title="Link two entities" aria-pressed="false">+ Link</button>
     <button id="sf-toggle-edit" title="Toggle edit mode" aria-pressed="false">Editing: Off</button>
   </div>
   <script nonce="${nonce}" src="${diagramScriptUri}"></script>
   <script type="module" nonce="${nonce}">
-    import { bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange, removeEntity, removeLink }
-      from '${interactionModuleUri}';
+    import {
+      bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange,
+      insertEntity, removeEntity, insertLink, removeLink,
+    } from '${interactionModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
     const el = document.getElementById('diagram');
@@ -73,12 +84,29 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     el.source = currentSource;
 
     let editing = null;
+    // Default new-entity footprint — no shared constant exists to reuse (see
+    // stickyflow.js/src/model), so this picks a generic size in the same
+    // ballpark as the rendered shapes a doc already has.
+    const NEW_ENTITY_SIZE = { width: 160, height: 80 };
 
     function applyPatch(next) {
       if (next === currentSource) return;
       currentSource = next;
       el.viewer.update({ source: currentSource });
       vscodeApi.postMessage({ type: 'sfl/edit', source: currentSource });
+    }
+
+    // A fresh <prefix>_<n> id not already declared anywhere in the current
+    // document. insertEntity/insertLink themselves silently no-op on a
+    // collision (see patchSfl.ts), so this only needs to be a good-faith
+    // pick, not a guaranteed-unique one.
+    function nextId(prefix) {
+      const taken = new Set(
+        [...currentSource.matchAll(/\\b(?:Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
+      );
+      let n = taken.size + 1;
+      while (taken.has(\`\${prefix}_\${n}\`)) n++;
+      return \`\${prefix}_\${n}\`;
     }
 
     function setEditMode(on) {
@@ -99,9 +127,125 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         editing.destroy();
         editing = null;
       }
+      if (!on) cancelLinking(); // turning editing off must also drop a pending "+ Link" gesture, not leave it armed
       const btn = document.getElementById('sf-toggle-edit');
       btn.setAttribute('aria-pressed', String(on));
       btn.textContent = on ? 'Editing: On' : 'Editing: Off';
+    }
+
+    // Canvas -> editor selection sync: always on, independent of edit mode.
+    // lastSyncedOwnerId is this SIDE's own record of the last id it sent or
+    // applied — not shared with panel.ts's own field of the same name across
+    // the postMessage boundary. Each side independently skips re-announcing
+    // an id it just received, which is enough on its own to break the loop
+    // where selecting in the canvas moves the editor's cursor, which then
+    // reports a selection change right back (see the sfl/select handler
+    // below, and panel.ts's matching field for the other half).
+    let lastSyncedOwnerId = null;
+
+    function syncSelectionToHost(selection) {
+      const id = selection.length === 1 ? selection[0].id : null; // no single text location for a multi-selection
+      if (id === lastSyncedOwnerId) return;
+      lastSyncedOwnerId = id;
+      vscodeApi.postMessage({ type: 'sfl/reveal', id });
+    }
+
+    if (el.viewer) {
+      el.viewer.on('selectionChange', (e) => syncSelectionToHost(e.selection));
+    }
+
+    // "+ Entity" — inserts a default-labeled entity centered on whatever the
+    // reader is currently looking at (getViewport(), not a fixed spot the
+    // reader would then have to go find), switches edit mode on so it's
+    // immediately draggable/renamable, and selects it — which also reveals
+    // it in the text editor via the selection-sync wiring above.
+    document.getElementById('sf-add-entity').addEventListener('click', () => {
+      const viewer = el.viewer;
+      if (!viewer) return;
+      const viewport = viewer.getViewport();
+      const id = nextId('entity');
+      const next = insertEntity(currentSource, {
+        id,
+        kind: 'shape',
+        text: 'New entity',
+        x: viewport.x + viewport.w / 2 - NEW_ENTITY_SIZE.width / 2,
+        y: viewport.y + viewport.h / 2 - NEW_ENTITY_SIZE.height / 2,
+        width: NEW_ENTITY_SIZE.width,
+        height: NEW_ENTITY_SIZE.height,
+      });
+      if (next === currentSource) {
+        // insertEntity no-ops (rather than throwing) on an id collision or a
+        // document with no top-level Model block — silently doing nothing
+        // left no way to tell "it worked" from "it didn't", so this reports
+        // it explicitly instead of failing invisibly.
+        vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not add entity "\${id}" — check that the document has a top-level Model block and that id isn't already used.\` });
+        return;
+      }
+      setEditMode(true);
+      applyPatch(next);
+      viewer.select([id]);
+    });
+
+    // "+ Link" — a two-click gesture: arm it, click a source entity, click a
+    // target entity. Listens on the viewer's own entityClick (fires
+    // alongside selectionChange on every click, which the reveal sync
+    // above already handles on its own) rather than re-deriving clicks from
+    // selectionChange, so this stays a simple additive listener with no
+    // interaction with normal click-to-select/reveal behavior. Requires edit
+    // mode the same way every other mutation does — arming it switches edit
+    // mode on (same pattern as "+ Entity"), and the entityClick handler below
+    // re-checks the editing flag itself so a link can never be created while
+    // it's off, even if edit mode gets toggled off mid-gesture some other way.
+    let linkState = null; // null (off) | 'from' (armed, waiting for source) | { from } (waiting for target)
+
+    function setLinkButtonLabel() {
+      const btn = document.getElementById('sf-add-link');
+      btn.setAttribute('aria-pressed', String(linkState !== null));
+      btn.textContent = linkState === null ? '+ Link' : linkState === 'from' ? 'Click source…' : 'Click target…';
+    }
+
+    function cancelLinking() {
+      linkState = null;
+      setLinkButtonLabel();
+    }
+
+    document.getElementById('sf-add-link').addEventListener('click', () => {
+      if (linkState === null) {
+        setEditMode(true);
+        linkState = 'from';
+      } else {
+        linkState = null;
+      }
+      setLinkButtonLabel();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && linkState !== null) cancelLinking();
+    });
+
+    if (el.viewer) {
+      el.viewer.on('entityClick', (e) => {
+        if (!editing) return; // belt-and-suspenders: mutation only proceeds while edit mode is actually on
+        if (linkState === 'from') {
+          linkState = { from: e.owner };
+          setLinkButtonLabel();
+          return;
+        }
+        if (linkState && linkState.from) {
+          if (e.owner.id === linkState.from.id) { cancelLinking(); return; } // clicked the same entity twice — cancel, not a self-link
+          const id = nextId('link');
+          const next = insertLink(currentSource, { id, fromId: linkState.from.id, toId: e.owner.id });
+          cancelLinking();
+          if (next === currentSource) {
+            // insertLink no-ops (rather than throwing) on an id collision —
+            // reported explicitly rather than failing invisibly, same as "+ Entity".
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not create link "\${id}" — that id may already be taken.\` });
+            return;
+          }
+          applyPatch(next);
+          el.viewer.select([id]);
+        }
+      });
     }
 
     function zoomBy(factor) {
@@ -128,6 +272,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       if (message && message.type === 'sfl/update' && message.source !== currentSource) {
         currentSource = message.source;
         el.viewer.update({ source: currentSource });
+      } else if (message && message.type === 'sfl/select') {
+        // Editor -> canvas half of selection sync (see panel.ts's
+        // selectFromEditor). lastSyncedOwnerId is set BEFORE calling
+        // select() so the selectionChange it synchronously re-emits is
+        // recognized by syncSelectionToHost above as already-in-sync and
+        // doesn't bounce right back to the host.
+        if (message.id === lastSyncedOwnerId) return;
+        lastSyncedOwnerId = message.id;
+        if (el.viewer) el.viewer.select(message.id ? [message.id] : []);
       }
     });
   </script>

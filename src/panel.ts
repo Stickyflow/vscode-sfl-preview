@@ -4,6 +4,7 @@
 // existing panel, same as VS Code's built-in Markdown preview.
 import * as vscode from 'vscode';
 import { getWebviewHtml } from './getWebviewHtml';
+import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
 
 const VIEW_TYPE = 'sfl.preview';
 const UPDATE_DEBOUNCE_MS = 150;
@@ -36,9 +37,24 @@ export class SflPreviewPanel {
     SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText());
   }
 
+  /** Called on every text-editor selection change (see extension.ts) so the
+   *  preview's canvas selection can follow the cursor — the editor-to-canvas
+   *  half of selection sync. A no-op for any document without an open panel. */
+  static syncSelectionIfOpen(editor: vscode.TextEditor): void {
+    SflPreviewPanel.panels.get(editor.document.uri.toString())?.selectFromEditor(editor);
+  }
+
   private readonly key: string;
   private updateTimer: ReturnType<typeof setTimeout> | undefined;
   private disposed = false;
+  // The last owner id either pushed to the webview (editor -> canvas) or
+  // received from it (canvas -> editor). Selection sync is naturally
+  // bidirectional and each direction's own action re-triggers the event the
+  // OTHER direction listens for (selecting in the canvas moves the editor's
+  // cursor, which fires onDidChangeTextEditorSelection right back) — tracking
+  // just this one id and skipping a sync that would just restate it is
+  // enough to break that loop without any separate "programmatic" flag.
+  private lastSyncedOwnerId: string | null = null;
 
   private constructor(
     private readonly panel: vscode.WebviewPanel,
@@ -50,6 +66,13 @@ export class SflPreviewPanel {
     this.panel.webview.onDidReceiveMessage((message) => {
       if (message?.type === 'sfl/edit' && typeof message.source === 'string') {
         void applyEditToDocument(document.uri, message.source);
+      } else if (message?.type === 'sfl/reveal') {
+        this.revealInEditor(typeof message.id === 'string' ? message.id : null);
+      } else if (message?.type === 'sfl/warn' && typeof message.message === 'string') {
+        // A canvas-side mutation (currently "+ Entity"/"+ Link") no-op'd
+        // instead of applying — surfaced here rather than left silent, so
+        // "nothing visibly happened" always comes with a reason.
+        void vscode.window.showWarningMessage(`SFL Preview: ${message.message}`);
       }
     });
     this.panel.onDidDispose(() => {
@@ -65,6 +88,34 @@ export class SflPreviewPanel {
       if (this.disposed) return;
       void this.panel.webview.postMessage({ type: 'sfl/update', source });
     }, UPDATE_DEBOUNCE_MS);
+  }
+
+  // Canvas -> editor: a shape/link was clicked (or selection cleared) in the
+  // webview. Moves the visible editor's own selection/scroll to match —
+  // deliberately not `vscode.window.showTextDocument`, so clicking around the
+  // diagram never steals focus away from the canvas.
+  private revealInEditor(id: string | null): void {
+    if (id === this.lastSyncedOwnerId) return;
+    this.lastSyncedOwnerId = id;
+    if (!id) return;
+    const editor = vscode.window.visibleTextEditors.find((e) => e.document.uri.toString() === this.key);
+    if (!editor) return;
+    const range = findOwnerRange(editor.document.getText().split('\n'), id);
+    if (!range) return;
+    const start = new vscode.Position(range.start, 0);
+    const end = new vscode.Position(range.start, editor.document.lineAt(range.start).text.length);
+    editor.selection = new vscode.Selection(start, end);
+    editor.revealRange(new vscode.Range(start, end), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+  }
+
+  // Editor -> canvas: the cursor moved to a new line. Finds the innermost
+  // owner block enclosing it and tells the webview to select it (or clear
+  // selection, past the last owner block).
+  private selectFromEditor(editor: vscode.TextEditor): void {
+    const id = findEnclosingOwnerId(editor.document.getText().split('\n'), editor.selection.active.line);
+    if (id === this.lastSyncedOwnerId) return;
+    this.lastSyncedOwnerId = id;
+    void this.panel.webview.postMessage({ type: 'sfl/select', id });
   }
 }
 

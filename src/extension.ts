@@ -25,6 +25,11 @@ export function activate(context: vscode.ExtensionContext): void {
         SflPreviewPanel.updateIfOpen(event.document);
       }
     }),
+    vscode.window.onDidChangeTextEditorSelection((event) => {
+      if (event.textEditor.document.languageId === 'sfl') {
+        SflPreviewPanel.syncSelectionIfOpen(event.textEditor);
+      }
+    }),
   );
 }
 

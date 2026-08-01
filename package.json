@@ -72,12 +72,15 @@
     "copy-media": "node ./scripts/copy-media.mjs",
     "compile": "npm run copy-media && tsc -p ./",
     "watch": "tsc -p ./ --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "package": "npm run compile && vsce package"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.9.2",
-    "typescript": "^5.5.4"
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
   }
 }
