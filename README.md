@@ -37,12 +37,17 @@ The toolbar in the top-right corner of the preview offers:
   document as a normal edit — so it's on the undo stack (Ctrl+Z) like
   anything you'd type by hand. Off by default so panning/selecting in the
   preview never risks mutating the file.
+- **+ Entity / + Link** — insert a new entity centered on the current
+  viewport, or connect two existing entities with a new link (arm the
+  button, click a source, click a target; Escape cancels). Both use
+  `insertEntity`/`insertLink` from `stickyflow/interaction` and switch edit
+  mode on automatically, so a new entity/link is immediately draggable and
+  its text editable the same way as anything else on the canvas.
 
-  Not wired up yet: inserting new entities/links (quick-duplicate bubbles,
-  drag-to-connect onto empty canvas) — those require inventing new ids and
-  copying style/size, which is a host decision stickyflow.js deliberately
-  leaves to the caller (see `insertEntity`/`insertLink` in
-  `stickyflow/interaction`).
+Clicking a shape or link also reveals/selects its block in the text editor
+(and moving the cursor in the editor selects the corresponding shape on the
+canvas) — selection stays in sync in both directions, independent of edit
+mode.
 
 ## Development
 
