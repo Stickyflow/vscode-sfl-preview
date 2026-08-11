@@ -356,7 +356,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       const message = event.data;
       if (message && message.type === 'sfl/update' && message.source !== currentSource) {
         currentSource = message.source;
-        el.viewer.update({ source: currentSource });
+        // highlightChanges only here, not in applyPatch() above — this path
+        // is external edits (typed in the text editor, or the file changed
+        // outside this webview entirely); applyPatch() is this webview's own
+        // drag/resize/create actions, which the user already just watched
+        // happen and doesn't need flashed back at them.
+        el.viewer.update({ source: currentSource, highlightChanges: true });
       } else if (message && message.type === 'sfl/select') {
         // Editor -> canvas half of selection sync (see panel.ts's
         // selectFromEditor). lastSyncedOwnerId is set BEFORE calling

@@ -55,6 +55,14 @@ Clicking a shape or link also reveals/selects its block in the text editor
 canvas) — selection stays in sync in both directions, independent of edit
 mode.
 
+When an update arrives from outside this webview — you typed an edit in the
+text editor, or the file changed on disk some other way — the shapes that
+were actually added or changed briefly flash an amber outline, so it's
+visually obvious exactly what an edit touched (and, just as importantly,
+what it didn't). This is deliberately scoped to *incoming* changes only:
+your own drags/resizes/creates in edit mode never flash, since you already
+just watched those happen.
+
 ## Development
 
 The webview loads a prebuilt copy of stickyflow.js's `dist/` output rather
