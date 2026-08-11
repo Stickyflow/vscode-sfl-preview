@@ -2,6 +2,7 @@
 // global panel) — opening preview for two different files gives two
 // independent panels; re-invoking preview on the same file just reveals its
 // existing panel, same as VS Code's built-in Markdown preview.
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { getWebviewHtml } from './getWebviewHtml';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
@@ -73,6 +74,12 @@ export class SflPreviewPanel {
         // instead of applying — surfaced here rather than left silent, so
         // "nothing visibly happened" always comes with a reason.
         void vscode.window.showWarningMessage(`SFL Preview: ${message.message}`);
+      } else if (
+        message?.type === 'sfl/export' &&
+        (message.format === 'svg' || message.format === 'png') &&
+        typeof message.data === 'string'
+      ) {
+        void exportDiagram(document.uri, message.format, message.data);
       }
     });
     this.panel.onDidDispose(() => {
@@ -138,4 +145,36 @@ async function applyEditToDocument(uri: vscode.Uri, newSource: string): Promise<
   const edit = new vscode.WorkspaceEdit();
   edit.replace(uri, fullRange, newSource);
   await vscode.workspace.applyEdit(edit);
+}
+
+// Same folder as the .sfl document, same base name, new extension — e.g.
+// checkout-flow.sfl -> checkout-flow.svg. Just the *starting point* for the
+// save dialog below, not a forced destination: the dialog lets the reader
+// browse anywhere and rename before writing.
+function defaultExportUri(documentUri: vscode.Uri, ext: 'svg' | 'png'): vscode.Uri {
+  const base = baseName(documentUri.fsPath).replace(/\.sfl$/i, '');
+  const dir = vscode.Uri.file(path.dirname(documentUri.fsPath));
+  return vscode.Uri.joinPath(dir, `${base}.${ext}`);
+}
+
+// The webview already did the actual export work (render() to SVG, and for
+// PNG, rasterizing that SVG through an offscreen <canvas> — see
+// getWebviewHtml.ts's exportDiagram()) and handed back a finished payload:
+// an SVG string, or a PNG `data:` URL. This just owns the one thing the
+// webview sandbox can't do itself — a native save dialog and a filesystem
+// write.
+async function exportDiagram(documentUri: vscode.Uri, format: 'svg' | 'png', data: string): Promise<void> {
+  const uri = await vscode.window.showSaveDialog({
+    defaultUri: defaultExportUri(documentUri, format),
+    filters: format === 'png' ? { 'PNG Image': ['png'] } : { 'SVG Image': ['svg'] },
+    title: `Export SFL Preview as ${format.toUpperCase()}`,
+  });
+  if (!uri) return;
+  const contents = format === 'png'
+    ? Buffer.from(data.slice(data.indexOf(',') + 1), 'base64')
+    : Buffer.from(data, 'utf8');
+  await vscode.workspace.fs.writeFile(uri, contents);
+  const reveal = 'Reveal in Explorer';
+  const choice = await vscode.window.showInformationMessage(`Exported ${baseName(uri.fsPath)}.`, reveal);
+  if (choice === reveal) void vscode.commands.executeCommand('revealFileInOS', uri);
 }

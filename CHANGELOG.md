@@ -25,4 +25,12 @@ First working version. Not yet published to the Marketplace (`publisher` in
   text edit, drag-to-reconnect link endpoints, and delete — wired to
   stickyflow.js's `stickyflow/interaction` tier, patched into SFL text, and
   written back to the document as a normal (undoable) edit. Off by default.
-  Inserting new entities/links isn't wired up yet.
+- Canvas-side create: `+ Entity` / `+ Link` toolbar buttons, using the same
+  `stickyflow/interaction` patchers as edit mode.
+- Bidirectional selection sync: clicking a shape reveals its block in the
+  text editor, and moving the editor cursor selects the corresponding shape
+  on the canvas.
+- `Export SVG` / `Export PNG` toolbar buttons — re-renders the current
+  document at its natural bounds via stickyflow.js's `render()` (independent
+  of the preview's current pan/zoom), then opens a native save dialog
+  defaulting next to the `.sfl` file. PNG is rasterized client-side at 2x.
