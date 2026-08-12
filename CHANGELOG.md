@@ -44,3 +44,8 @@ First working version. Not yet published to the Marketplace (`publisher` in
   the edit's shape, not confirmed authorship; see `extension.ts`'s
   `looksLikeExternalRewrite` for the exact rule and its known false
   positives (a `git checkout`, a format-on-save, a manual select-all+paste).
+- A status-bar line (`SFL: N changed, N added, N removed`, ~3s) fires on
+  every scene diff, self-caused or external — a plain-text confirmation
+  that the diff engine ran at all, independent of whether the ring itself
+  is visible (it renders alongside, and can look similar to, the separate,
+  always-on selection overlay with its own ring + resize handles).

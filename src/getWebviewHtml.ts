@@ -204,6 +204,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
 
     if (el.viewer) {
       el.viewer.on('selectionChange', (e) => syncSelectionToHost(e.selection));
+      // Reports every scene diff to the host as a status-bar line (see
+      // panel.ts's sfl/sceneDiff handler) — a plain-text, unambiguous signal
+      // that change-highlighting's underlying diff actually fired, decoupled
+      // from whether the amber/blue ring itself is visible or obscured by
+      // the (separate, always-on) selection overlay. Fires on EVERY
+      // update() call, including this webview's own self-caused edits
+      // (drag/resize/create) — those don't get flashed, but they're still
+      // real diffs, so they're reported too rather than filtered out.
+      el.viewer.on('sceneDiff', (e) => vscodeApi.postMessage({ type: 'sfl/sceneDiff', added: e.added, removed: e.removed, changed: e.changed }));
     }
 
     // "+ Entity" — inserts a default-labeled entity centered on whatever the

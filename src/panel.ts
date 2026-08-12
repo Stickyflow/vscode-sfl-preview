@@ -75,6 +75,11 @@ export class SflPreviewPanel {
         void applyEditToDocument(document.uri, message.source);
       } else if (message?.type === 'sfl/reveal') {
         this.revealInEditor(typeof message.id === 'string' ? message.id : null);
+      } else if (
+        message?.type === 'sfl/sceneDiff' &&
+        Array.isArray(message.added) && Array.isArray(message.removed) && Array.isArray(message.changed)
+      ) {
+        reportSceneDiff(message.added.length, message.removed.length, message.changed.length);
       } else if (message?.type === 'sfl/warn' && typeof message.message === 'string') {
         // A canvas-side mutation (currently "+ Entity"/"+ Link") no-op'd
         // instead of applying — surfaced here rather than left silent, so
@@ -136,6 +141,22 @@ export class SflPreviewPanel {
 
 function baseName(fileName: string): string {
   return fileName.split(/[\\/]/).pop() ?? fileName;
+}
+
+// Plain-text, unambiguous confirmation that change-highlighting's diff
+// engine actually ran, independent of whether the ring itself is visible on
+// screen (it can be obscured by, or hard to tell apart from, the separate
+// always-on selection overlay — see the vault note this shipped alongside).
+// A transient status-bar message rather than an information toast: this can
+// fire on every debounced document edit while typing, and a toast would
+// stack up or steal focus at that rate.
+function reportSceneDiff(added: number, removed: number, changed: number): void {
+  if (added === 0 && removed === 0 && changed === 0) return; // a no-op update (e.g. only whitespace/comment reordering) — nothing to report
+  const parts: string[] = [];
+  if (changed) parts.push(`${changed} changed`);
+  if (added) parts.push(`${added} added`);
+  if (removed) parts.push(`${removed} removed`);
+  vscode.window.setStatusBarMessage(`SFL: ${parts.join(', ')}`, 3000);
 }
 
 // Writes an edit-mode change (drag-to-move/resize, text edit, link
