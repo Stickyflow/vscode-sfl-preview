@@ -38,4 +38,9 @@ First working version. Not yet published to the Marketplace (`publisher` in
   (typed in the text editor, or the file changed outside this webview) get a
   brief amber outline, using stickyflow.js's `sceneDiff`/`highlightChanges`.
   Self-caused edits (drag/resize/create in edit mode) never flash — you
-  already just watched those happen.
+  already just watched those happen. Updates that look like a whole-document
+  external rewrite (e.g. an agent/tool writing the file directly, such as
+  `mcp-sfl`) flash a distinct blue instead of amber — a heuristic guess at
+  the edit's shape, not confirmed authorship; see `extension.ts`'s
+  `looksLikeExternalRewrite` for the exact rule and its known false
+  positives (a `git checkout`, a format-on-save, a manual select-all+paste).

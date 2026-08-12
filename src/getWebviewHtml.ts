@@ -131,6 +131,16 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       '}',
     ].join('\\n');
 
+    // Second change-highlight color, for updates extension.ts's
+    // looksLikeExternalRewrite() flags as probably NOT ordinary in-editor
+    // typing (a whole-document replace, e.g. from mcp-sfl writing the file
+    // directly — see the sfl/update handler below). Reuses the same blue as
+    // NEW_ENTITY_STYLE's stroke above rather than inventing a third color in
+    // this file's palette. This is a heuristic guess at the edit's shape,
+    // not confirmed provenance — a git checkout or a manual select-all+paste
+    // in the text editor look identical and get the same color.
+    const EXTERNAL_REWRITE_COLOR = '#2563eb';
+
     function applyPatch(next) {
       if (next === currentSource) return;
       currentSource = next;
@@ -361,7 +371,18 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         // outside this webview entirely); applyPatch() is this webview's own
         // drag/resize/create actions, which the user already just watched
         // happen and doesn't need flashed back at them.
-        el.viewer.update({ source: currentSource, highlightChanges: true });
+        //
+        // message.likelyExternalRewrite (see extension.ts's
+        // looksLikeExternalRewrite) picks which color flashes: the default
+        // amber for an update that looks like ordinary in-editor typing, or
+        // EXTERNAL_REWRITE_COLOR for one that looks like a whole-document
+        // rewrite from outside the editor (e.g. mcp-sfl). A guess at the
+        // edit's shape, not real provenance — see that function's own
+        // comment for known false positives.
+        el.viewer.update({
+          source: currentSource,
+          highlightChanges: message.likelyExternalRewrite ? { color: EXTERNAL_REWRITE_COLOR } : true,
+        });
       } else if (message && message.type === 'sfl/select') {
         // Editor -> canvas half of selection sync (see panel.ts's
         // selectFromEditor). lastSyncedOwnerId is set BEFORE calling

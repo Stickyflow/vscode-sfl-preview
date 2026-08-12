@@ -34,8 +34,8 @@ export class SflPreviewPanel {
     SflPreviewPanel.panels.set(key, new SflPreviewPanel(panel, extensionUri, document));
   }
 
-  static updateIfOpen(document: vscode.TextDocument): void {
-    SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText());
+  static updateIfOpen(document: vscode.TextDocument, likelyExternalRewrite = false): void {
+    SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText(), likelyExternalRewrite);
   }
 
   /** Called on every text-editor selection change (see extension.ts) so the
@@ -47,6 +47,12 @@ export class SflPreviewPanel {
 
   private readonly key: string;
   private updateTimer: ReturnType<typeof setTimeout> | undefined;
+  // OR-accumulated across every onDidChangeTextDocument event coalesced into
+  // the pending debounce window — a burst of several small edits plus one
+  // big external one within the same 150ms should still flag the whole
+  // batch as "external", not silently drop the flag if the burst happens to
+  // end on a small edit. Reset once the batch is actually sent.
+  private pendingLikelyExternal = false;
   private disposed = false;
   // The last owner id either pushed to the webview (editor -> canvas) or
   // received from it (canvas -> editor). Selection sync is naturally
@@ -89,11 +95,13 @@ export class SflPreviewPanel {
     });
   }
 
-  private scheduleUpdate(source: string): void {
+  private scheduleUpdate(source: string, likelyExternalRewrite: boolean): void {
     clearTimeout(this.updateTimer);
+    this.pendingLikelyExternal = this.pendingLikelyExternal || likelyExternalRewrite;
     this.updateTimer = setTimeout(() => {
       if (this.disposed) return;
-      void this.panel.webview.postMessage({ type: 'sfl/update', source });
+      void this.panel.webview.postMessage({ type: 'sfl/update', source, likelyExternalRewrite: this.pendingLikelyExternal });
+      this.pendingLikelyExternal = false;
     }, UPDATE_DEBOUNCE_MS);
   }
 
