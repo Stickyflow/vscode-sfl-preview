@@ -43,11 +43,25 @@ The toolbar in the top-right corner of the preview offers:
   `insertEntity`/`insertLink` from `stickyflow/interaction` and switch edit
   mode on automatically, so a new entity/link is immediately draggable and
   its text editable the same way as anything else on the canvas.
+- **Export SVG / Export PNG** — save the diagram to a file. Both re-render
+  the current document at its natural bounds (via stickyflow.js's `render()`
+  core), not a snapshot of whatever's currently panned/zoomed into view, so
+  the export always captures the whole diagram. PNG is rasterized client-side
+  through an offscreen canvas at 2x for a crisp result. A native save dialog
+  opens, defaulting to the `.sfl` file's own folder and name.
 
 Clicking a shape or link also reveals/selects its block in the text editor
 (and moving the cursor in the editor selects the corresponding shape on the
 canvas) — selection stays in sync in both directions, independent of edit
 mode.
+
+When an update arrives from outside this webview — you typed an edit in the
+text editor, or the file changed on disk some other way — the shapes that
+were actually added or changed briefly flash an amber outline, so it's
+visually obvious exactly what an edit touched (and, just as importantly,
+what it didn't). This is deliberately scoped to *incoming* changes only:
+your own drags/resizes/creates in edit mode never flash, since you already
+just watched those happen.
 
 ## Development
 

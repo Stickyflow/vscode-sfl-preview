@@ -21,12 +21,26 @@
 //  - wires "+ Entity"/"+ Link" toolbar buttons to `insertEntity`/
 //    `insertLink`, the same pure patchers `applyXChange` uses, so canvas-side
 //    creation round-trips into the document exactly like a drag-to-move does.
+//  - wires "Export SVG"/"Export PNG" toolbar buttons to stickyflow.js's own
+//    `render()` (the static, DOM-free core — same entry the non-interactive
+//    <stickyflow-diagram> path and the main app's export use), re-rendering
+//    `currentSource` at its natural bounds rather than reading the live
+//    viewer's `<svg>` — that element's viewBox tracks the reader's current
+//    pan/zoom, so serializing it directly would export whatever's currently
+//    in view (and cropped to it) instead of the whole diagram, and would
+//    disturb the camera if reset first. PNG rasterizes that SVG through an
+//    offscreen <canvas> (an Image() load + drawImage, at 2x for a crisp
+//    result independent of the host display's own DPI). Either way the
+//    finished payload is posted to the extension host as `sfl/export` — a
+//    webview can't open a native save dialog or write files itself, so the
+//    host owns that half (see panel.ts's `sfl/export` handler).
 import * as vscode from 'vscode';
 
 export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri, initialSource: string): string {
   const mediaRoot = vscode.Uri.joinPath(extensionUri, 'media', 'stickyflow');
   const diagramScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'stickyflow-diagram.global.js'));
   const interactionModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'interaction', 'index.js'));
+  const coreModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'index.js'));
   const nonce = getNonce();
   // Escape `<` so the JSON blob can't break out of the surrounding <script> tag.
   const initialSourceJson = JSON.stringify(initialSource).replace(/</g, '\\u003c');
@@ -59,6 +73,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       background: var(--vscode-button-background, #0e639c);
       color: var(--vscode-button-foreground, #fff);
     }
+    .sf-toolbar .sf-sep {
+      width: 1px;
+      align-self: stretch;
+      background: var(--vscode-contrastBorder, rgba(128, 128, 128, 0.4));
+      margin: 2px 2px;
+    }
   </style>
 </head>
 <body>
@@ -67,9 +87,13 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <button id="sf-zoom-out" title="Zoom out">&minus;</button>
     <button id="sf-zoom-in" title="Zoom in">+</button>
     <button id="sf-zoom-fit" title="Fit to view">Fit</button>
+    <span class="sf-sep"></span>
     <button id="sf-add-entity" title="Add a new entity">+ Entity</button>
     <button id="sf-add-link" title="Link two entities" aria-pressed="false">+ Link</button>
     <button id="sf-toggle-edit" title="Toggle edit mode" aria-pressed="false">Editing: Off</button>
+    <span class="sf-sep"></span>
+    <button id="sf-export-svg" title="Export the diagram as an SVG file">Export SVG</button>
+    <button id="sf-export-png" title="Export the diagram as a PNG image">Export PNG</button>
   </div>
   <script nonce="${nonce}" src="${diagramScriptUri}"></script>
   <script type="module" nonce="${nonce}">
@@ -77,6 +101,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange,
       insertEntity, removeEntity, insertLink, removeLink,
     } from '${interactionModuleUri}';
+    import { render } from '${coreModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
     const el = document.getElementById('diagram');
@@ -105,6 +130,16 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       '    textColor: "#111827"',
       '}',
     ].join('\\n');
+
+    // Second change-highlight color, for updates extension.ts's
+    // looksLikeExternalRewrite() flags as probably NOT ordinary in-editor
+    // typing (a whole-document replace, e.g. from mcp-sfl writing the file
+    // directly — see the sfl/update handler below). Reuses the same blue as
+    // NEW_ENTITY_STYLE's stroke above rather than inventing a third color in
+    // this file's palette. This is a heuristic guess at the edit's shape,
+    // not confirmed provenance — a git checkout or a manual select-all+paste
+    // in the text editor look identical and get the same color.
+    const EXTERNAL_REWRITE_COLOR = '#2563eb';
 
     function applyPatch(next) {
       if (next === currentSource) return;
@@ -169,6 +204,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
 
     if (el.viewer) {
       el.viewer.on('selectionChange', (e) => syncSelectionToHost(e.selection));
+      // Reports every scene diff to the host as a status-bar line (see
+      // panel.ts's sfl/sceneDiff handler) — a plain-text, unambiguous signal
+      // that change-highlighting's underlying diff actually fired, decoupled
+      // from whether the amber/blue ring itself is visible or obscured by
+      // the (separate, always-on) selection overlay. Fires on EVERY
+      // update() call, including this webview's own self-caused edits
+      // (drag/resize/create) — those don't get flashed, but they're still
+      // real diffs, so they're reported too rather than filtered out.
+      el.viewer.on('sceneDiff', (e) => vscodeApi.postMessage({ type: 'sfl/sceneDiff', added: e.added, removed: e.removed, changed: e.changed }));
     }
 
     // "+ Entity" — inserts a default-labeled entity centered on whatever the
@@ -285,11 +329,69 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     document.getElementById('sf-zoom-fit').addEventListener('click', () => el.viewer && el.viewer.fit());
     document.getElementById('sf-toggle-edit').addEventListener('click', () => setEditMode(!editing));
 
+    // PNG export is rasterized at this fixed multiple of the diagram's
+    // natural (SFL user-space) size, independent of the host display's own
+    // DPI — the reader's screen shouldn't decide the resolution of a file
+    // they're taking out of the editor.
+    const PNG_EXPORT_SCALE = 2;
+
+    function exportDiagram(format) {
+      let result;
+      try {
+        result = render(currentSource, { padding: 16 });
+      } catch (err) {
+        vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not export: \${err && err.message ? err.message : err}\` });
+        return;
+      }
+      if (format === 'svg') {
+        vscodeApi.postMessage({ type: 'sfl/export', format: 'svg', data: result.svg });
+        return;
+      }
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(result.width * PNG_EXPORT_SCALE));
+        canvas.height = Math.max(1, Math.round(result.height * PNG_EXPORT_SCALE));
+        const ctx = canvas.getContext('2d');
+        // The rendered SVG itself has no background rect (transparent by
+        // design, so it composites into any page) — fill white here so text
+        // tuned for a light canvas doesn't disappear when the PNG lands on a
+        // dark surface elsewhere.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        vscodeApi.postMessage({ type: 'sfl/export', format: 'png', data: canvas.toDataURL('image/png') });
+      };
+      img.onerror = () => {
+        vscodeApi.postMessage({ type: 'sfl/warn', message: 'Could not rasterize the diagram for PNG export.' });
+      };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(result.svg);
+    }
+
+    document.getElementById('sf-export-svg').addEventListener('click', () => exportDiagram('svg'));
+    document.getElementById('sf-export-png').addEventListener('click', () => exportDiagram('png'));
+
     window.addEventListener('message', (event) => {
       const message = event.data;
       if (message && message.type === 'sfl/update' && message.source !== currentSource) {
         currentSource = message.source;
-        el.viewer.update({ source: currentSource });
+        // highlightChanges only here, not in applyPatch() above — this path
+        // is external edits (typed in the text editor, or the file changed
+        // outside this webview entirely); applyPatch() is this webview's own
+        // drag/resize/create actions, which the user already just watched
+        // happen and doesn't need flashed back at them.
+        //
+        // message.likelyExternalRewrite (see extension.ts's
+        // looksLikeExternalRewrite) picks which color flashes: the default
+        // amber for an update that looks like ordinary in-editor typing, or
+        // EXTERNAL_REWRITE_COLOR for one that looks like a whole-document
+        // rewrite from outside the editor (e.g. mcp-sfl). A guess at the
+        // edit's shape, not real provenance — see that function's own
+        // comment for known false positives.
+        el.viewer.update({
+          source: currentSource,
+          highlightChanges: message.likelyExternalRewrite ? { color: EXTERNAL_REWRITE_COLOR } : true,
+        });
       } else if (message && message.type === 'sfl/select') {
         // Editor -> canvas half of selection sync (see panel.ts's
         // selectFromEditor). lastSyncedOwnerId is set BEFORE calling

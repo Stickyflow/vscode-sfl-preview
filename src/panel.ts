@@ -2,6 +2,7 @@
 // global panel) — opening preview for two different files gives two
 // independent panels; re-invoking preview on the same file just reveals its
 // existing panel, same as VS Code's built-in Markdown preview.
+import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { getWebviewHtml } from './getWebviewHtml';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
@@ -33,8 +34,8 @@ export class SflPreviewPanel {
     SflPreviewPanel.panels.set(key, new SflPreviewPanel(panel, extensionUri, document));
   }
 
-  static updateIfOpen(document: vscode.TextDocument): void {
-    SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText());
+  static updateIfOpen(document: vscode.TextDocument, likelyExternalRewrite = false): void {
+    SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText(), likelyExternalRewrite);
   }
 
   /** Called on every text-editor selection change (see extension.ts) so the
@@ -46,6 +47,12 @@ export class SflPreviewPanel {
 
   private readonly key: string;
   private updateTimer: ReturnType<typeof setTimeout> | undefined;
+  // OR-accumulated across every onDidChangeTextDocument event coalesced into
+  // the pending debounce window — a burst of several small edits plus one
+  // big external one within the same 150ms should still flag the whole
+  // batch as "external", not silently drop the flag if the burst happens to
+  // end on a small edit. Reset once the batch is actually sent.
+  private pendingLikelyExternal = false;
   private disposed = false;
   // The last owner id either pushed to the webview (editor -> canvas) or
   // received from it (canvas -> editor). Selection sync is naturally
@@ -68,11 +75,22 @@ export class SflPreviewPanel {
         void applyEditToDocument(document.uri, message.source);
       } else if (message?.type === 'sfl/reveal') {
         this.revealInEditor(typeof message.id === 'string' ? message.id : null);
+      } else if (
+        message?.type === 'sfl/sceneDiff' &&
+        Array.isArray(message.added) && Array.isArray(message.removed) && Array.isArray(message.changed)
+      ) {
+        reportSceneDiff(message.added.length, message.removed.length, message.changed.length);
       } else if (message?.type === 'sfl/warn' && typeof message.message === 'string') {
         // A canvas-side mutation (currently "+ Entity"/"+ Link") no-op'd
         // instead of applying — surfaced here rather than left silent, so
         // "nothing visibly happened" always comes with a reason.
         void vscode.window.showWarningMessage(`SFL Preview: ${message.message}`);
+      } else if (
+        message?.type === 'sfl/export' &&
+        (message.format === 'svg' || message.format === 'png') &&
+        typeof message.data === 'string'
+      ) {
+        void exportDiagram(document.uri, message.format, message.data);
       }
     });
     this.panel.onDidDispose(() => {
@@ -82,11 +100,13 @@ export class SflPreviewPanel {
     });
   }
 
-  private scheduleUpdate(source: string): void {
+  private scheduleUpdate(source: string, likelyExternalRewrite: boolean): void {
     clearTimeout(this.updateTimer);
+    this.pendingLikelyExternal = this.pendingLikelyExternal || likelyExternalRewrite;
     this.updateTimer = setTimeout(() => {
       if (this.disposed) return;
-      void this.panel.webview.postMessage({ type: 'sfl/update', source });
+      void this.panel.webview.postMessage({ type: 'sfl/update', source, likelyExternalRewrite: this.pendingLikelyExternal });
+      this.pendingLikelyExternal = false;
     }, UPDATE_DEBOUNCE_MS);
   }
 
@@ -123,6 +143,22 @@ function baseName(fileName: string): string {
   return fileName.split(/[\\/]/).pop() ?? fileName;
 }
 
+// Plain-text, unambiguous confirmation that change-highlighting's diff
+// engine actually ran, independent of whether the ring itself is visible on
+// screen (it can be obscured by, or hard to tell apart from, the separate
+// always-on selection overlay — see the vault note this shipped alongside).
+// A transient status-bar message rather than an information toast: this can
+// fire on every debounced document edit while typing, and a toast would
+// stack up or steal focus at that rate.
+function reportSceneDiff(added: number, removed: number, changed: number): void {
+  if (added === 0 && removed === 0 && changed === 0) return; // a no-op update (e.g. only whitespace/comment reordering) — nothing to report
+  const parts: string[] = [];
+  if (changed) parts.push(`${changed} changed`);
+  if (added) parts.push(`${added} added`);
+  if (removed) parts.push(`${removed} removed`);
+  vscode.window.setStatusBarMessage(`SFL: ${parts.join(', ')}`, 3000);
+}
+
 // Writes an edit-mode change (drag-to-move/resize, text edit, link
 // reconnect, delete — already turned into full new SFL text by the
 // webview's `applyXChange` patchers) back into the real document as a
@@ -138,4 +174,36 @@ async function applyEditToDocument(uri: vscode.Uri, newSource: string): Promise<
   const edit = new vscode.WorkspaceEdit();
   edit.replace(uri, fullRange, newSource);
   await vscode.workspace.applyEdit(edit);
+}
+
+// Same folder as the .sfl document, same base name, new extension — e.g.
+// checkout-flow.sfl -> checkout-flow.svg. Just the *starting point* for the
+// save dialog below, not a forced destination: the dialog lets the reader
+// browse anywhere and rename before writing.
+function defaultExportUri(documentUri: vscode.Uri, ext: 'svg' | 'png'): vscode.Uri {
+  const base = baseName(documentUri.fsPath).replace(/\.sfl$/i, '');
+  const dir = vscode.Uri.file(path.dirname(documentUri.fsPath));
+  return vscode.Uri.joinPath(dir, `${base}.${ext}`);
+}
+
+// The webview already did the actual export work (render() to SVG, and for
+// PNG, rasterizing that SVG through an offscreen <canvas> — see
+// getWebviewHtml.ts's exportDiagram()) and handed back a finished payload:
+// an SVG string, or a PNG `data:` URL. This just owns the one thing the
+// webview sandbox can't do itself — a native save dialog and a filesystem
+// write.
+async function exportDiagram(documentUri: vscode.Uri, format: 'svg' | 'png', data: string): Promise<void> {
+  const uri = await vscode.window.showSaveDialog({
+    defaultUri: defaultExportUri(documentUri, format),
+    filters: format === 'png' ? { 'PNG Image': ['png'] } : { 'SVG Image': ['svg'] },
+    title: `Export SFL Preview as ${format.toUpperCase()}`,
+  });
+  if (!uri) return;
+  const contents = format === 'png'
+    ? Buffer.from(data.slice(data.indexOf(',') + 1), 'base64')
+    : Buffer.from(data, 'utf8');
+  await vscode.workspace.fs.writeFile(uri, contents);
+  const reveal = 'Reveal in Explorer';
+  const choice = await vscode.window.showInformationMessage(`Exported ${baseName(uri.fsPath)}.`, reveal);
+  if (choice === reveal) void vscode.commands.executeCommand('revealFileInOS', uri);
 }
