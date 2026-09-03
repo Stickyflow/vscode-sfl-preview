@@ -74,6 +74,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       cursor: pointer;
     }
     .sf-toolbar button:hover { background: var(--vscode-button-secondaryHoverBackground, #45494e); }
+    .sf-toolbar button[hidden] { display: none; }
     .sf-toolbar button[aria-pressed="true"] {
       background: var(--vscode-button-background, #0e639c);
       color: var(--vscode-button-foreground, #fff);
@@ -93,8 +94,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <button id="sf-zoom-in" title="Zoom in">+</button>
     <button id="sf-zoom-fit" title="Fit to view">Fit</button>
     <span class="sf-sep"></span>
-    <button id="sf-add-entity" title="Add a new entity">+ Entity</button>
-    <button id="sf-add-link" title="Link two entities" aria-pressed="false">+ Link</button>
+    <button id="sf-add-entity" title="Add a new entity" hidden>+ Entity</button>
+    <button id="sf-add-link" title="Link two entities" aria-pressed="false" hidden>+ Link</button>
     <button id="sf-toggle-edit" title="Toggle edit mode" aria-pressed="false">Editing: Off</button>
     <span class="sf-sep"></span>
     <button id="sf-export-svg" title="Export the diagram as an SVG file">Export SVG</button>
@@ -246,6 +247,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       const btn = document.getElementById('sf-toggle-edit');
       btn.setAttribute('aria-pressed', String(on));
       btn.textContent = on ? 'Editing: On' : 'Editing: Off';
+      // "+ Entity" / "+ Link" only do anything while editing is on — every
+      // mutation path is gated on the editing flag — and a visible button that
+      // silently no-ops is worse than no button. So they're shown only in edit
+      // mode; the "Editing" toggle stays put as the one way in.
+      document.getElementById('sf-add-entity').hidden = !on;
+      document.getElementById('sf-add-link').hidden = !on;
     }
 
     // Canvas -> editor selection sync: always on, independent of edit mode.
@@ -286,11 +293,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       el.viewer.on('sceneDiff', (e) => vscodeApi.postMessage({ type: 'sfl/sceneDiff', added: e.added, removed: e.removed, changed: e.changed }));
     }
 
-    // "+ Entity" — adds a *connected* next step, not a floating orphan. The
-    // anchor is the one selected shape, or (nothing selected) the entity the
-    // previous "+ Entity" click added, so repeated clicks build a chain. The
-    // first click with no anchor drops a lone entity centered on the viewport.
-    // The new entity lands just below its anchor and is linked from it.
+    // "+ Entity" — adds a *connected* next step, not a floating orphan. Only
+    // shown in edit mode (see setEditMode). The anchor is the one selected
+    // shape, or (nothing selected) the entity the previous "+ Entity" click
+    // added, so repeated clicks build a chain. The first click with no anchor
+    // drops a lone entity centered on the viewport. The new entity lands just
+    // below its anchor and is linked from it.
     let lastAddedEntityId = null;
     // Snapshot the selection on pointerdown, before the button takes focus.
     let addEntityPdAnchor = null;
@@ -300,7 +308,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     });
     document.getElementById('sf-add-entity').addEventListener('click', () => {
       const viewer = el.viewer;
-      if (!viewer) return;
+      if (!viewer || !editing) return; // button is hidden while editing is off — guard the handler too
 
       const pd = addEntityPdAnchor;
       addEntityPdAnchor = null;
@@ -353,7 +361,6 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       }
 
       lastAddedEntityId = id;
-      setEditMode(true);
       applyPatch(next);
       viewer.select([id]);
     });
@@ -363,11 +370,10 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     // alongside selectionChange on every click, which the reveal sync
     // above already handles on its own) rather than re-deriving clicks from
     // selectionChange, so this stays a simple additive listener with no
-    // interaction with normal click-to-select/reveal behavior. Requires edit
-    // mode the same way every other mutation does — arming it switches edit
-    // mode on (same pattern as "+ Entity"), and the entityClick handler below
-    // re-checks the editing flag itself so a link can never be created while
-    // it's off, even if edit mode gets toggled off mid-gesture some other way.
+    // interaction with normal click-to-select/reveal behavior. The button is
+    // only visible in edit mode (see setEditMode), and both this click handler
+    // and the entityClick handler below re-check the editing flag, so a link
+    // can never be armed or created while edit mode is off.
     let linkState = null; // null (off) | 'from' (armed, waiting for source) | { from } (waiting for target)
 
     function setLinkButtonLabel() {
@@ -382,12 +388,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     document.getElementById('sf-add-link').addEventListener('click', () => {
-      if (linkState === null) {
-        setEditMode(true);
-        linkState = 'from';
-      } else {
-        linkState = null;
-      }
+      if (!editing) return; // button is hidden while editing is off — guard the handler too
+      linkState = linkState === null ? 'from' : null;
       setLinkButtonLabel();
     });
 
