@@ -7,7 +7,7 @@ import * as vscode from 'vscode';
 import { getWebviewHtml } from './getWebviewHtml';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
 
-const VIEW_TYPE = 'sfl.preview';
+export const VIEW_TYPE = 'sfl.preview';
 const UPDATE_DEBOUNCE_MS = 150;
 
 export class SflPreviewPanel {
