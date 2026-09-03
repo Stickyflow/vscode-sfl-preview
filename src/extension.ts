@@ -5,7 +5,7 @@
 // the stickyflow.js render runtime, so installing/activating the language
 // server doesn't pull in the diagram renderer, and vice versa.
 import * as vscode from 'vscode';
-import { SflPreviewPanel } from './panel';
+import { SflPreviewPanel, VIEW_TYPE } from './panel';
 
 // Heuristic, not real provenance: VS Code's onDidChangeTextDocument carries
 // no signal for *who* made an edit, so this guesses from the SHAPE of the
@@ -42,6 +42,15 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   context.subscriptions.push(
+    // The preview holds no restorable state (its content is derived fresh from
+    // the .sfl document by getWebviewHtml). On a window reload the workbench
+    // would otherwise resurrect the old panel and its stale HTML; discard it
+    // so re-running the command always builds a current one.
+    vscode.window.registerWebviewPanelSerializer(VIEW_TYPE, {
+      async deserializeWebviewPanel(panel: vscode.WebviewPanel): Promise<void> {
+        panel.dispose();
+      },
+    }),
     vscode.commands.registerCommand('sfl.showPreview', () => openPreview(vscode.ViewColumn.Active)),
     vscode.commands.registerCommand('sfl.showPreviewToSide', () => openPreview(vscode.ViewColumn.Beside)),
     vscode.workspace.onDidChangeTextDocument((event) => {

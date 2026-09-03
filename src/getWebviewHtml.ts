@@ -49,7 +49,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';" />
+  <!-- 'strict-dynamic': stickyflow.js's ESM build is code-split, so
+       interaction/index.js and index.js each import sibling ../chunk-*.js
+       files. A bare nonce authorises an element, not a fetch, so those
+       transitive imports would be blocked and the whole module script — every
+       edit-mode gesture — would fail to load while the diagram still renders. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'strict-dynamic';" />
   <style>
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--vscode-editor-background); }
     stickyflow-diagram { width: 100%; height: 100%; display: block; }
@@ -101,10 +106,17 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange,
       insertEntity, removeEntity, insertLink, removeLink,
     } from '${interactionModuleUri}';
-    import { render } from '${coreModuleUri}';
+    import { render, sflToCanvasState } from '${coreModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
     const el = document.getElementById('diagram');
+
+    // Roles a canvas-drawn link may connect. Narrower than SFL's own linkable
+    // set on purpose: Path and Chart are valid \`to:\` targets in the language,
+    // but the link router only draws a clean edge to a rectangular owner, so
+    // linking to one from the canvas leaves a stub ending mid-shape — link
+    // those by editing the SFL. Frame/swimlane are Container render roles.
+    const LINKABLE_ROLES = ['entity', 'frame', 'swimlane', 'table'];
     let currentSource = ${initialSourceJson};
     el.source = currentSource;
 
@@ -148,13 +160,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       vscodeApi.postMessage({ type: 'sfl/edit', source: currentSource });
     }
 
-    // A fresh <prefix>_<n> id not already declared anywhere in the current
-    // document. insertEntity/insertLink themselves silently no-op on a
-    // collision (see patchSfl.ts), so this only needs to be a good-faith
-    // pick, not a guaranteed-unique one.
-    function nextId(prefix) {
+    // A fresh <prefix>_<n> id not already declared anywhere in \`src\` (the live
+    // document by default). insertEntity/insertLink themselves silently no-op
+    // on a collision (see patchSfl.ts), so this only needs to be a good-faith
+    // pick, not a guaranteed-unique one. Pass an explicit \`src\` to pick a
+    // second id against a document already patched but not yet committed.
+    function nextId(prefix, src) {
+      const text = src || currentSource;
       const taken = new Set(
-        [...currentSource.matchAll(/\\b(?:Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
+        [...text.matchAll(/\\b(?:Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
       );
       let n = taken.size + 1;
       while (taken.has(\`\${prefix}_\${n}\`)) n++;
@@ -170,6 +184,55 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         editing.on('moveChange', (e) => applyPatch(applyMoveChange(currentSource, e)));
         editing.on('resizeChange', (e) => applyPatch(applyResizeChange(currentSource, e)));
         editing.on('linkReconnect', (e) => applyPatch(applyLinkReconnectChange(currentSource, e)));
+        // The "+" bubbles around a selected shape. stickyflow.js has no pure
+        // patcher for this, so it's built here: a duplicate of the shape,
+        // offset in the clicked direction, plus a link from the shape into it
+        // — the bubble is an "add connected next step" affordance, not a plain
+        // copy. Falls back to a bare duplicate if the source isn't linkable.
+        editing.on('quickDuplicate', (e) => {
+          const source = sflToCanvasState(currentSource).entities.find((en) => en.id === e.owner.id);
+          if (!source) return;
+          const w = source.width || NEW_ENTITY_SIZE.width;
+          const h = source.height || NEW_ENTITY_SIZE.height;
+          const gap = 40;
+          let x = source.x;
+          let y = source.y;
+          if (e.direction === 'right') x = source.x + w + gap;
+          else if (e.direction === 'left') x = source.x - w - gap;
+          else if (e.direction === 'bottom') y = source.y + h + gap;
+          else if (e.direction === 'top') y = source.y - h - gap;
+          const id = nextId('entity');
+          let next = insertEntity(currentSource, { id, kind: 'shape', text: 'New entity', x, y, width: w, height: h, body: NEW_ENTITY_STYLE });
+          if (next === currentSource) return;
+          if (LINKABLE_ROLES.includes(e.owner.role)) {
+            const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[e.direction];
+            const linked = insertLink(next, { id: nextId('link', next), fromId: e.owner.id, toId: id, fromSide: e.direction, toSide: opposite });
+            if (linked !== next) next = linked;
+          }
+          applyPatch(next);
+          el.viewer.select([id]);
+        });
+        // Drag a "+" bubble onto another shape (instead of into empty space):
+        // resolved as a new link rather than a duplicate. The bubble's side is
+        // the from-endpoint; the drop point on the target gives the to-side +
+        // fraction. Non-connectable targets (path/chart) are rejected — no
+        // half-made link left on the board.
+        editing.on('linkTo', (e) => {
+          if (!LINKABLE_ROLES.includes(e.target.role)) {
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Can't link to "\${e.target.id}" — it's a \${e.target.role}. Canvas links connect entities, containers and tables; link a \${e.target.role} by editing the SFL.\` });
+            el.viewer.update({ source: currentSource }); // clear the drag preview
+            return;
+          }
+          const id = nextId('link');
+          const next = insertLink(currentSource, { id, fromId: e.owner.id, toId: e.target.id, fromSide: e.direction, toSide: e.side, toFraction: e.fraction });
+          if (next === currentSource) {
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not link "\${e.owner.id}" → "\${e.target.id}".\` });
+            el.viewer.update({ source: currentSource });
+            return;
+          }
+          applyPatch(next);
+          el.viewer.select([id]);
+        });
         editing.on('delete', (e) => {
           let next = currentSource;
           for (const owner of e.owners) next = owner.role === 'link' ? removeLink(next, owner.id) : removeEntity(next, owner.id);
@@ -202,8 +265,16 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       vscodeApi.postMessage({ type: 'sfl/reveal', id });
     }
 
+    // Last non-empty canvas selection — a durable anchor for "+ Entity", since
+    // reading getSelection() the moment the toolbar button is clicked can come
+    // back empty when focus shifts to the button.
+    let lastSelectionOwners = [];
+
     if (el.viewer) {
-      el.viewer.on('selectionChange', (e) => syncSelectionToHost(e.selection));
+      el.viewer.on('selectionChange', (e) => {
+        if (e.selection.length > 0) lastSelectionOwners = e.selection;
+        syncSelectionToHost(e.selection);
+      });
       // Reports every scene diff to the host as a status-bar line (see
       // panel.ts's sfl/sceneDiff handler) — a plain-text, unambiguous signal
       // that change-highlighting's underlying diff actually fired, decoupled
@@ -215,34 +286,73 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       el.viewer.on('sceneDiff', (e) => vscodeApi.postMessage({ type: 'sfl/sceneDiff', added: e.added, removed: e.removed, changed: e.changed }));
     }
 
-    // "+ Entity" — inserts a default-labeled entity centered on whatever the
-    // reader is currently looking at (getViewport(), not a fixed spot the
-    // reader would then have to go find), switches edit mode on so it's
-    // immediately draggable/renamable, and selects it — which also reveals
-    // it in the text editor via the selection-sync wiring above.
+    // "+ Entity" — adds a *connected* next step, not a floating orphan. The
+    // anchor is the one selected shape, or (nothing selected) the entity the
+    // previous "+ Entity" click added, so repeated clicks build a chain. The
+    // first click with no anchor drops a lone entity centered on the viewport.
+    // The new entity lands just below its anchor and is linked from it.
+    let lastAddedEntityId = null;
+    // Snapshot the selection on pointerdown, before the button takes focus.
+    let addEntityPdAnchor = null;
+    document.getElementById('sf-add-entity').addEventListener('pointerdown', () => {
+      const sel = el.viewer ? el.viewer.getSelection() : [];
+      addEntityPdAnchor = sel.length === 1 ? sel[0] : null;
+    });
     document.getElementById('sf-add-entity').addEventListener('click', () => {
       const viewer = el.viewer;
       if (!viewer) return;
-      const viewport = viewer.getViewport();
+
+      const pd = addEntityPdAnchor;
+      addEntityPdAnchor = null;
+      const clickSel = viewer.getSelection();
+      const selAnchor =
+        pd ||
+        (clickSel.length === 1 ? clickSel[0] : null) ||
+        (lastSelectionOwners.length === 1 ? lastSelectionOwners[0] : null);
+
+      const entities = sflToCanvasState(currentSource).entities;
+      let anchorShape = null;
+      if (selAnchor && LINKABLE_ROLES.includes(selAnchor.role)) {
+        anchorShape = entities.find((en) => en.id === selAnchor.id) || null;
+      }
+      if (!anchorShape && lastAddedEntityId) {
+        anchorShape = entities.find((en) => en.id === lastAddedEntityId) || null;
+      }
+
+      let x;
+      let y;
+      if (anchorShape) {
+        x = anchorShape.x + (anchorShape.width || NEW_ENTITY_SIZE.width) / 2 - NEW_ENTITY_SIZE.width / 2;
+        y = anchorShape.y + (anchorShape.height || NEW_ENTITY_SIZE.height) + 60;
+      } else {
+        const viewport = viewer.getViewport();
+        x = viewport.x + viewport.w / 2 - NEW_ENTITY_SIZE.width / 2;
+        y = viewport.y + viewport.h / 2 - NEW_ENTITY_SIZE.height / 2;
+      }
+
       const id = nextId('entity');
-      const next = insertEntity(currentSource, {
+      let next = insertEntity(currentSource, {
         id,
         kind: 'shape',
         text: 'New entity',
-        x: viewport.x + viewport.w / 2 - NEW_ENTITY_SIZE.width / 2,
-        y: viewport.y + viewport.h / 2 - NEW_ENTITY_SIZE.height / 2,
+        x,
+        y,
         width: NEW_ENTITY_SIZE.width,
         height: NEW_ENTITY_SIZE.height,
         body: NEW_ENTITY_STYLE,
       });
       if (next === currentSource) {
-        // insertEntity no-ops (rather than throwing) on an id collision or a
-        // document with no top-level Model block — silently doing nothing
-        // left no way to tell "it worked" from "it didn't", so this reports
-        // it explicitly instead of failing invisibly.
+        // insertEntity no-ops (never throws) on an id collision or a document
+        // with no top-level Model block — surfaced rather than left silent.
         vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not add entity "\${id}" — check that the document has a top-level Model block and that id isn't already used.\` });
         return;
       }
+      if (anchorShape) {
+        const linked = insertLink(next, { id: nextId('link', next), fromId: anchorShape.id, toId: id, fromSide: 'bottom', toSide: 'top' });
+        if (linked !== next) next = linked;
+      }
+
+      lastAddedEntityId = id;
       setEditMode(true);
       applyPatch(next);
       viewer.select([id]);
@@ -289,19 +399,27 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       el.viewer.on('entityClick', (e) => {
         if (!editing) return; // belt-and-suspenders: mutation only proceeds while edit mode is actually on
         if (linkState === 'from') {
+          if (!LINKABLE_ROLES.includes(e.owner.role)) {
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Can't link from "\${e.owner.id}" — it's a \${e.owner.role}. Canvas links connect entities, containers and tables.\` });
+            cancelLinking();
+            return;
+          }
           linkState = { from: e.owner };
           setLinkButtonLabel();
           return;
         }
         if (linkState && linkState.from) {
           if (e.owner.id === linkState.from.id) { cancelLinking(); return; } // clicked the same entity twice — cancel, not a self-link
-          const id = nextId('link');
-          const next = insertLink(currentSource, { id, fromId: linkState.from.id, toId: e.owner.id });
+          const fromId = linkState.from.id;
           cancelLinking();
+          if (!LINKABLE_ROLES.includes(e.owner.role)) {
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Can't link to "\${e.owner.id}" — it's a \${e.owner.role}. Canvas links connect entities, containers and tables.\` });
+            return;
+          }
+          const id = nextId('link');
+          const next = insertLink(currentSource, { id, fromId, toId: e.owner.id });
           if (next === currentSource) {
-            // insertLink no-ops (rather than throwing) on an id collision —
-            // reported explicitly rather than failing invisibly, same as "+ Entity".
-            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not create link "\${id}" — that id may already be taken.\` });
+            vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not create link "\${fromId}" → "\${e.owner.id}".\` });
             return;
           }
           applyPatch(next);
