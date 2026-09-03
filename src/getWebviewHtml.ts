@@ -121,6 +121,25 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     let currentSource = ${initialSourceJson};
     el.source = currentSource;
 
+    // The viewer draws resize handles and the "+" quick-add bubbles around any
+    // singly-selected entity straight from selection state — it has no notion
+    // of this preview's edit mode, and selection stays live even with editing
+    // off (it drives editor<->canvas sync). With editing off those affordances
+    // are inert (their interaction events have no listener), so gate them on a
+    // class the "Editing" toggle puts on the host. The rule lives in a sheet
+    // adopted into the diagram's shadow root — adoptedStyleSheets survives the
+    // web component clearing its shadow DOM, a <style> child would not. The
+    // plain selection ring is left alone; it's the sync cue.
+    if (el.shadowRoot && 'adoptedStyleSheets' in el.shadowRoot) {
+      const gate = new CSSStyleSheet();
+      gate.replaceSync(
+        ':host(:not(.sf-editing)) [data-sf-resize-handle],' +
+        ':host(:not(.sf-editing)) [data-sf-quick-duplicate],' +
+        ':host(:not(.sf-editing)) [data-sf-quick-duplicate] + path { display: none; }',
+      );
+      el.shadowRoot.adoptedStyleSheets = [...el.shadowRoot.adoptedStyleSheets, gate];
+    }
+
     let editing = null;
     // Default new-entity footprint — no shared constant exists to reuse (see
     // stickyflow.js/src/model), so this picks a generic size in the same
@@ -253,6 +272,9 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       // mode; the "Editing" toggle stays put as the one way in.
       document.getElementById('sf-add-entity').hidden = !on;
       document.getElementById('sf-add-link').hidden = !on;
+      // Same reasoning for the on-canvas resize handles / "+" bubbles the
+      // viewer paints around a selected entity (see the adopted sheet above).
+      el.classList.toggle('sf-editing', on);
     }
 
     // Canvas -> editor selection sync: always on, independent of edit mode.
