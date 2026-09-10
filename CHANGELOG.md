@@ -39,6 +39,12 @@ First working version. Not yet published to the Marketplace (`publisher` in
   routing style orthogonal → curved → straight, via a new
   `webview/linkRoute.ts` patcher that sets a `route:` on the link's own SFL
   block.
+- Better canvas panning (`webview/panControls.ts`): middle-button drag,
+  left-drag on empty background, and plain scroll wheel (Shift for
+  horizontal) all pan now — previously only Ctrl/Cmd-drag did, and a plain
+  wheel did nothing. A grab / grabbing cursor shows over the background.
+  Ctrl/Cmd-wheel still zooms. Works in and out of edit mode; the viewer's
+  own camera stays the source of truth, so zoom is unaffected.
 - Canvas-side create: `+ Entity` / `+ Link` toolbar buttons, using the same
   `stickyflow/interaction` patchers as edit mode.
 - Bidirectional selection sync: clicking a shape reveals its block in the

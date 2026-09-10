@@ -215,6 +215,40 @@ const probe = `(async () => {
     return null;
   }
 
+  // --- panning (works outside edit mode) --------------------------------
+  const viewBox = () => (svg().getAttribute('viewBox') || '').split(/\\s+/).map(Number);
+  const p = (x, y, button) => ({ clientX: x, clientY: y, button, buttons: button === 1 ? 4 : 1, bubbles: true, cancelable: true, pointerId: 7, pointerType: 'mouse', isPrimary: true });
+  async function panDrag(button, dx, dy) {
+    const sr = svg().getBoundingClientRect();
+    const x0 = sr.left + 8, y0 = sr.top + 8; // top-left corner: empty background
+    svg().dispatchEvent(new PointerEvent('pointerdown', p(x0, y0, button)));
+    await new Promise(r => setTimeout(r, 15));
+    svg().dispatchEvent(new PointerEvent('pointermove', p(x0 + dx * 0.5, y0 + dy * 0.5, button)));
+    await new Promise(r => setTimeout(r, 15));
+    svg().dispatchEvent(new PointerEvent('pointermove', p(x0 + dx, y0 + dy, button)));
+    await new Promise(r => setTimeout(r, 15));
+    svg().dispatchEvent(new PointerEvent('pointerup', p(x0 + dx, y0 + dy, button)));
+    await new Promise(r => setTimeout(r, 40));
+  }
+  const cursorIdle = svg().style.cursor;
+  const vbBefore = viewBox();
+  await panDrag(1, 120, 60); // middle-button drag
+  const vbAfterMiddle = viewBox();
+  await panDrag(0, -90, 40); // left-drag on empty background
+  const vbAfterLeft = viewBox();
+  const cursorAfterPan = svg().style.cursor;
+  svg().dispatchEvent(new WheelEvent('wheel', { deltaX: 0, deltaY: 80, bubbles: true, cancelable: true, clientX: 100, clientY: 100 }));
+  await new Promise(r => setTimeout(r, 40));
+  const vbAfterWheel = viewBox();
+  // regression: after panning, a plain click still selects a shape
+  const soloNode = svg().querySelector('[data-sf-id="solo"][data-sf-primary]');
+  const snr = soloNode.getBoundingClientRect();
+  soloNode.dispatchEvent(new PointerEvent('pointerdown', p(snr.left + snr.width / 2, snr.top + snr.height / 2, 0)));
+  soloNode.dispatchEvent(new PointerEvent('pointerup', p(snr.left + snr.width / 2, snr.top + snr.height / 2, 0)));
+  await new Promise(r => setTimeout(r, 40));
+  const selectionAfterPan = el.viewer.getSelection().map(o => o.id);
+  el.viewer.select([]);
+
   document.getElementById('sf-toggle-edit').click();
   await new Promise(r => setTimeout(r, 40));
 
@@ -253,6 +287,7 @@ const probe = `(async () => {
   return { start, afterFrame, afterEntity, afterTable,
     afterFrameResize, afterTableResize, resizeFrameErr, resizeTableErr,
     routeBtn, route1, route2,
+    pan: { cursorIdle, cursorAfterPan, vbBefore, vbAfterMiddle, vbAfterLeft, vbAfterWheel, selectionAfterPan },
     edits: posted().filter(m => m && m.type === 'sfl/edit').length,
     warns: posted().filter(m => m && m.type === 'sfl/warn').map(m => m.message) };
 })()`;
@@ -288,10 +323,19 @@ if (!out || !out.start) {
   if (out.route1 === out.route2) fail.push('route did not change on 2nd click');
   if (out.warns?.length) fail.push('unexpected warnings: ' + out.warns.join(' | '));
   if ((out.edits ?? 0) < 7) fail.push('expected >= 7 sfl/edit messages, got ' + out.edits);
+
+  const pan = out.pan || {};
+  const vbMoved = (a, b) => a && b && a.length === 4 && (a[0] !== b[0] || a[1] !== b[1]);
+  if (pan.cursorIdle !== 'grab') fail.push('idle canvas cursor is "' + pan.cursorIdle + '", expected "grab"');
+  if (!vbMoved(pan.vbBefore, pan.vbAfterMiddle)) fail.push('middle-drag did not pan: ' + JSON.stringify([pan.vbBefore, pan.vbAfterMiddle]));
+  if (!vbMoved(pan.vbAfterMiddle, pan.vbAfterLeft)) fail.push('left-drag on background did not pan: ' + JSON.stringify([pan.vbAfterMiddle, pan.vbAfterLeft]));
+  if (!vbMoved(pan.vbAfterLeft, pan.vbAfterWheel)) fail.push('scroll wheel did not pan: ' + JSON.stringify([pan.vbAfterLeft, pan.vbAfterWheel]));
+  if (pan.cursorAfterPan !== 'grab') fail.push('cursor stuck at "' + pan.cursorAfterPan + '" after panning, expected "grab"');
+  if (JSON.stringify(pan.selectionAfterPan) !== JSON.stringify(['solo'])) fail.push('click-to-select broken after panning: ' + JSON.stringify(pan.selectionAfterPan));
 }
 if (fail.length) {
   console.error('\nverify-webview FAILED:\n - ' + fail.join('\n - '));
   process.exit(1);
 }
-console.log('\nverify-webview: OK (frame/entity/table drag, frame/table resize, link route cycle)');
+console.log('\nverify-webview: OK (pan: middle-drag / bg-drag / wheel + grab cursor; frame/entity/table drag; frame/table resize; link route cycle)');
 process.exit(0);

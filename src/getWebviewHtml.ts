@@ -8,6 +8,10 @@
 //    bindings survive — the setter tears down and remounts the whole viewer.
 //  - wires zoom in/out/fit buttons (dispatching synthetic ctrl+wheel events,
 //    since `Viewer` only exposes `fit()` publicly — no direct zoom method).
+//  - binds `webview/panControls.ts` for canvas panning the viewer itself
+//    doesn't offer: middle-drag / drag-on-empty-background to pan, plain
+//    scroll wheel to pan, and a grab cursor — each fed to the viewer's own
+//    (ctrl-drag) pan path so its camera state stays authoritative.
 //  - wires an edit-mode toggle that binds stickyflow.js's `interaction` tier
 //    (drag-to-move/resize, double-click text edit, drag-to-reconnect links,
 //    delete) on top of the existing viewer, turns each change event into
@@ -56,6 +60,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   const webviewRoot = vscode.Uri.joinPath(extensionUri, 'media', 'webview');
   const ownerDragModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerDrag.js'));
   const ownerResizeModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerResize.js'));
+  const panControlsModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'panControls.js'));
   const linkRouteModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'linkRoute.js'));
   const nonce = getNonce();
   // Escape `<` so the JSON blob can't break out of the surrounding <script> tag.
@@ -127,6 +132,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     import { render, sflToCanvasState } from '${coreModuleUri}';
     import { bindOwnerDrag } from '${ownerDragModuleUri}';
     import { bindOwnerResize } from '${ownerResizeModuleUri}';
+    import { bindPanControls } from '${panControlsModuleUri}';
     import { applyRouteChange, nextRoute } from '${linkRouteModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
@@ -392,6 +398,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     let lastSelectionOwners = [];
 
     if (el.viewer) {
+      // Better canvas panning: middle-drag or drag-on-empty-background to pan,
+      // plain scroll wheel to pan (Ctrl/Cmd wheel still zooms), and a grab
+      // cursor over the background. Independent of edit mode — panning is
+      // navigation. Feeds the viewer's own pan path (see webview/panControls.ts).
+      bindPanControls(el.viewer.svg);
+
       el.viewer.on('selectionChange', (e) => {
         if (e.selection.length > 0) lastSelectionOwners = e.selection;
         selectedLinkId = e.selection.length === 1 && e.selection[0].role === 'link' ? e.selection[0].id : null;

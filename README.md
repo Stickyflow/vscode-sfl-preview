@@ -26,9 +26,12 @@ The preview updates as you type (debounced ~150ms).
 The toolbar in the top-right corner of the preview offers:
 
 - **&minus; / + / Fit** — zoom out, zoom in, and fit the diagram to the
-  panel. (Ctrl/Cmd+scroll and Ctrl/Cmd+drag also work directly on the canvas,
-  same convention as the main app — the toolbar buttons are there because
-  that's not obvious at a glance.)
+  panel. Ctrl/Cmd+scroll also zooms directly on the canvas — the toolbar
+  buttons are there because that's not obvious at a glance.
+- **Panning** — middle-button drag, drag on an empty part of the canvas, or
+  just scroll the wheel (Shift for horizontal). A grab cursor shows over the
+  background. Ctrl/Cmd+drag still pans too. Works whether or not edit mode
+  is on.
 - **Editing: Off/On** — toggles edit mode. When on, you can drag any shape to
   move it — entities, and also **frames, swimlanes, tables and charts**
   (dragging a frame carries its contents) — select a shape and drag a corner
@@ -101,8 +104,9 @@ Development Host for manual testing.
   drag/resize-geometry helpers (`src/**/__tests__`, `webview/__tests__`). No
   browser needed.
 - `npm run verify:webview` — end-to-end smoke test in real headless Chrome:
-  builds the actual webview HTML, toggles edit mode, drags a frame / entity /
-  table, resizes the frame and table off their handles, cycles a link's
-  route, and checks the `sfl/edit` messages posted back. Needs a local Chrome
-  (`CHROME_PATH` to point at a non-standard one); exits 2 (skip) if none is
-  found. Run it after touching `getWebviewHtml.ts` or `webview/`.
+  builds the actual webview HTML, then pans (middle-drag, background-drag,
+  wheel) and checks the grab cursor, toggles edit mode, drags a frame /
+  entity / table, resizes the frame and table off their handles, cycles a
+  link's route, and checks the `sfl/edit` messages posted back. Needs a local
+  Chrome (`CHROME_PATH` to point at a non-standard one); exits 2 (skip) if
+  none is found. Run it after touching `getWebviewHtml.ts` or `webview/`.
