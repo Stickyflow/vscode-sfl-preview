@@ -31,15 +31,16 @@ The toolbar in the top-right corner of the preview offers:
   that's not obvious at a glance.)
 - **Editing: Off/On** — toggles edit mode. When on, you can drag any shape to
   move it — entities, and also **frames, swimlanes, tables and charts**
-  (dragging a frame carries its contents) — drag a corner handle to resize an
-  entity, double-click to edit text, drag a link's endpoint to reconnect it,
-  and press Delete/Backspace on a selection to remove it.
+  (dragging a frame carries its contents) — select a shape and drag a corner
+  handle to **resize** it (entities *and* frames/swimlanes/tables/charts),
+  double-click to edit text, drag a link's endpoint to reconnect it, and press
+  Delete/Backspace on a selection to remove it.
   Each change is turned into new SFL text (via stickyflow.js's
   `stickyflow/interaction` patchers — plus this extension's `webview/`
-  modules for the frame/table/chart drag) and written back into the real
-  document as a normal edit — so it's on the undo stack (Ctrl+Z) like
-  anything you'd type by hand. Off by default so panning/selecting in the
-  preview never risks mutating the file.
+  modules for moving and resizing frames/tables/charts) and written back into
+  the real document as a normal edit — so it's on the undo stack (Ctrl+Z)
+  like anything you'd type by hand. Off by default so panning/selecting in
+  the preview never risks mutating the file.
 - **+ Entity / + Link** — insert a new entity centered on the current
   viewport, or connect two existing entities with a new link (arm the
   button, click a source, click a target; Escape cancels). Both use
@@ -96,11 +97,12 @@ Development Host for manual testing.
 
 ### Tests
 
-- `npm test` — vitest, pure logic: the SFL text patchers and drag-geometry
-  helpers (`src/**/__tests__`, `webview/__tests__`). No browser needed.
+- `npm test` — vitest, pure logic: the SFL text patchers and the
+  drag/resize-geometry helpers (`src/**/__tests__`, `webview/__tests__`). No
+  browser needed.
 - `npm run verify:webview` — end-to-end smoke test in real headless Chrome:
   builds the actual webview HTML, toggles edit mode, drags a frame / entity /
-  table, cycles a link's route, and checks the `sfl/edit` messages posted
-  back. Needs a local Chrome (`CHROME_PATH` to point at a non-standard one);
-  exits 2 (skip) if none is found. Run it after touching `getWebviewHtml.ts`
-  or `webview/`.
+  table, resizes the frame and table off their handles, cycles a link's
+  route, and checks the `sfl/edit` messages posted back. Needs a local Chrome
+  (`CHROME_PATH` to point at a non-standard one); exits 2 (skip) if none is
+  found. Run it after touching `getWebviewHtml.ts` or `webview/`.

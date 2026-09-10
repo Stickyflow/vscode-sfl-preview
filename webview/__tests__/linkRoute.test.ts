@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyRouteChange, nextRoute, ROUTES } from '../linkRoute';
+import { applyRouteChange, nextRoute, ROUTES } from '../linkRoute.js';
 
 describe('nextRoute', () => {
   it('cycles orthogonal -> curved -> straight -> orthogonal', () => {

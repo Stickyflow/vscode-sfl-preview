@@ -8,25 +8,23 @@
 // (Container { kind: frame }), table, swimlane or chart can't be repositioned
 // from the canvas — even though the package's pure applyMoveChange patcher
 // happily rewrites any block's `layout { position }` by id. This binds the
-// missing gesture for exactly those roles and nothing else; entities and link
-// endpoints stay owned by bindEditing().
+// missing gesture for exactly those roles (see SUPPLEMENTAL_OWNER_ROLES) and
+// nothing else; entities and link endpoints stay owned by bindEditing().
 //
 // It reports a finished drag as { owner, dx, dy } — the same shape as
 // MoveChangeEvent — so the host can feed it straight to applyMoveChange and
 // re-render, identical to how it already handles the entity 'moveChange' event.
 
-/** Roles bindEditing()'s move session ignores that a plain `layout { position }`
- *  patch can still move. Deliberately excludes 'entity' (owned by bindEditing)
- *  and 'link' / 'path' (moved by editing their endpoints / points, not dragged
- *  as a rigid body). */
-export const SUPPLEMENTAL_MOVE_ROLES: ReadonlySet<string> = new Set(['frame', 'swimlane', 'table', 'chart']);
+import {
+  cssEscape,
+  type OwnerRef,
+  ownerElementAt,
+  pastThreshold,
+  SUPPLEMENTAL_OWNER_ROLES,
+} from './ownerGesture.js';
 
-const DRAG_THRESHOLD_PX = 3;
-
-export interface OwnerRef {
-  role: string;
-  id: string;
-}
+export type { OwnerRef } from './ownerGesture.js';
+export { SUPPLEMENTAL_OWNER_ROLES } from './ownerGesture.js';
 
 export interface OwnerMove {
   owner: OwnerRef;
@@ -65,10 +63,6 @@ export function userDelta(
   };
 }
 
-export function pastThreshold(ax: number, ay: number, bx: number, by: number, px = DRAG_THRESHOLD_PX): boolean {
-  return Math.hypot(bx - ax, by - ay) >= px;
-}
-
 /** Prepend a translate to whatever transform a node already carries. */
 export function withTranslate(base: string | null, dx: number, dy: number): string {
   return base ? `translate(${dx} ${dy}) ${base}` : `translate(${dx} ${dy})`;
@@ -84,21 +78,6 @@ interface DragState {
   nodes: Element[];
   bases: (string | null)[];
   moved: boolean;
-}
-
-function ownerElementFrom(target: EventTarget | null): { el: Element; role: string; id: string } | null {
-  const el = target instanceof Element ? target.closest('[data-sf-id][data-sf-role]') : null;
-  if (!el) {
-    return null;
-  }
-  const role = el.getAttribute('data-sf-role');
-  const id = el.getAttribute('data-sf-id');
-  return role && id ? { el, role, id } : null;
-}
-
-function cssEscape(value: string): string {
-  const g = globalThis as unknown as { CSS?: { escape(v: string): string } };
-  return g.CSS?.escape ? g.CSS.escape(value) : value.replace(/["\\\]]/g, '\\$&');
 }
 
 function collectNodes(svg: SVGSVGElement, ids: string[]): Element[] {
@@ -140,9 +119,9 @@ export function bindOwnerDrag(svg: SVGSVGElement, options: OwnerDragOptions): Ow
     if (drag || event.button !== 0 || event.ctrlKey || event.metaKey || !options.isActive()) {
       return;
     }
-    const hit = ownerElementFrom(event.target);
-    if (!hit || !SUPPLEMENTAL_MOVE_ROLES.has(hit.role)) {
-      return; // entities, links, empty canvas — not ours
+    const hit = ownerElementAt(event.target);
+    if (!hit || !SUPPLEMENTAL_OWNER_ROLES.has(hit.role)) {
+      return; // entities, links, empty canvas, selection-overlay controls — not ours
     }
     const ctm = svg.getScreenCTM();
     const ids = [hit.id, ...(options.descendantIds?.(hit.id) ?? [])];

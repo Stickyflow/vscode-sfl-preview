@@ -177,6 +177,10 @@ const probe = `(async () => {
     const m = src && src.match(new RegExp('(?:Entity|Container|Table)\\\\s+' + id + '\\\\b[\\\\s\\\\S]*?position:\\\\s*([\\\\-0-9.]+),\\\\s*([\\\\-0-9.]+)'));
     return m ? [+m[1], +m[2]] : null;
   };
+  const size = (src, id) => {
+    const m = src && src.match(new RegExp('(?:Entity|Container|Table)\\\\s+' + id + '\\\\b[\\\\s\\\\S]*?size:\\\\s*([\\\\-0-9.]+),\\\\s*([\\\\-0-9.]+)'));
+    return m ? [+m[1], +m[2]] : null;
+  };
   const o = (x, y) => ({ clientX: x, clientY: y, button: 0, buttons: 1, bubbles: true, pointerId: 1, pointerType: 'mouse', isPrimary: true });
   async function drag(id, tox, toy) {
     const s = svg();
@@ -191,17 +195,49 @@ const probe = `(async () => {
     s.dispatchEvent(new PointerEvent('pointerup', o(sr.left + tox, sr.top + toy)));
     await new Promise(r => setTimeout(r, 60));
   }
+  // Grab a selected owner's bottom-right resize handle and drag it by (dx, dy)
+  // screen px. Requires the owner to already be selected (handles are painted
+  // by the selection overlay).
+  async function resizeBR(id, dx, dy) {
+    const s = svg();
+    const handle = s.querySelector('[data-sf-selection-overlay="' + id + '"] [data-sf-resize-handle="bottom-right"]');
+    if (!handle) return 'no bottom-right handle for ' + id;
+    const r = handle.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    handle.dispatchEvent(new PointerEvent('pointerdown', o(cx, cy)));
+    await new Promise(r => setTimeout(r, 15));
+    handle.dispatchEvent(new PointerEvent('pointermove', o(cx + 8, cy + 8)));
+    await new Promise(r => setTimeout(r, 15));
+    s.dispatchEvent(new PointerEvent('pointermove', o(cx + dx, cy + dy)));
+    await new Promise(r => setTimeout(r, 15));
+    s.dispatchEvent(new PointerEvent('pointerup', o(cx + dx, cy + dy)));
+    await new Promise(r => setTimeout(r, 60));
+    return null;
+  }
 
   document.getElementById('sf-toggle-edit').click();
   await new Promise(r => setTimeout(r, 40));
 
-  const start = { grp: pos(el.source, 'grp'), solo: pos(el.source, 'solo'), tab: pos(el.source, 'tab') };
+  const start = {
+    grp: pos(el.source, 'grp'), solo: pos(el.source, 'solo'), tab: pos(el.source, 'tab'),
+    grpSize: size(el.source, 'grp'), tabSize: size(el.source, 'tab'),
+  };
   await drag('grp', 520, 420);
   const afterFrame = { grp: pos(lastEdit()?.source, 'grp'), childA: pos(lastEdit()?.source, 'a') };
   await drag('solo', 720, 520);
   const afterEntity = pos(lastEdit()?.source, 'solo');
   await drag('tab', 250, 620);
   const afterTable = pos(lastEdit()?.source, 'tab');
+
+  // Resize: select the frame, drag its bottom-right handle out; then the table.
+  el.viewer.select(['grp']);
+  await new Promise(r => setTimeout(r, 40));
+  const resizeFrameErr = await resizeBR('grp', 120, 90);
+  const afterFrameResize = size(lastEdit()?.source, 'grp');
+  el.viewer.select(['tab']);
+  await new Promise(r => setTimeout(r, 40));
+  const resizeTableErr = await resizeBR('tab', 80, 60);
+  const afterTableResize = size(lastEdit()?.source, 'tab');
 
   el.viewer.select(['e']);
   await new Promise(r => setTimeout(r, 40));
@@ -214,37 +250,48 @@ const probe = `(async () => {
   await new Promise(r => setTimeout(r, 60));
   const route2 = (lastEdit()?.source.match(/Link e \\{[^}]*\\}/) || [''])[0];
 
-  return { start, afterFrame, afterEntity, afterTable, routeBtn, route1, route2,
+  return { start, afterFrame, afterEntity, afterTable,
+    afterFrameResize, afterTableResize, resizeFrameErr, resizeTableErr,
+    routeBtn, route1, route2,
     edits: posted().filter(m => m && m.type === 'sfl/edit').length,
     warns: posted().filter(m => m && m.type === 'sfl/warn').map(m => m.message) };
 })()`;
 
-const out = (await send('Runtime.evaluate', { expression: probe, awaitPromise: true, returnByValue: true })).result?.value;
+const evalResult = await send('Runtime.evaluate', { expression: probe, awaitPromise: true, returnByValue: true });
+const out = evalResult.result?.value;
+if (evalResult.exceptionDetails) {
+  logs.push('PROBE THREW: ' + (evalResult.exceptionDetails.exception?.description || evalResult.exceptionDetails.text));
+}
 
 ws.close();
 chrome.kill();
 server.close();
 
+console.log(JSON.stringify(out, null, 2));
+
 const fail = [];
 const moved = (a, b) => a && b && (a[0] !== b[0] || a[1] !== b[1]);
 if (logs.length) fail.push('page errors: ' + logs.join(' | '));
-if (!out) fail.push('no result from page');
-else {
-  if (!moved(out.start.grp, out.afterFrame.grp)) fail.push('frame did not move: ' + JSON.stringify(out.afterFrame.grp));
-  if (JSON.stringify(out.afterFrame.childA) !== JSON.stringify([40, 60])) fail.push('frame child position changed in text (should be relative): ' + JSON.stringify(out.afterFrame.childA));
+if (!out || !out.start) {
+  fail.push('no usable result from page');
+} else {
+  if (!moved(out.start.grp, out.afterFrame?.grp)) fail.push('frame did not move: ' + JSON.stringify(out.afterFrame?.grp));
+  if (JSON.stringify(out.afterFrame?.childA) !== JSON.stringify([40, 60])) fail.push('frame child position changed in text (should be relative): ' + JSON.stringify(out.afterFrame?.childA));
   if (!moved(out.start.solo, out.afterEntity)) fail.push('entity did not move');
   if (!moved(out.start.tab, out.afterTable)) fail.push('table did not move');
-  if (out.routeBtn.hidden) fail.push('route button hidden with a link selected');
-  if (!/route:\s*(orthogonal|curved|straight)/.test(out.route1)) fail.push('route not patched on 1st click: ' + out.route1);
+  if (out.resizeFrameErr) fail.push('frame resize: ' + out.resizeFrameErr);
+  if (!moved(out.start.grpSize, out.afterFrameResize)) fail.push('frame did not resize: ' + JSON.stringify(out.afterFrameResize));
+  if (out.resizeTableErr) fail.push('table resize: ' + out.resizeTableErr);
+  if (!moved(out.start.tabSize, out.afterTableResize)) fail.push('table did not resize: ' + JSON.stringify(out.afterTableResize));
+  if (out.routeBtn?.hidden) fail.push('route button hidden with a link selected');
+  if (!/route:\s*(orthogonal|curved|straight)/.test(out.route1 || '')) fail.push('route not patched on 1st click: ' + out.route1);
   if (out.route1 === out.route2) fail.push('route did not change on 2nd click');
-  if (out.warns.length) fail.push('unexpected warnings: ' + out.warns.join(' | '));
-  if (out.edits < 5) fail.push('expected >= 5 sfl/edit messages, got ' + out.edits);
+  if (out.warns?.length) fail.push('unexpected warnings: ' + out.warns.join(' | '));
+  if ((out.edits ?? 0) < 7) fail.push('expected >= 7 sfl/edit messages, got ' + out.edits);
 }
-
-console.log(JSON.stringify(out, null, 2));
 if (fail.length) {
   console.error('\nverify-webview FAILED:\n - ' + fail.join('\n - '));
   process.exit(1);
 }
-console.log('\nverify-webview: OK (frame + entity + table drag, link route cycle)');
+console.log('\nverify-webview: OK (frame/entity/table drag, frame/table resize, link route cycle)');
 process.exit(0);

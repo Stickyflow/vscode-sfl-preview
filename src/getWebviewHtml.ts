@@ -15,12 +15,13 @@
 //    posts the result back to the extension host to write into the real
 //    document (see panel.ts's `sfl/edit` handler).
 //  - alongside that, binds this extension's own `webview/` modules (compiled
-//    to media/webview/): `bindOwnerDrag` adds drag-to-move for frames /
-//    swimlanes / tables / charts — roles stickyflow.js's move session skips
-//    (it only drags `entity`) even though `applyMoveChange` patches any block
-//    by id — and `applyRouteChange` backs a "Route:" toolbar button that
-//    cycles a selected link's routing (orthogonal/curved/straight). Both
-//    round-trip through the same `applyPatch` -> `sfl/edit` path.
+//    to media/webview/): `bindOwnerDrag` / `bindOwnerResize` add drag-to-move
+//    and drag-to-resize for frames / swimlanes / tables / charts — roles
+//    stickyflow.js's move and resize sessions skip (they only act on `entity`)
+//    even though `applyMoveChange` / `applyResizeChange` patch any block by id
+//    — and `applyRouteChange` backs a "Route:" toolbar button that cycles a
+//    selected link's routing (orthogonal/curved/straight). All round-trip
+//    through the same `applyPatch` -> `sfl/edit` path.
 //  - wires the viewer's own (always-on, independent of edit mode)
 //    `selectionChange` event to the extension host as `sfl/reveal`, and
 //    applies incoming `sfl/select` messages via `viewer.select()` — the two
@@ -54,6 +55,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   // propagates trust.
   const webviewRoot = vscode.Uri.joinPath(extensionUri, 'media', 'webview');
   const ownerDragModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerDrag.js'));
+  const ownerResizeModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerResize.js'));
   const linkRouteModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'linkRoute.js'));
   const nonce = getNonce();
   // Escape `<` so the JSON blob can't break out of the surrounding <script> tag.
@@ -124,6 +126,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     } from '${interactionModuleUri}';
     import { render, sflToCanvasState } from '${coreModuleUri}';
     import { bindOwnerDrag } from '${ownerDragModuleUri}';
+    import { bindOwnerResize } from '${ownerResizeModuleUri}';
     import { applyRouteChange, nextRoute } from '${linkRouteModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
@@ -158,10 +161,12 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     let editing = null;
-    // Supplemental drag-to-move for frames / swimlanes / tables / charts —
-    // roles stickyflow.js's own bindEditing() move session ignores (it only
-    // drags role === 'entity'). Bound and torn down alongside \`editing\`.
+    // Supplemental drag-to-move and drag-to-resize for frames / swimlanes /
+    // tables / charts — roles stickyflow.js's own bindEditing() move and resize
+    // sessions ignore (they only act on role === 'entity'). Bound and torn down
+    // alongside \`editing\`.
     let ownerDrag = null;
+    let ownerResize = null;
     // The single selected link's id, or null. Drives the "Route:" toolbar
     // button's visibility and label (see the selectionChange handler).
     let selectedLinkId = null;
@@ -246,6 +251,21 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
             applyPatch(next);
           },
         });
+        // Resize the same roles: their selection overlay already draws handles
+        // (the viewer paints them for every non-link shape), they're just inert
+        // because stickyflow.js's resize session is entity-only. Commit via the
+        // same applyResizeChange the entity 'resizeChange' event uses.
+        ownerResize = bindOwnerResize(viewer.svg, {
+          isActive: () => !!editing,
+          onCommit: (e) => {
+            const next = applyResizeChange(currentSource, e);
+            if (next === currentSource) {
+              vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't resize "\${e.owner.id}" from the canvas — set its layout { size } in the SFL instead.\` });
+              return;
+            }
+            applyPatch(next);
+          },
+        });
         editing.on('textChange', (e) => applyPatch(applyTextChange(currentSource, e)));
         editing.on('moveChange', (e) => applyPatch(applyMoveChange(currentSource, e)));
         editing.on('resizeChange', (e) => applyPatch(applyResizeChange(currentSource, e)));
@@ -309,6 +329,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         editing = null;
         if (ownerDrag) ownerDrag.destroy();
         ownerDrag = null;
+        if (ownerResize) ownerResize.destroy();
+        ownerResize = null;
       }
       if (!on) cancelLinking(); // turning editing off must also drop a pending "+ Link" gesture, not leave it armed
       const btn = document.getElementById('sf-toggle-edit');

@@ -10,6 +10,10 @@ Rules for anything in here:
 - **No `vscode`, no Node built-ins, no `stickyflow` import.** These run in the
   webview sandbox. Talk to the host only via the `sfl/*` `postMessage`
   protocol, which the inline script owns.
+- **Relative imports need the `.js` extension** (`./ownerGesture.js`) — the
+  browser loads these as-is; `tsconfig.webview.json` (`moduleResolution:
+  bundler`) resolves the `.js` specifier back to the `.ts` source for
+  type-checking but does not rewrite it.
 - Keep the DOM glue thin and factor the real logic into pure functions — that
   is what the `webview/__tests__/` vitest suites cover (node env, no DOM).
   End-to-end wiring is checked by `npm run verify:webview` (real headless
@@ -19,5 +23,7 @@ Rules for anything in here:
 
 | File | Purpose |
 | --- | --- |
+| `ownerGesture.ts` | Shared primitives for the supplemental gestures: `SUPPLEMENTAL_OWNER_ROLES` (`frame` / `swimlane` / `table` / `chart` — the roles stickyflow.js's own move **and** resize sessions hard-gate out), `ownerElementAt`, `cssEscape`, `pastThreshold`, `clientToUser` (screen → SFL user space via `getScreenCTM().inverse()`). |
 | `linkRoute.ts` | `applyRouteChange(sfl, linkId, route)` — pure SFL text patch that forces one link's `route:` (orthogonal / curved / straight); `nextRoute()` for the toolbar's cycle button. stickyflow.js exports the specific `apply*Change` patchers but no generic property setter, so this one lives here. |
-| `ownerDrag.ts` | `bindOwnerDrag(svg, opts)` — drag-to-move for `frame` / `swimlane` / `table` / `chart`. stickyflow.js's `bindEditing()` move session bails unless the grabbed element is `role === 'entity'`, yet its pure `applyMoveChange` patcher rewrites any block's `layout { position }` by id. This binds the missing gesture for exactly those roles and reports it as `{ owner, dx, dy }` — the same shape as `MoveChangeEvent` — so the host feeds it straight to `applyMoveChange`. |
+| `ownerDrag.ts` | `bindOwnerDrag(svg, opts)` — drag-to-move for the supplemental roles. Reports `{ owner, dx, dy }` (the shape of `MoveChangeEvent`) so the host feeds it straight to `applyMoveChange`. A frame drag carries its child entities in the live preview. |
+| `ownerResize.ts` | `bindOwnerResize(svg, opts)` — drag-to-resize for the supplemental roles, off the resize handles the viewer's selection overlay already paints for every non-link shape. `resizedBounds()` mirrors stickyflow.js's own entity-resize math (grabbed corner follows the pointer, opposite corner fixed, `MIN_SIZE` clamp). Reports absolute `{ owner, x, y, width, height, dx, dy, dWidth, dHeight }` (the shape of `ResizeChangeEvent`) for `applyResizeChange`. |
