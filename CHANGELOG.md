@@ -25,6 +25,17 @@ First working version. Not yet published to the Marketplace (`publisher` in
   text edit, drag-to-reconnect link endpoints, and delete — wired to
   stickyflow.js's `stickyflow/interaction` tier, patched into SFL text, and
   written back to the document as a normal (undoable) edit. Off by default.
+- Edit mode now also drags **frames, swimlanes, tables and charts** to
+  reposition them, not just entities. stickyflow.js's own move gesture is
+  entity-only; a small `webview/ownerDrag.ts` module binds the missing
+  gesture for those roles and commits through the package's existing
+  `applyMoveChange` patcher. Dragging a frame carries its child entities in
+  the live preview; their final position is settled by the re-render on drop
+  (child positions are relative to the frame's own `layout { position }`).
+- **Route:** toolbar button (edit mode, one link selected) cycles that link's
+  routing style orthogonal → curved → straight, via a new
+  `webview/linkRoute.ts` patcher that sets a `route:` on the link's own SFL
+  block.
 - Canvas-side create: `+ Entity` / `+ Link` toolbar buttons, using the same
   `stickyflow/interaction` patchers as edit mode.
 - Bidirectional selection sync: clicking a shape reveals its block in the

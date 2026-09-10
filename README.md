@@ -29,11 +29,14 @@ The toolbar in the top-right corner of the preview offers:
   panel. (Ctrl/Cmd+scroll and Ctrl/Cmd+drag also work directly on the canvas,
   same convention as the main app — the toolbar buttons are there because
   that's not obvious at a glance.)
-- **Editing: Off/On** — toggles edit mode. When on, you can drag shapes to
-  move or resize them, double-click to edit text, drag a link's endpoint to
-  reconnect it, and press Delete/Backspace on a selection to remove it.
+- **Editing: Off/On** — toggles edit mode. When on, you can drag any shape to
+  move it — entities, and also **frames, swimlanes, tables and charts**
+  (dragging a frame carries its contents) — drag a corner handle to resize an
+  entity, double-click to edit text, drag a link's endpoint to reconnect it,
+  and press Delete/Backspace on a selection to remove it.
   Each change is turned into new SFL text (via stickyflow.js's
-  `stickyflow/interaction` patchers) and written back into the real
+  `stickyflow/interaction` patchers — plus this extension's `webview/`
+  modules for the frame/table/chart drag) and written back into the real
   document as a normal edit — so it's on the undo stack (Ctrl+Z) like
   anything you'd type by hand. Off by default so panning/selecting in the
   preview never risks mutating the file.
@@ -43,6 +46,9 @@ The toolbar in the top-right corner of the preview offers:
   `insertEntity`/`insertLink` from `stickyflow/interaction` and switch edit
   mode on automatically, so a new entity/link is immediately draggable and
   its text editable the same way as anything else on the canvas.
+- **Route:** *(edit mode, with a link selected)* — cycles that link's routing
+  style: orthogonal → curved → straight. Writes a `route:` on the link's own
+  SFL block, overriding whatever it inherits from a `Style`.
 - **Export SVG / Export PNG** — save the diagram to a file. Both re-render
   the current document at its natural bounds (via stickyflow.js's `render()`
   core), not a snapshot of whatever's currently panned/zoomed into view, so
@@ -75,8 +81,26 @@ for the `<stickyflow-diagram>` element) and the ESM `interaction` tier
 cd ../stickyflow.js && npm run build
 cd ../vscode-sfl-preview
 npm install
-npm run compile   # copies media/ then compiles the extension
+npm run compile   # copy-media, then tsc (extension host), then tsc (webview/ -> media/webview/)
 ```
+
+`npm run compile` does three things: copy stickyflow.js's `dist/` into
+`media/stickyflow/`, compile the extension host (`src/` -> `out/`), and
+compile the webview client modules (`webview/` -> `media/webview/`, via
+`tsconfig.webview.json`). `npm run watch` does the first two once and then
+watches the host; re-run `npm run compile` (or `npm run watch:webview`) after
+editing anything under `webview/`.
 
 Press F5 in VS Code (with this folder open) to launch an Extension
 Development Host for manual testing.
+
+### Tests
+
+- `npm test` — vitest, pure logic: the SFL text patchers and drag-geometry
+  helpers (`src/**/__tests__`, `webview/__tests__`). No browser needed.
+- `npm run verify:webview` — end-to-end smoke test in real headless Chrome:
+  builds the actual webview HTML, toggles edit mode, drags a frame / entity /
+  table, cycles a link's route, and checks the `sfl/edit` messages posted
+  back. Needs a local Chrome (`CHROME_PATH` to point at a non-standard one);
+  exits 2 (skip) if none is found. Run it after touching `getWebviewHtml.ts`
+  or `webview/`.

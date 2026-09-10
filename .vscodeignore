@@ -1,7 +1,10 @@
 .vscode/**
 src/**
+webview/**
 scripts/**
 .gitignore
 tsconfig.json
+tsconfig.webview.json
+vitest.config.ts
 **/*.map
 .git/**

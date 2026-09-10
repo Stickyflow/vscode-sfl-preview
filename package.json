@@ -70,10 +70,13 @@
   },
   "scripts": {
     "copy-media": "node ./scripts/copy-media.mjs",
-    "compile": "npm run copy-media && tsc -p ./",
-    "watch": "tsc -p ./ --watch",
+    "compile:webview": "tsc -p ./tsconfig.webview.json",
+    "compile": "npm run copy-media && tsc -p ./ && npm run compile:webview",
+    "watch": "npm run copy-media && npm run compile:webview && tsc -p ./ --watch",
+    "watch:webview": "tsc -p ./tsconfig.webview.json --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "verify:webview": "node ./scripts/verify-webview.mjs",
     "package": "npm run compile && vsce package"
   },
   "devDependencies": {
