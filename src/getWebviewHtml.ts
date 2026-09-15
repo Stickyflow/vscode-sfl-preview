@@ -8,12 +8,24 @@
 //    bindings survive — the setter tears down and remounts the whole viewer.
 //  - wires zoom in/out/fit buttons (dispatching synthetic ctrl+wheel events,
 //    since `Viewer` only exposes `fit()` publicly — no direct zoom method).
+//  - binds `webview/panControls.ts` for canvas panning the viewer itself
+//    doesn't offer: middle-drag / drag-on-empty-background to pan, plain
+//    scroll wheel to pan, and a grab cursor — each fed to the viewer's own
+//    (ctrl-drag) pan path so its camera state stays authoritative.
 //  - wires an edit-mode toggle that binds stickyflow.js's `interaction` tier
 //    (drag-to-move/resize, double-click text edit, drag-to-reconnect links,
 //    delete) on top of the existing viewer, turns each change event into
 //    patched SFL text via that tier's pure `applyXChange` patchers, and
 //    posts the result back to the extension host to write into the real
 //    document (see panel.ts's `sfl/edit` handler).
+//  - alongside that, binds this extension's own `webview/` modules (compiled
+//    to media/webview/): `bindOwnerDrag` / `bindOwnerResize` add drag-to-move
+//    and drag-to-resize for frames / swimlanes / tables / charts — roles
+//    stickyflow.js's move and resize sessions skip (they only act on `entity`)
+//    even though `applyMoveChange` / `applyResizeChange` patch any block by id
+//    — and `applyRouteChange` backs a "Route:" toolbar button that cycles a
+//    selected link's routing (orthogonal/curved/straight). All round-trip
+//    through the same `applyPatch` -> `sfl/edit` path.
 //  - wires the viewer's own (always-on, independent of edit mode)
 //    `selectionChange` event to the extension host as `sfl/reveal`, and
 //    applies incoming `sfl/select` messages via `viewer.select()` — the two
@@ -41,6 +53,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   const diagramScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'stickyflow-diagram.global.js'));
   const interactionModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'interaction', 'index.js'));
   const coreModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'index.js'));
+  // This extension's own webview-client modules (compiled from webview/ by
+  // tsconfig.webview.json). Same media/ resource root, so no CSP change: the
+  // trusted inline module below statically imports them and 'strict-dynamic'
+  // propagates trust.
+  const webviewRoot = vscode.Uri.joinPath(extensionUri, 'media', 'webview');
+  const ownerDragModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerDrag.js'));
+  const ownerResizeModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerResize.js'));
+  const panControlsModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'panControls.js'));
+  const linkRouteModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'linkRoute.js'));
   const nonce = getNonce();
   // Escape `<` so the JSON blob can't break out of the surrounding <script> tag.
   const initialSourceJson = JSON.stringify(initialSource).replace(/</g, '\\u003c');
@@ -96,6 +117,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <span class="sf-sep"></span>
     <button id="sf-add-entity" title="Add a new entity" hidden>+ Entity</button>
     <button id="sf-add-link" title="Link two entities" aria-pressed="false" hidden>+ Link</button>
+    <button id="sf-link-route" title="Cycle the selected link's routing: orthogonal → curved → straight" hidden>Route: &mdash;</button>
     <button id="sf-toggle-edit" title="Toggle edit mode" aria-pressed="false">Editing: Off</button>
     <span class="sf-sep"></span>
     <button id="sf-export-svg" title="Export the diagram as an SVG file">Export SVG</button>
@@ -108,6 +130,10 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       insertEntity, removeEntity, insertLink, removeLink,
     } from '${interactionModuleUri}';
     import { render, sflToCanvasState } from '${coreModuleUri}';
+    import { bindOwnerDrag } from '${ownerDragModuleUri}';
+    import { bindOwnerResize } from '${ownerResizeModuleUri}';
+    import { bindPanControls } from '${panControlsModuleUri}';
+    import { applyRouteChange, nextRoute } from '${linkRouteModuleUri}';
 
     const vscodeApi = acquireVsCodeApi();
     const el = document.getElementById('diagram');
@@ -141,6 +167,15 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     let editing = null;
+    // Supplemental drag-to-move and drag-to-resize for frames / swimlanes /
+    // tables / charts — roles stickyflow.js's own bindEditing() move and resize
+    // sessions ignore (they only act on role === 'entity'). Bound and torn down
+    // alongside \`editing\`.
+    let ownerDrag = null;
+    let ownerResize = null;
+    // The single selected link's id, or null. Drives the "Route:" toolbar
+    // button's visibility and label (see the selectionChange handler).
+    let selectedLinkId = null;
     // Default new-entity footprint — no shared constant exists to reuse (see
     // stickyflow.js/src/model), so this picks a generic size in the same
     // ballpark as the rendered shapes a doc already has.
@@ -200,6 +235,43 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       if (!viewer) return;
       if (on && !editing) {
         editing = bindEditing(viewer);
+        // Move the roles bindEditing() won't: a frame/swimlane drag carries its
+        // child entities in the live preview (their final spot is settled by the
+        // re-render on commit, since child positions are relative to the frame's
+        // own \`layout { position }\` that applyMoveChange rewrites).
+        ownerDrag = bindOwnerDrag(viewer.svg, {
+          isActive: () => !!editing,
+          descendantIds: (id) => {
+            try {
+              return sflToCanvasState(currentSource).entities.filter((en) => en.parentFrameId === id).map((en) => en.id);
+            } catch (_) {
+              return [];
+            }
+          },
+          onCommit: (move) => {
+            const next = applyMoveChange(currentSource, move);
+            if (next === currentSource) {
+              vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't move "\${move.owner.id}" from the canvas — reposition it by editing its layout { position } in the SFL.\` });
+              return;
+            }
+            applyPatch(next);
+          },
+        });
+        // Resize the same roles: their selection overlay already draws handles
+        // (the viewer paints them for every non-link shape), they're just inert
+        // because stickyflow.js's resize session is entity-only. Commit via the
+        // same applyResizeChange the entity 'resizeChange' event uses.
+        ownerResize = bindOwnerResize(viewer.svg, {
+          isActive: () => !!editing,
+          onCommit: (e) => {
+            const next = applyResizeChange(currentSource, e);
+            if (next === currentSource) {
+              vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't resize "\${e.owner.id}" from the canvas — set its layout { size } in the SFL instead.\` });
+              return;
+            }
+            applyPatch(next);
+          },
+        });
         editing.on('textChange', (e) => applyPatch(applyTextChange(currentSource, e)));
         editing.on('moveChange', (e) => applyPatch(applyMoveChange(currentSource, e)));
         editing.on('resizeChange', (e) => applyPatch(applyResizeChange(currentSource, e)));
@@ -261,6 +333,10 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       } else if (!on && editing) {
         editing.destroy();
         editing = null;
+        if (ownerDrag) ownerDrag.destroy();
+        ownerDrag = null;
+        if (ownerResize) ownerResize.destroy();
+        ownerResize = null;
       }
       if (!on) cancelLinking(); // turning editing off must also drop a pending "+ Link" gesture, not leave it armed
       const btn = document.getElementById('sf-toggle-edit');
@@ -272,9 +348,31 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       // mode; the "Editing" toggle stays put as the one way in.
       document.getElementById('sf-add-entity').hidden = !on;
       document.getElementById('sf-add-link').hidden = !on;
+      if (!on) selectedLinkId = null;
+      refreshRouteButton();
       // Same reasoning for the on-canvas resize handles / "+" bubbles the
       // viewer paints around a selected entity (see the adopted sheet above).
       el.classList.toggle('sf-editing', on);
+    }
+
+    // Current routing of a link, read straight off its rendered path
+    // (data-sf-route, set by the renderer). Falls back to 'straight' only if
+    // the attribute is missing entirely — nextRoute() treats an unknown value
+    // as "start the cycle" anyway.
+    function currentRouteOf(linkId) {
+      const svg = el.viewer && el.viewer.svg;
+      const path = svg && svg.querySelector('[data-sf-id="' + (window.CSS ? CSS.escape(linkId) : linkId) + '"][data-sf-primary]');
+      return (path && path.getAttribute('data-sf-route')) || 'straight';
+    }
+
+    // The "Route:" button is shown only with edit mode on AND exactly one link
+    // selected — the one thing it acts on. Otherwise a visible button that
+    // silently does nothing (same rule as "+ Entity"/"+ Link").
+    function refreshRouteButton() {
+      const btn = document.getElementById('sf-link-route');
+      const show = !!editing && !!selectedLinkId;
+      btn.hidden = !show;
+      btn.textContent = show ? 'Route: ' + currentRouteOf(selectedLinkId) : 'Route: \\u2014';
     }
 
     // Canvas -> editor selection sync: always on, independent of edit mode.
@@ -300,8 +398,16 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     let lastSelectionOwners = [];
 
     if (el.viewer) {
+      // Better canvas panning: middle-drag or drag-on-empty-background to pan,
+      // plain scroll wheel to pan (Ctrl/Cmd wheel still zooms), and a grab
+      // cursor over the background. Independent of edit mode — panning is
+      // navigation. Feeds the viewer's own pan path (see webview/panControls.ts).
+      bindPanControls(el.viewer.svg);
+
       el.viewer.on('selectionChange', (e) => {
         if (e.selection.length > 0) lastSelectionOwners = e.selection;
+        selectedLinkId = e.selection.length === 1 && e.selection[0].role === 'link' ? e.selection[0].id : null;
+        refreshRouteButton();
         syncSelectionToHost(e.selection);
       });
       // Reports every scene diff to the host as a status-bar line (see
@@ -470,6 +576,22 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     document.getElementById('sf-zoom-out').addEventListener('click', () => zoomBy(1 / 1.2));
     document.getElementById('sf-zoom-fit').addEventListener('click', () => el.viewer && el.viewer.fit());
     document.getElementById('sf-toggle-edit').addEventListener('click', () => setEditMode(!editing));
+
+    // "Route:" cycles the selected link orthogonal -> curved -> straight,
+    // patched into its SFL like every other edit-mode change. Guarded on
+    // \`editing\` + a live selection even though the button is hidden otherwise.
+    document.getElementById('sf-link-route').addEventListener('click', () => {
+      if (!editing || !selectedLinkId) return;
+      const id = selectedLinkId;
+      const next = applyRouteChange(currentSource, id, nextRoute(currentRouteOf(id)));
+      if (next === currentSource) {
+        vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't change the route of "\${id}" — set its \\\`route:\\\` in the SFL instead.\` });
+        return;
+      }
+      applyPatch(next);
+      el.viewer.select([id]); // keep it selected so the button stays up, now showing the new route
+      refreshRouteButton();
+    });
 
     // PNG export is rasterized at this fixed multiple of the diagram's
     // natural (SFL user-space) size, independent of the host display's own

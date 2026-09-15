@@ -25,6 +25,26 @@ First working version. Not yet published to the Marketplace (`publisher` in
   text edit, drag-to-reconnect link endpoints, and delete — wired to
   stickyflow.js's `stickyflow/interaction` tier, patched into SFL text, and
   written back to the document as a normal (undoable) edit. Off by default.
+- Edit mode now also **moves and resizes frames, swimlanes, tables and
+  charts**, not just entities. stickyflow.js's own move and resize gestures
+  are entity-only; small `webview/ownerDrag.ts` / `webview/ownerResize.ts`
+  modules bind the missing gestures for those roles and commit through the
+  package's existing `applyMoveChange` / `applyResizeChange` patchers. Resize
+  works off the handles the selection overlay already draws for every non-link
+  shape (select the shape, drag a corner). Dragging a frame carries its child
+  entities in the live preview; their final layout is settled by the
+  re-render on drop (child positions are relative to the frame's own
+  `layout { position }`).
+- **Route:** toolbar button (edit mode, one link selected) cycles that link's
+  routing style orthogonal → curved → straight, via a new
+  `webview/linkRoute.ts` patcher that sets a `route:` on the link's own SFL
+  block.
+- Better canvas panning (`webview/panControls.ts`): middle-button drag,
+  left-drag on empty background, and plain scroll wheel (Shift for
+  horizontal) all pan now — previously only Ctrl/Cmd-drag did, and a plain
+  wheel did nothing. A grab / grabbing cursor shows over the background.
+  Ctrl/Cmd-wheel still zooms. Works in and out of edit mode; the viewer's
+  own camera stays the source of truth, so zoom is unaffected.
 - Canvas-side create: `+ Entity` / `+ Link` toolbar buttons, using the same
   `stickyflow/interaction` patchers as edit mode.
 - Bidirectional selection sync: clicking a shape reveals its block in the
