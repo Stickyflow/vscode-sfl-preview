@@ -31,6 +31,10 @@ export class SflPreviewPanel {
         localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')],
       },
     );
+    // Same logo vscode-sfl uses for the .sfl file icon (icons/sfl-icon-theme.json,
+    // copied in here — see icons/sfl-file.svg) — without this the tab falls back
+    // to VS Code's generic webview icon instead of matching the file it previews.
+    panel.iconPath = vscode.Uri.joinPath(extensionUri, 'icons', 'sfl-file.svg');
     SflPreviewPanel.panels.set(key, new SflPreviewPanel(panel, extensionUri, document));
   }
 
