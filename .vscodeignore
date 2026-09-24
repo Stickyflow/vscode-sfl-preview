@@ -8,3 +8,4 @@ tsconfig.webview.json
 vitest.config.ts
 **/*.map
 .git/**
+assets/**
