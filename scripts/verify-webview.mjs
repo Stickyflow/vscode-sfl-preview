@@ -1,6 +1,6 @@
 // Real-browser smoke test for the preview webview's edit-mode gestures.
 //
-// `npm test` covers the pure logic (webview/linkRoute, webview/ownerDrag
+// `npm test` covers the pure logic (webview/linkRoute, webview/panControls
 // helpers). This drives the *actual* generated webview HTML — real CSP, the
 // real stickyflow.js bundle, the real inline script — in headless Chrome:
 // toggle edit mode, drag a frame / entity / table, cycle a link's route, and
