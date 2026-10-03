@@ -13,17 +13,13 @@
 //    scroll wheel to pan, and a grab cursor — each fed to the viewer's own
 //    (ctrl-drag) pan path so its camera state stays authoritative.
 //  - wires an edit-mode toggle that binds stickyflow.js's `interaction` tier
-//    (drag-to-move/resize, double-click text edit, drag-to-reconnect links,
-//    delete) on top of the existing viewer, turns each change event into
+//    (drag-to-move/resize for entities, frames, swimlanes, tables and charts,
+//    double-click text edit, drag-to-reconnect links, delete) on top of the existing viewer, turns each change event into
 //    patched SFL text via that tier's pure `applyXChange` patchers, and
 //    posts the result back to the extension host to write into the real
 //    document (see panel.ts's `sfl/edit` handler).
-//  - alongside that, binds this extension's own `webview/` modules (compiled
-//    to media/webview/): `bindOwnerDrag` / `bindOwnerResize` add drag-to-move
-//    and drag-to-resize for frames / swimlanes / tables / charts — roles
-//    stickyflow.js's move and resize sessions skip (they only act on `entity`)
-//    even though `applyMoveChange` / `applyResizeChange` patch any block by id
-//    — and `applyRouteChange` backs a "Route:" toolbar button that cycles a
+//  - binds this extension's own `webview/` modules (compiled to
+//    media/webview/): `applyRouteChange` backs a "Route:" toolbar button that cycles a
 //    selected link's routing (orthogonal/curved/straight). All round-trip
 //    through the same `applyPatch` -> `sfl/edit` path.
 //  - wires the viewer's own (always-on, independent of edit mode)
@@ -58,8 +54,6 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   // trusted inline module below statically imports them and 'strict-dynamic'
   // propagates trust.
   const webviewRoot = vscode.Uri.joinPath(extensionUri, 'media', 'webview');
-  const ownerDragModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerDrag.js'));
-  const ownerResizeModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'ownerResize.js'));
   const panControlsModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'panControls.js'));
   const linkRouteModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'linkRoute.js'));
   const nonce = getNonce();
@@ -130,8 +124,6 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       insertEntity, removeEntity, insertLink, removeLink,
     } from '${interactionModuleUri}';
     import { render, sflToCanvasState } from '${coreModuleUri}';
-    import { bindOwnerDrag } from '${ownerDragModuleUri}';
-    import { bindOwnerResize } from '${ownerResizeModuleUri}';
     import { bindPanControls } from '${panControlsModuleUri}';
     import { applyRouteChange, nextRoute } from '${linkRouteModuleUri}';
 
@@ -167,12 +159,9 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     let editing = null;
-    // Supplemental drag-to-move and drag-to-resize for frames / swimlanes /
-    // tables / charts — roles stickyflow.js's own bindEditing() move and resize
-    // sessions ignore (they only act on role === 'entity'). Bound and torn down
-    // alongside \`editing\`.
-    let ownerDrag = null;
-    let ownerResize = null;
+    // moveChange events of the drag in progress, flushed as one patch (see
+    // flushMoves).
+    let pendingMoves = [];
     // The single selected link's id, or null. Drives the "Route:" toolbar
     // button's visibility and label (see the selectionChange handler).
     let selectedLinkId = null;
@@ -215,6 +204,40 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       vscodeApi.postMessage({ type: 'sfl/edit', source: currentSource });
     }
 
+    // bindEditing() emits one moveChange per moved owner, synchronously, and
+    // a dragged frame/swimlane brings its contained children along with the
+    // same delta. Child positions are relative to the parent's origin, so
+    // once the parent moves the children already follow it: patching them
+    // too would move them twice. Drop every move whose ancestor moves in the
+    // same gesture, then commit the rest as a single edit.
+    function flushMoves() {
+      const moves = pendingMoves;
+      pendingMoves = [];
+      if (moves.length === 0) return;
+      const moving = new Set(moves.map((m) => m.owner.id));
+      let parentOf = () => undefined;
+      try {
+        const objects = sflToCanvasState(currentSource).canvasObjects;
+        const parents = new Map(objects.map((o) => [o.id, o.parentFrameId]));
+        parentOf = (id) => parents.get(id);
+      } catch (_) {
+        // Unparseable source: no hierarchy to consult, apply every move as is.
+      }
+      const hasMovingAncestor = (id) => {
+        const seen = new Set();
+        for (let p = parentOf(id); p && !seen.has(p); p = parentOf(p)) {
+          if (moving.has(p)) return true;
+          seen.add(p);
+        }
+        return false;
+      };
+      let next = currentSource;
+      for (const move of moves) {
+        if (!hasMovingAncestor(move.owner.id)) next = applyMoveChange(next, move);
+      }
+      applyPatch(next);
+    }
+
     // A fresh <prefix>_<n> id not already declared anywhere in \`src\` (the live
     // document by default). insertEntity/insertLink themselves silently no-op
     // on a collision (see patchSfl.ts), so this only needs to be a good-faith
@@ -223,7 +246,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     function nextId(prefix, src) {
       const text = src || currentSource;
       const taken = new Set(
-        [...text.matchAll(/\\b(?:Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
+        [...text.matchAll(/\\b(?:Shape|Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
       );
       let n = taken.size + 1;
       while (taken.has(\`\${prefix}_\${n}\`)) n++;
@@ -235,45 +258,11 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       if (!viewer) return;
       if (on && !editing) {
         editing = bindEditing(viewer);
-        // Move the roles bindEditing() won't: a frame/swimlane drag carries its
-        // child entities in the live preview (their final spot is settled by the
-        // re-render on commit, since child positions are relative to the frame's
-        // own \`layout { position }\` that applyMoveChange rewrites).
-        ownerDrag = bindOwnerDrag(viewer.svg, {
-          isActive: () => !!editing,
-          descendantIds: (id) => {
-            try {
-              return sflToCanvasState(currentSource).entities.filter((en) => en.parentFrameId === id).map((en) => en.id);
-            } catch (_) {
-              return [];
-            }
-          },
-          onCommit: (move) => {
-            const next = applyMoveChange(currentSource, move);
-            if (next === currentSource) {
-              vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't move "\${move.owner.id}" from the canvas — reposition it by editing its layout { position } in the SFL.\` });
-              return;
-            }
-            applyPatch(next);
-          },
-        });
-        // Resize the same roles: their selection overlay already draws handles
-        // (the viewer paints them for every non-link shape), they're just inert
-        // because stickyflow.js's resize session is entity-only. Commit via the
-        // same applyResizeChange the entity 'resizeChange' event uses.
-        ownerResize = bindOwnerResize(viewer.svg, {
-          isActive: () => !!editing,
-          onCommit: (e) => {
-            const next = applyResizeChange(currentSource, e);
-            if (next === currentSource) {
-              vscodeApi.postMessage({ type: 'sfl/warn', message: \`Couldn't resize "\${e.owner.id}" from the canvas — set its layout { size } in the SFL instead.\` });
-              return;
-            }
-            applyPatch(next);
-          },
-        });
         editing.on('textChange', (e) => applyPatch(applyTextChange(currentSource, e)));
-        editing.on('moveChange', (e) => applyPatch(applyMoveChange(currentSource, e)));
+        editing.on('moveChange', (e) => {
+          if (pendingMoves.length === 0) queueMicrotask(flushMoves);
+          pendingMoves.push(e);
+        });
         editing.on('resizeChange', (e) => applyPatch(applyResizeChange(currentSource, e)));
         editing.on('linkReconnect', (e) => applyPatch(applyLinkReconnectChange(currentSource, e)));
         // The "+" bubbles around a selected shape. stickyflow.js has no pure
@@ -282,7 +271,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         // — the bubble is an "add connected next step" affordance, not a plain
         // copy. Falls back to a bare duplicate if the source isn't linkable.
         editing.on('quickDuplicate', (e) => {
-          const source = sflToCanvasState(currentSource).entities.find((en) => en.id === e.owner.id);
+          const source = sflToCanvasState(currentSource).canvasObjects.find((en) => en.id === e.owner.id);
           if (!source) return;
           const w = source.width || NEW_ENTITY_SIZE.width;
           const h = source.height || NEW_ENTITY_SIZE.height;
@@ -333,10 +322,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       } else if (!on && editing) {
         editing.destroy();
         editing = null;
-        if (ownerDrag) ownerDrag.destroy();
-        ownerDrag = null;
-        if (ownerResize) ownerResize.destroy();
-        ownerResize = null;
+        pendingMoves = [];
       }
       if (!on) cancelLinking(); // turning editing off must also drop a pending "+ Link" gesture, not leave it armed
       const btn = document.getElementById('sf-toggle-edit');
@@ -446,7 +432,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         (clickSel.length === 1 ? clickSel[0] : null) ||
         (lastSelectionOwners.length === 1 ? lastSelectionOwners[0] : null);
 
-      const entities = sflToCanvasState(currentSource).entities;
+      const entities = sflToCanvasState(currentSource).canvasObjects;
       let anchorShape = null;
       if (selAnchor && LINKABLE_ROLES.includes(selAnchor.role)) {
         anchorShape = entities.find((en) => en.id === selAnchor.id) || null;

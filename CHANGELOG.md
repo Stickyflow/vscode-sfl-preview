@@ -8,6 +8,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 First working version. Not yet published to the Marketplace (`publisher` in
 `package.json` is a placeholder).
 
+### Changed
+
+- Built against stickyflow.js `main` after its Publishing-Refactoring merge
+  (#12). Frames, swimlanes, tables and charts are now moved and resized by
+  stickyflow.js's own edit mode, so the preview's supplemental
+  `webview/ownerDrag.ts` / `ownerResize.ts` / `ownerGesture.ts` gestures are
+  removed (running both moved a dragged frame twice).
+- A frame/swimlane drag commits as one edit, and only the container's own
+  `layout { position }` is rewritten: its children's positions are relative to
+  it, so they no longer jump inside the frame.
+- Selection sync and the "+ Entity" name check recognise `Shape` blocks
+  (stickyflow.js's new keyword for `Entity`, which stays an alias).
+
+### Fixed
+
+- "+ Entity", the "+" bubbles and frame-drag previews read
+  `sflToCanvasState().canvasObjects` (renamed from `entities` in
+  stickyflow.js); with the old name "+ Entity" threw and did nothing.
+
 ### Added
 
 - `SFL: Open Preview` / `SFL: Open Preview to the Side` commands, plus an

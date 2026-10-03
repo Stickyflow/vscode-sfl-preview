@@ -10,7 +10,8 @@
 // same correctness bar as a patch that rewrites the document, so a small
 // self-contained scanner is a better fit here than adding a build-time
 // dependency for it.
-const OWNER_HEADER = /^\s*(Entity|Container|Table|Link)\s+([A-Za-z_][A-Za-z0-9_]*)\b/;
+// `Shape` is the current leaf keyword; `Entity` is its still-accepted alias.
+const OWNER_HEADER = /^\s*(Shape|Entity|Container|Table|Link)\s+([A-Za-z_][A-Za-z0-9_]*)\b/;
 
 function stripStringsAndComments(line: string): string {
   return line.replace(/\/\/.*$/, '').replace(/"(?:[^"\\]|\\.)*"/g, '""');
@@ -50,12 +51,12 @@ function collectOwnerBlocks(lines: string[]): OwnerBlock[] {
   return blocks;
 }
 
-/** The full line range of the top-level Entity/Container/Table/Link block named `id`. */
+/** The full line range of the top-level Shape/Entity/Container/Table/Link block named `id`. */
 export function findOwnerRange(lines: string[], id: string): LineRange | null {
   return collectOwnerBlocks(lines).find(b => b.id === id)?.range ?? null;
 }
 
-/** The id of the innermost Entity/Container/Table/Link block containing `line`
+/** The id of the innermost Shape/Entity/Container/Table/Link block containing `line`
  *  — for nested blocks (e.g. an Entity inside a Container), the one with the
  *  latest start line among all enclosing ranges is the innermost. */
 export function findEnclosingOwnerId(lines: string[], line: number): string | null {
