@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Architecture of the vscode-sfl-preview live preview extension">
+    <title>vscode-sfl-preview · Architecture</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --page: #090b10;
+        --surface: #10141d;
+        --surface-raised: #161c28;
+        --line: #283143;
+        --line-strong: #3a4760;
+        --text: #f2f5f9;
+        --muted: #9ca8ba;
+        --cyan: #4dd7d0;
+        --blue: #6da8ff;
+        --violet: #a989ff;
+        --amber: #ffc66d;
+        --green: #72dda0;
+        --red: #ff7f8e;
+        --accent: var(--blue);
+        --accent-soft: rgb(109 168 255 / 9%);
+        --accent-line: rgb(109 168 255 / 30%);
+        --content: 1180px;
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background:
+          radial-gradient(circle at 85% 5%, var(--accent-soft), transparent 32rem),
+          radial-gradient(circle at 10% 25%, rgb(77 215 208 / 7%), transparent 28rem),
+          var(--page);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.65;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      code,
+      pre {
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      }
+
+      code {
+        color: #b8f4ef;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 30px 24px;
+        border-right: 1px solid var(--line);
+        background: rgb(9 11 16 / 88%);
+        backdrop-filter: blur(18px);
+        overflow-y: auto;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-bottom: 28px;
+        font-weight: 750;
+        letter-spacing: -0.03em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 35px;
+        height: 35px;
+        flex: none;
+        place-items: center;
+        border: 1px solid var(--accent-line);
+        border-radius: 11px;
+        color: var(--accent);
+        background: var(--accent-soft);
+        font-size: 13px;
+      }
+
+      .version {
+        display: inline-flex;
+        margin-left: auto;
+        padding: 2px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .nav-label {
+        margin: 22px 0 8px;
+        color: #647086;
+        font-size: 11px;
+        font-weight: 750;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      nav a {
+        display: block;
+        margin: 2px 0;
+        padding: 7px 10px;
+        border-radius: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        text-decoration: none;
+        transition: 140ms ease;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        color: var(--text);
+        background: var(--surface-raised);
+        outline: none;
+      }
+
+      main {
+        min-width: 0;
+        padding: 0 46px 80px;
+      }
+
+      .content {
+        width: min(100%, var(--content));
+        margin: 0 auto;
+      }
+
+      .hero {
+        padding: 92px 0 68px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin: 0 0 18px;
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        line-height: 1.15;
+        letter-spacing: -0.035em;
+      }
+
+      h1 {
+        max-width: 900px;
+        margin: 0;
+        font-size: clamp(46px, 7vw, 86px);
+        font-weight: 780;
+      }
+
+      h1 span {
+        color: var(--accent);
+      }
+
+      .lead {
+        max-width: 760px;
+        margin: 25px 0 0;
+        color: var(--muted);
+        font-size: clamp(17px, 2vw, 21px);
+      }
+
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 34px;
+      }
+
+      .pill {
+        padding: 7px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        color: #c7d0dd;
+        background: rgb(16 20 29 / 75%);
+        font-size: 12px;
+      }
+
+      section {
+        padding: 72px 0 0;
+        scroll-margin-top: 24px;
+      }
+
+      .section-head {
+        display: grid;
+        grid-template-columns: minmax(240px, 0.85fr) minmax(300px, 1.15fr);
+        gap: 56px;
+        align-items: end;
+        margin-bottom: 30px;
+      }
+
+      h2 {
+        margin: 0;
+        font-size: clamp(30px, 4vw, 48px);
+      }
+
+      .section-head p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: linear-gradient(155deg, rgb(22 28 40 / 94%), rgb(16 20 29 / 90%));
+      }
+
+      .card-number {
+        display: inline-flex;
+        min-width: 30px;
+        height: 25px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 22px;
+        border: 1px solid var(--accent-line);
+        border-radius: 7px;
+        color: var(--accent);
+        background: var(--accent-soft);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .card h3 {
+        margin: 0 0 10px;
+        font-size: 20px;
+      }
+
+      .card p,
+      .card li {
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .card p {
+        margin: 0;
+      }
+
+      .card ul {
+        margin: 15px 0 0;
+        padding-left: 18px;
+      }
+
+      .path {
+        display: inline-block;
+        margin-top: 18px;
+        padding: 5px 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        color: #c6edf0;
+        background: #0a0e15;
+        font-size: 11px;
+      }
+
+      /* Diagrams: the SFL styles bake in colors tuned for this dark page. */
+      .diagram {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: #090b10;
+        overflow: hidden;
+      }
+
+      .diagram-canvas {
+        padding: 18px;
+        overflow-x: auto;
+      }
+
+      /* Scales to the column; below 760px the canvas scrolls sideways instead. */
+      stickyflow-diagram {
+        display: block;
+        width: 100%;
+        min-width: 760px;
+      }
+
+      .diagram-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding: 14px 20px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        margin-right: 7px;
+        border-radius: 3px;
+        vertical-align: -1px;
+      }
+
+      .swatch.dashed {
+        height: 0;
+        border-top: 2px dashed;
+        border-radius: 0;
+        vertical-align: 3px;
+      }
+
+      .diagram details {
+        border-top: 1px solid var(--line);
+      }
+
+      .diagram summary {
+        padding: 12px 20px;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .diagram summary:hover,
+      .diagram summary:focus-visible {
+        color: var(--text);
+        outline: none;
+      }
+
+      .diagram details pre {
+        max-height: 420px;
+        margin: 0;
+        padding: 18px 20px;
+        border-top: 1px solid var(--line);
+        color: #d9e2ee;
+        background: #080b11;
+        overflow: auto;
+        font-size: 12px;
+        line-height: 1.6;
+      }
+
+      .diagram-offline {
+        display: none;
+        padding: 22px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .renderer-missing .diagram-offline {
+        display: block;
+      }
+
+      .renderer-missing .diagram-canvas {
+        display: none;
+      }
+
+      .rule-box {
+        margin-top: 20px;
+        padding: 19px 22px;
+        border-left: 3px solid var(--accent);
+        border-radius: 0 12px 12px 0;
+        color: #c9d2df;
+        background: var(--accent-soft);
+      }
+
+      .tree {
+        margin: 0;
+        padding: 24px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        color: #d5dce7;
+        background: #0a0e15;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.75;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-spacing: 0;
+        border-collapse: separate;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        font-size: 14px;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: #d7dfeb;
+        background: var(--surface-raised);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      td {
+        color: var(--muted);
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .dir {
+        white-space: nowrap;
+      }
+
+      .to-webview {
+        color: var(--cyan);
+      }
+
+      .to-host {
+        color: var(--violet);
+      }
+
+      .checks {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .check {
+        display: flex;
+        gap: 12px;
+        padding: 15px 17px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        color: var(--muted);
+        background: var(--surface);
+        font-size: 13px;
+      }
+
+      .check::before {
+        color: var(--green);
+        content: "✓";
+        font-weight: 800;
+      }
+
+      .timeline {
+        display: grid;
+        gap: 12px;
+      }
+
+      .timeline-step {
+        display: grid;
+        grid-template-columns: 54px minmax(0, 1fr);
+        gap: 18px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface);
+      }
+
+      .timeline-index {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border: 1px solid var(--accent-line);
+        border-radius: 12px;
+        color: var(--accent);
+        background: var(--accent-soft);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .timeline-step h3 {
+        margin: 1px 0 7px;
+        font-size: 18px;
+      }
+
+      .timeline-step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .function-path {
+        display: block;
+        margin-top: 9px;
+        color: #b8f4ef;
+        font-size: 12px;
+      }
+
+      footer {
+        margin-top: 80px;
+        padding-top: 30px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 1050px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .sidebar nav {
+          display: none;
+        }
+
+        .brand {
+          margin: 0;
+        }
+
+        .grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        main {
+          padding: 0 16px 60px;
+        }
+
+        .hero {
+          padding: 58px 0 48px;
+        }
+
+        .section-head {
+          grid-template-columns: 1fr;
+          gap: 14px;
+        }
+
+        .grid,
+        .checks {
+          grid-template-columns: 1fr;
+        }
+
+        .timeline-step {
+          grid-template-columns: 1fr;
+          gap: 10px;
+        }
+      }
+
+      :root {
+        --accent: var(--violet);
+        --accent-soft: rgb(169 137 255 / 9%);
+        --accent-line: rgb(169 137 255 / 30%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">sfl</span>
+          vscode-sfl-preview
+          <span class="version">0.1</span>
+        </div>
+        <nav aria-label="Page navigation">
+          <p class="nav-label">Overview</p>
+          <a href="#purpose">Goals and principles</a>
+          <a href="#extensions">Two extensions, one document</a>
+          <a href="#internals">Host and webview</a>
+          <a href="#protocol">Message protocol</a>
+          <a href="#roundtrip">A canvas edit, step by step</a>
+          <a href="#structure">Folder structure</a>
+          <p class="nav-label">Modules</p>
+          <a href="#host-modules">Extension host</a>
+          <a href="#webview-modules">Webview</a>
+          <a href="#build">Build pipeline</a>
+          <p class="nav-label">Contracts</p>
+          <a href="#decisions">Design decisions</a>
+          <a href="#quality">Quality checks</a>
+        </nav>
+      </aside>
+
+      <main>
+        <div class="content">
+          <header class="hero">
+            <p class="eyebrow">Technical documentation</p>
+            <h1>The diagram and its text, <span>always in sync</span>.</h1>
+            <p class="lead">
+              vscode-sfl-preview renders an <code>.sfl</code> document next to its source with stickyflow.js. The
+              extension host owns the document and the filesystem, a sandboxed webview owns rendering and canvas
+              gestures, and the two only talk through a small <code>sfl/*</code> message protocol.
+            </p>
+            <div class="hero-meta" aria-label="Architecture traits">
+              <span class="pill">Host / webview split</span>
+              <span class="pill">One panel per document</span>
+              <span class="pill">Edits are text edits</span>
+              <span class="pill">Prebuilt stickyflow.js</span>
+              <span class="pill">Strict CSP</span>
+            </div>
+          </header>
+
+          <section id="purpose">
+            <div class="section-head">
+              <h2>Goals and principles</h2>
+              <p>
+                The preview is a thin layer over stickyflow.js. Its own code is mostly wiring: which side owns which
+                state, and how changes cross the boundary without loops or lost edits.
+              </p>
+            </div>
+            <div class="grid">
+              <article class="card">
+                <span class="card-number">01</span>
+                <h3>The text is the truth</h3>
+                <p>Every canvas change becomes new SFL text, written back as a <code>WorkspaceEdit</code>. It lands on the undo stack and in your diff like any edit.</p>
+              </article>
+              <article class="card">
+                <span class="card-number">02</span>
+                <h3>Clear ownership</h3>
+                <p>The host owns the document, save dialogs and file writes. The webview owns the viewer, camera, selection and gestures.</p>
+              </article>
+              <article class="card">
+                <span class="card-number">03</span>
+                <h3>One panel per URI</h3>
+                <p>Previews are keyed by document URI. Re-running the command reveals the existing panel, like the built-in Markdown preview.</p>
+              </article>
+              <article class="card">
+                <span class="card-number">04</span>
+                <h3>Update, never remount</h3>
+                <p>External edits go through <code>viewer.update()</code>, so pan, zoom and edit-mode bindings survive every keystroke.</p>
+              </article>
+              <article class="card">
+                <span class="card-number">05</span>
+                <h3>Renderer as static assets</h3>
+                <p>stickyflow.js is copied from its <code>dist/</code> at build time. The extension host itself has no runtime dependencies.</p>
+              </article>
+              <article class="card">
+                <span class="card-number">06</span>
+                <h3>Pure logic, thin glue</h3>
+                <p>SFL patchers, routing cycles and pan math are pure functions with unit tests. DOM glue stays small and is checked end to end.</p>
+              </article>
+            </div>
+          </section>
+
+          <section id="extensions">
+            <div class="section-head">
+              <h2>Two extensions, one document</h2>
+              <p>
+                <a href="https://github.com/Stickyflow/vscode-sfl">vscode-sfl</a> understands the text, vscode-sfl-preview
+                draws it. They never call each other: both react to the same <code>.sfl</code> document, and installing
+                either one installs both.
+              </p>
+            </div>
+            <figure class="diagram" style="margin: 0">
+              <div class="diagram-canvas">
+                <stickyflow-diagram data-sfl="sfl-overview" aria-label="Diagram of both SFL extensions around one .sfl document"></stickyflow-diagram>
+              </div>
+              <div class="diagram-offline">
+                The stickyflow.js renderer was not found, so the diagram is shown as SFL source below. Run
+                <code>npm run compile</code> (which fills <code>media/stickyflow/</code>) and reload.
+              </div>
+              <figcaption class="diagram-legend">
+                <span><i class="swatch" style="background: var(--blue)"></i>vscode-sfl</span>
+                <span><i class="swatch" style="background: var(--violet)"></i>vscode-sfl-preview</span>
+                <span><i class="swatch" style="background: var(--cyan)"></i>shared document</span>
+                <span><i class="swatch dashed" style="color: var(--amber)"></i>build-time copy</span>
+              </figcaption>
+              <details>
+                <summary>SFL source</summary>
+                <pre data-sfl="sfl-overview"></pre>
+              </details>
+            </figure>
+          </section>
+
+          <section id="internals">
+            <div class="section-head">
+              <h2>Host and webview</h2>
+              <p>
+                Two runtimes with a hard boundary. Anything that needs VS Code or the filesystem stays in the host;
+                anything that needs the DOM stays in the webview.
+              </p>
+            </div>
+            <figure class="diagram" style="margin: 0">
+              <div class="diagram-canvas">
+                <stickyflow-diagram data-sfl="sfl-internals" aria-label="Diagram of the preview's extension host, webview and build step"></stickyflow-diagram>
+              </div>
+              <div class="diagram-offline">
+                The stickyflow.js renderer was not found, so the diagram is shown as SFL source below.
+              </div>
+              <figcaption class="diagram-legend">
+                <span><i class="swatch" style="background: var(--cyan)"></i>extension host</span>
+                <span><i class="swatch" style="background: var(--violet)"></i>webview</span>
+                <span><i class="swatch" style="background: var(--amber)"></i>stickyflow.js</span>
+                <span><i class="swatch dashed" style="color: var(--amber)"></i>build step</span>
+              </figcaption>
+              <details>
+                <summary>SFL source</summary>
+                <pre data-sfl="sfl-internals"></pre>
+              </details>
+            </figure>
+            <div class="rule-box">
+              The webview's CSP is <code>default-src 'none'</code> with a per-load nonce and <code>'strict-dynamic'</code>.
+              The nonce authorizes the inline module; <code>'strict-dynamic'</code> extends that trust to the code-split
+              <code>chunk-*.js</code> files stickyflow.js imports, which a bare nonce would block.
+            </div>
+          </section>
+
+          <section id="protocol">
+            <div class="section-head">
+              <h2>Message protocol</h2>
+              <p>Everything that crosses the boundary. Messages are plain objects, validated by shape on the receiving side.</p>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Message</th><th>Direction</th><th>Payload and effect</th></tr></thead>
+                <tbody>
+                  <tr><td><code>sfl/update</code></td><td class="dir to-webview">host → webview</td><td><code>source</code>, <code>likelyExternalRewrite</code>. Debounced 150 ms. Calls <code>viewer.update()</code> with change highlighting (blue for a likely external rewrite).</td></tr>
+                  <tr><td><code>sfl/select</code></td><td class="dir to-webview">host → webview</td><td><code>id</code> of the innermost block at the cursor, or <code>null</code>. Calls <code>viewer.select()</code>.</td></tr>
+                  <tr><td><code>sfl/edit</code></td><td class="dir to-host">webview → host</td><td>Full patched <code>source</code>. Applied as one whole-document <code>WorkspaceEdit</code>, skipped when unchanged.</td></tr>
+                  <tr><td><code>sfl/reveal</code></td><td class="dir to-host">webview → host</td><td><code>id</code> of the selected shape or link. Moves the editor selection to its header line without stealing focus.</td></tr>
+                  <tr><td><code>sfl/sceneDiff</code></td><td class="dir to-host">webview → host</td><td><code>added</code>, <code>removed</code>, <code>changed</code>. Shown as a 3 second status bar message.</td></tr>
+                  <tr><td><code>sfl/warn</code></td><td class="dir to-host">webview → host</td><td><code>message</code>. Explains a canvas action that could not be applied.</td></tr>
+                  <tr><td><code>sfl/export</code></td><td class="dir to-host">webview → host</td><td><code>format</code> (svg or png) and <code>data</code>. Host opens a save dialog and writes the file.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="rule-box">
+              Selection sync is bidirectional, and each side's action triggers the other side's event. Both sides
+              remember the last synced owner id and skip a sync that would only restate it, which breaks the loop
+              without a separate "programmatic change" flag.
+            </div>
+          </section>
+
+          <section id="roundtrip">
+            <div class="section-head">
+              <h2>A canvas edit, step by step</h2>
+              <p>Dragging a shape in edit mode, from pointer event to the text editor and back.</p>
+            </div>
+            <div class="timeline">
+              <article class="timeline-step">
+                <span class="timeline-index">01</span>
+                <div>
+                  <h3>Gesture</h3>
+                  <p>With <strong>Editing: On</strong>, <code>bindEditing()</code> from stickyflow.js's interaction tier emits a <code>moveChange</code> for each moved owner. Moves are collected for the gesture.</p>
+                  <span class="function-path">getWebviewHtml.ts (inline module) → stickyflow/interaction</span>
+                </div>
+              </article>
+              <article class="timeline-step">
+                <span class="timeline-index">02</span>
+                <div>
+                  <h3>Patch the text</h3>
+                  <p><code>flushMoves()</code> drops moves whose ancestor frame also moved (children are relative to their parent), then folds the rest through <code>applyMoveChange()</code> into one new source string.</p>
+                  <span class="function-path">flushMoves() → sflToCanvasState() → applyMoveChange()</span>
+                </div>
+              </article>
+              <article class="timeline-step">
+                <span class="timeline-index">03</span>
+                <div>
+                  <h3>Update locally, then report</h3>
+                  <p><code>applyPatch()</code> updates the viewer immediately without highlighting (you just watched it happen) and posts <code>sfl/edit</code> with the full source.</p>
+                  <span class="function-path">applyPatch() → viewer.update() → postMessage('sfl/edit')</span>
+                </div>
+              </article>
+              <article class="timeline-step">
+                <span class="timeline-index">04</span>
+                <div>
+                  <h3>Write the document</h3>
+                  <p>The panel replaces the whole document in one <code>WorkspaceEdit</code>. The patchers already preserve comments and formatting, so a narrower diff would add nothing.</p>
+                  <span class="function-path">panel.ts → applyEditToDocument()</span>
+                </div>
+              </article>
+              <article class="timeline-step">
+                <span class="timeline-index">05</span>
+                <div>
+                  <h3>Echo, ignored</h3>
+                  <p>The edit fires <code>onDidChangeTextDocument</code>, which schedules an <code>sfl/update</code>. The webview sees the source equals <code>currentSource</code> and does nothing.</p>
+                  <span class="function-path">extension.ts → SflPreviewPanel.updateIfOpen() → scheduleUpdate()</span>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section id="structure">
+            <div class="section-head">
+              <h2>Folder structure</h2>
+              <p>Host code in <code>src/</code>, webview modules in <code>webview/</code>, generated assets in <code>media/</code>.</p>
+            </div>
+            <pre class="tree" aria-label="Source folder structure"><code>vscode-sfl-preview/
+├─ package.json             Commands, editor title button, dependency on vscode-sfl
+├─ src/                     Extension host (Node)
+│  ├─ extension.ts          Commands, document and selection listeners
+│  ├─ panel.ts              SflPreviewPanel: lifecycle, debounce, message handling
+│  ├─ getWebviewHtml.ts     HTML shell, CSP, toolbar, inline module script
+│  └─ sflOwnerBlocks.ts     Line ranges of Shape/Container/Table/Link blocks
+├─ webview/                 Browser ES modules, compiled to media/webview/
+│  ├─ panControls.ts        Drag and wheel panning fed to the viewer
+│  └─ linkRoute.ts          Route cycling as a pure SFL patch
+├─ scripts/
+│  ├─ copy-media.mjs        stickyflow.js/dist → media/stickyflow/
+│  └─ verify-webview.mjs    End-to-end check in headless Chrome
+└─ media/                   Generated, git-ignored
+   ├─ stickyflow/           Prebuilt renderer (IIFE + ESM chunks)
+   └─ webview/              Compiled webview modules</code></pre>
+          </section>
+
+          <section id="host-modules">
+            <div class="section-head">
+              <h2>Extension host</h2>
+              <p>Node-side modules. None of them import stickyflow.js.</p>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Module</th><th>Core function or type</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code>extension.ts</code></td><td><code>activate()</code>, <code>looksLikeExternalRewrite()</code></td><td>Registers both commands and a serializer that discards stale panels on reload. Forwards document changes and cursor moves to the open panel. Guesses external rewrites from the change shape.</td></tr>
+                  <tr><td><code>panel.ts</code></td><td><code>SflPreviewPanel</code></td><td>One panel per URI. Debounces updates, handles every incoming message, applies edits, reveals blocks, writes exports.</td></tr>
+                  <tr><td><code>getWebviewHtml.ts</code></td><td><code>getWebviewHtml()</code></td><td>Webview URIs, nonce, CSP, toolbar markup, and the inline module that wires viewer, editing, selection and export.</td></tr>
+                  <tr><td><code>sflOwnerBlocks.ts</code></td><td><code>findOwnerRange()</code>, <code>findEnclosingOwnerId()</code></td><td>Brace-depth scan for block line ranges, used only for selection sync.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="webview-modules">
+            <div class="section-head">
+              <h2>Webview</h2>
+              <p>Runs in the sandbox. No <code>vscode</code>, no Node built-ins; it reaches the host only through <code>postMessage</code>.</p>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Piece</th><th>Source</th><th>Responsibility</th></tr></thead>
+                <tbody>
+                  <tr><td><code>&lt;stickyflow-diagram interactive&gt;</code></td><td><code>media/stickyflow/stickyflow-diagram.global.js</code></td><td>Viewer with camera and selection, mounted once and updated in place.</td></tr>
+                  <tr><td>Interaction tier</td><td><code>media/stickyflow/interaction/index.js</code></td><td><code>bindEditing()</code> gestures and the pure <code>apply*Change</code>, <code>insertEntity</code>, <code>insertLink</code> patchers.</td></tr>
+                  <tr><td>Core</td><td><code>media/stickyflow/index.js</code></td><td><code>render()</code> for full-bounds SVG and PNG export, <code>sflToCanvasState()</code> for frame hierarchy.</td></tr>
+                  <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
+                  <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section id="build">
+            <div class="section-head">
+              <h2>Build pipeline</h2>
+              <p><code>npm run compile</code> runs three steps. stickyflow.js must be built first in its sibling checkout.</p>
+            </div>
+            <div class="grid">
+              <article class="card">
+                <span class="card-number">B1</span>
+                <h3>Copy the renderer</h3>
+                <p>The whole <code>dist/</code> tree is copied, because the ESM entries import sibling <code>chunk-*.js</code> files by relative path.</p>
+                <span class="path">npm run copy-media</span>
+              </article>
+              <article class="card">
+                <span class="card-number">B2</span>
+                <h3>Compile the host</h3>
+                <p><code>src/</code> compiles to <code>out/</code> with the main <code>tsconfig.json</code>.</p>
+                <span class="path">tsc -p ./</span>
+              </article>
+              <article class="card">
+                <span class="card-number">B3</span>
+                <h3>Compile the webview</h3>
+                <p><code>webview/</code> compiles to <code>media/webview/</code> as ES2022 modules with DOM types.</p>
+                <span class="path">npm run compile:webview</span>
+              </article>
+            </div>
+          </section>
+
+          <section id="decisions">
+            <div class="section-head">
+              <h2>Design decisions</h2>
+              <p>Trade-offs made deliberately, and what they cost.</p>
+            </div>
+            <div class="grid">
+              <article class="card">
+                <span class="card-number">D1</span>
+                <h3>Shape-based rewrite guess</h3>
+                <p>VS Code does not say who made an edit. One large change at the top of the file is treated as an external rewrite and flashed in blue.</p>
+                <ul><li>Cost: git checkout or select-all paste look the same.</li></ul>
+                <span class="path">src/extension.ts</span>
+              </article>
+              <article class="card">
+                <span class="card-number">D2</span>
+                <h3>Own block scanner</h3>
+                <p>Selection sync uses a small line scanner instead of importing stickyflow.js into the host.</p>
+                <ul><li>Cost: approximate, but reveal has a low correctness bar.</li></ul>
+                <span class="path">src/sflOwnerBlocks.ts</span>
+              </article>
+              <article class="card">
+                <span class="card-number">D3</span>
+                <h3>Export re-renders</h3>
+                <p>Export calls <code>render()</code> on the current source instead of serializing the live SVG, whose viewBox follows pan and zoom.</p>
+                <ul><li>Cost: one extra render per export.</li></ul>
+                <span class="path">exportDiagram() in the webview</span>
+              </article>
+            </div>
+          </section>
+
+          <section id="quality">
+            <div class="section-head">
+              <h2>Quality checks</h2>
+              <p>Pure logic is unit tested in Node. The real webview is driven in headless Chrome.</p>
+            </div>
+            <div class="checks">
+              <div class="check">Vitest covers the owner-block scanner used for selection sync.</div>
+              <div class="check">Vitest covers link route patching and pan geometry in <code>webview/__tests__/</code>.</div>
+              <div class="check"><code>npm run verify:webview</code> loads the generated HTML in headless Chrome.</div>
+              <div class="check">It exercises panning, edit mode, dragging, resizing and link routing end to end.</div>
+            </div>
+            <div class="rule-box">
+              Run <code>npm run verify:webview</code> after touching <code>getWebviewHtml.ts</code> or anything in
+              <code>webview/</code>. It needs a local Chrome (set <code>CHROME_PATH</code> if needed) and skips itself
+              when none is found.
+            </div>
+          </section>
+
+          <footer>
+            vscode-sfl-preview architecture · Diagrams are SFL, rendered live by stickyflow.js. Companion page:
+            <code>vscode-sfl/docs/architecture.html</code>.
+          </footer>
+        </div>
+      </main>
+    </div>
+
+    <script type="text/sfl" id="sfl-overview">
+      sfl 1.4
+      
+      // How the two VS Code extensions split the work around one .sfl document.
+      // vscode-sfl understands the text, vscode-sfl-preview draws it.
+      
+      Style Frame     { shape: rounded_rectangle; fill: "#0f141d"; stroke: "#3a4760"; strokeWidth: 1.5; textColor: "#f2f5f9" }
+      Style SflFrame  : Frame { stroke: "#6da8ff"; strokeWidth: 2 }
+      Style PrevFrame : Frame { stroke: "#a989ff"; strokeWidth: 2 }
+      
+      Style Node      { shape: rounded_rectangle; fill: "#161c28"; stroke: "#3a4760"; textColor: "#f2f5f9" }
+      Style SflNode   : Node { stroke: "#6da8ff" }
+      Style PrevNode  : Node { stroke: "#a989ff" }
+      Style DocNode   : Node { shape: document; fill: "#10221f"; stroke: "#4dd7d0"; strokeWidth: 2 }
+      Style LibNode   : Node { shape: cylinder; fill: "#231d10"; stroke: "#ffc66d"; strokeWidth: 2 }
+      
+      Style Flow      { route: orthogonal; stroke: "#9ca8ba"; markerEnd: arrow; textColor: "#c7d0dd" }
+      Style SflFlow   : Flow { stroke: "#6da8ff"; strokeWidth: 2 }
+      Style PrevFlow  : Flow { stroke: "#a989ff"; strokeWidth: 2 }
+      Style BuildFlow : Flow { stroke: "#ffc66d"; strokeStyle: dashed }
+      Style PackFlow  : Flow { stroke: "#647086"; strokeStyle: dashed; markerStart: arrow }
+      
+      Model vscode_extensions {
+        text: "vscode-sfl + vscode-sfl-preview"
+      
+        Shape doc : DocNode {
+          kind: input
+          text: ".sfl TextDocument\nopen in the editor"
+          layout { position: 440, 0; size: 240, 76 }
+        }
+      
+        // ========================================================= vscode-sfl
+        Container sfl : SflFrame {
+          kind: frame
+          text: "vscode-sfl  ·  language support"
+          layout { position: 0, 150; size: 500, 330 }
+      
+          Shape sfl_client : SflNode {
+            kind: component
+            text: "extension.ts\nLanguageClient"
+            layout { position: 20, 56; size: 210, 60 }
+          }
+          Shape sfl_grammar : SflNode {
+            kind: component
+            text: "TextMate grammar\nicon theme, colors"
+            layout { position: 270, 56; size: 210, 60 }
+          }
+          Shape sfl_server : SflNode {
+            kind: process
+            text: "server.ts\nLSP server (IPC)"
+            layout { position: 20, 156; size: 210, 60 }
+          }
+          Shape sfl_features : SflNode {
+            kind: process
+            text: "features/*\n9 LSP providers"
+            layout { position: 270, 156; size: 210, 60 }
+          }
+          Shape sfl_model : SflNode {
+            kind: process
+            text: "documentModel.ts\nparse + resolve"
+            layout { position: 20, 252; size: 210, 60 }
+          }
+          Shape sfl_core : SflNode {
+            kind: component
+            text: "sfl-core/*\nported SFL parser"
+            layout { position: 270, 252; size: 210, 60 }
+          }
+        }
+      
+        // ================================================= vscode-sfl-preview
+        Container prev : PrevFrame {
+          kind: frame
+          text: "vscode-sfl-preview  ·  live preview"
+          layout { position: 620, 150; size: 500, 330 }
+      
+          Shape prev_ext : PrevNode {
+            kind: component
+            text: "extension.ts\ncommands, doc events"
+            layout { position: 20, 56; size: 210, 60 }
+          }
+          Shape prev_panel : PrevNode {
+            kind: process
+            text: "panel.ts\nSflPreviewPanel"
+            layout { position: 270, 56; size: 210, 60 }
+          }
+          Shape prev_owner : PrevNode {
+            kind: component
+            text: "sflOwnerBlocks.ts\nselection sync"
+            layout { position: 20, 156; size: 210, 60 }
+          }
+          Shape prev_html : PrevNode {
+            kind: component
+            text: "getWebviewHtml.ts\nCSP shell + toolbar"
+            layout { position: 270, 156; size: 210, 60 }
+          }
+          Shape prev_webview : PrevNode {
+            kind: process
+            text: "Webview\n<stickyflow-diagram>"
+            layout { position: 270, 252; size: 210, 60 }
+          }
+          Shape prev_client : PrevNode {
+            kind: component
+            text: "webview/*\npan, link route"
+            layout { position: 20, 252; size: 210, 60 }
+          }
+        }
+      
+        Shape sfjs : LibNode {
+          kind: component
+          text: "stickyflow.js\ndist/ build"
+          layout { position: 895, 560; size: 200, 90 }
+        }
+      
+        // ============================================================== links
+        Link l_doc_client : SflFlow {
+          from: doc, left (0.5)
+          to: sfl.sfl_client, top (0.5)
+          text: "LSP sync"
+        }
+        Link l_client_server : SflFlow {
+          from: sfl.sfl_client, bottom (0.5)
+          to: sfl.sfl_server, top (0.5)
+          text: "IPC"
+        }
+        Link l_server_features : SflFlow {
+          from: sfl.sfl_server, right (0.5)
+          to: sfl.sfl_features, left (0.5)
+        }
+        Link l_server_model : SflFlow {
+          from: sfl.sfl_server, bottom (0.5)
+          to: sfl.sfl_model, top (0.5)
+        }
+        Link l_model_core : SflFlow {
+          from: sfl.sfl_model, right (0.5)
+          to: sfl.sfl_core, left (0.5)
+        }
+      
+        Link l_doc_ext : PrevFlow {
+          from: doc, right (0.5)
+          to: prev.prev_ext, top (0.5)
+          text: "onDidChange"
+        }
+        Link l_ext_panel : PrevFlow {
+          from: prev.prev_ext, right (0.5)
+          to: prev.prev_panel, left (0.5)
+        }
+        Link l_panel_html : PrevFlow {
+          from: prev.prev_panel, bottom (0.5)
+          to: prev.prev_html, top (0.5)
+        }
+        Link l_html_webview : PrevFlow {
+          from: prev.prev_html, bottom (0.5)
+          to: prev.prev_webview, top (0.5)
+          text: "sfl/* messages"
+        }
+        Link l_webview_client : PrevFlow {
+          from: prev.prev_webview, left (0.5)
+          to: prev.prev_client, right (0.5)
+        }
+        Link l_panel_doc : PrevFlow {
+          from: prev.prev_panel, top (0.5)
+          to: doc, right (0.75)
+          text: "WorkspaceEdit"
+        }
+      
+        Link l_sfjs_webview : BuildFlow {
+          from: sfjs, top (0.5)
+          to: prev.prev_webview, bottom (0.5)
+          text: "copy-media.mjs"
+        }
+        Link l_pack : PackFlow {
+          from: sfl, right (0.85)
+          to: prev, left (0.85)
+          text: "extension pack"
+        }
+      }
+    </script>
+    <script type="text/sfl" id="sfl-internals">
+      sfl 1.4
+      
+      // vscode-sfl-preview internals: the extension host owns the document and the
+      // filesystem, the sandboxed webview owns rendering and canvas gestures, and
+      // the two only talk through sfl/* postMessage messages.
+      
+      Style Frame      { shape: rounded_rectangle; fill: "#0f141d"; stroke: "#3a4760"; strokeWidth: 1.5; textColor: "#f2f5f9" }
+      Style HostFrame  : Frame { stroke: "#4dd7d0"; strokeWidth: 2 }
+      Style WvFrame    : Frame { stroke: "#a989ff"; strokeWidth: 2 }
+      Style BuildFrame : Frame { stroke: "#ffc66d"; strokeStyle: dashed }
+      
+      Style Node      { shape: rounded_rectangle; fill: "#161c28"; stroke: "#3a4760"; textColor: "#f2f5f9" }
+      Style HostNode  : Node { stroke: "#4dd7d0" }
+      Style WvNode    : Node { stroke: "#a989ff" }
+      Style LibNode   : Node { stroke: "#ffc66d" }
+      Style DocNode   : Node { shape: document; fill: "#10221f"; stroke: "#4dd7d0"; strokeWidth: 2 }
+      Style DistNode  : Node { shape: cylinder; fill: "#231d10"; stroke: "#ffc66d"; strokeWidth: 2 }
+      
+      Style Flow      { route: orthogonal; stroke: "#9ca8ba"; markerEnd: arrow; textColor: "#c7d0dd" }
+      Style HostFlow  : Flow { stroke: "#4dd7d0"; strokeWidth: 2 }
+      Style MsgFlow   : Flow { stroke: "#a989ff"; strokeWidth: 2 }
+      Style BuildFlow : Flow { stroke: "#ffc66d"; strokeStyle: dashed }
+      
+      Model vscode_sfl_preview {
+        text: "vscode-sfl-preview internals"
+      
+        Shape doc : DocNode {
+          kind: input
+          text: ".sfl TextDocument"
+          layout { position: 150, 0; size: 240, 70 }
+        }
+      
+        Container host : HostFrame {
+          kind: frame
+          text: "Extension host (Node)"
+          layout { position: 0, 140; size: 540, 400 }
+      
+          Shape ext : HostNode {
+            kind: component
+            text: "extension.ts\ncommands + listeners"
+            layout { position: 20, 56; size: 230, 52 }
+          }
+          Shape panel : HostNode {
+            kind: process
+            text: "panel.ts  ·  SflPreviewPanel\none per URI, 150 ms debounce"
+            layout { position: 290, 56; size: 230, 64 }
+          }
+          Shape owner : HostNode {
+            kind: component
+            text: "sflOwnerBlocks.ts\nblock line ranges"
+            layout { position: 20, 180; size: 230, 64 }
+          }
+          Shape html : HostNode {
+            kind: component
+            text: "getWebviewHtml.ts\nCSP nonce, toolbar, script"
+            layout { position: 290, 180; size: 230, 64 }
+          }
+          Shape save : HostNode {
+            kind: process
+            text: "exportDiagram()\nsave dialog + fs.writeFile"
+            layout { position: 290, 304; size: 230, 64 }
+          }
+        }
+      
+        Container wv : WvFrame {
+          kind: frame
+          text: "Webview sandbox (browser)"
+          layout { position: 660, 140; size: 540, 400 }
+      
+          Shape inline : WvNode {
+            kind: process
+            text: "inline module script\nedit mode, toolbar, sync"
+            layout { position: 20, 56; size: 230, 64 }
+          }
+          Shape element : WvNode {
+            kind: component
+            text: "<stickyflow-diagram>\nviewer, camera, selection"
+            layout { position: 290, 56; size: 230, 64 }
+          }
+          Shape interaction : LibNode {
+            kind: component
+            text: "stickyflow/interaction\nbindEditing, apply*Change"
+            layout { position: 20, 180; size: 230, 64 }
+          }
+          Shape core : LibNode {
+            kind: component
+            text: "stickyflow core\nrender() for export"
+            layout { position: 290, 180; size: 230, 64 }
+          }
+          Shape pan : WvNode {
+            kind: component
+            text: "webview/panControls.ts\ndrag + wheel panning"
+            layout { position: 20, 304; size: 230, 64 }
+          }
+          Shape route : WvNode {
+            kind: component
+            text: "webview/linkRoute.ts\nRoute button patcher"
+            layout { position: 290, 304; size: 230, 64 }
+          }
+        }
+      
+        Container build : BuildFrame {
+          kind: frame
+          text: "npm run compile"
+          layout { position: 660, 620; size: 540, 150 }
+      
+          Shape dist : DistNode {
+            kind: component
+            text: "stickyflow.js/dist"
+            layout { position: 20, 50; size: 200, 80 }
+          }
+          Shape copy : LibNode {
+            kind: process
+            text: "copy-media.mjs\n→ media/stickyflow/"
+            layout { position: 290, 58; size: 230, 64 }
+          }
+        }
+      
+        Link l_doc_ext : HostFlow {
+          from: doc, bottom (0.3)
+          to: host.ext, top (0.5)
+          text: "onDidChange"
+        }
+        Link l_ext_panel : HostFlow {
+          from: host.ext, right (0.5)
+          to: host.panel, left (0.41)
+        }
+        Link l_panel_doc : HostFlow {
+          from: host.panel, top (0.5)
+          to: doc, right (0.5)
+          text: "WorkspaceEdit"
+        }
+        Link l_panel_owner : HostFlow {
+          from: host.panel, left (0.95)
+          to: host.owner, top (0.5)
+        }
+        Link l_panel_html : HostFlow {
+          from: host.panel, bottom (0.5)
+          to: host.html, top (0.5)
+        }
+        Link l_html_save : HostFlow {
+          from: host.panel, right (0.9)
+          to: host.save, right (0.5)
+          text: "sfl/export"
+        }
+        Link l_host_to_wv : MsgFlow {
+          from: host.panel, right (0.3)
+          to: wv.inline, left (0.3)
+          text: "sfl/update · select"
+        }
+        Link l_wv_to_host : MsgFlow {
+          from: wv.inline, left (0.7)
+          to: host.panel, right (0.7)
+          text: "sfl/edit · reveal · export"
+        }
+        Link l_inline_element : MsgFlow {
+          from: wv.inline, right (0.5)
+          to: wv.element, left (0.5)
+        }
+        Link l_inline_interaction : MsgFlow {
+          from: wv.inline, bottom (0.5)
+          to: wv.interaction, top (0.5)
+        }
+        Link l_inline_core : MsgFlow {
+          from: wv.inline, bottom (0.85)
+          to: wv.core, left (0.5)
+        }
+        Link l_dist_copy : BuildFlow {
+          from: build.dist, right (0.5)
+          to: build.copy, left (0.5)
+        }
+        Link l_copy_wv : BuildFlow {
+          from: build.copy, top (0.5)
+          to: wv, bottom (0.75)
+          text: "loaded via webview URIs"
+        }
+      }
+    </script>
+    <script>
+      // The diagrams are SFL, rendered by stickyflow.js's <stickyflow-diagram>
+      // custom element. The page carries no copy of the renderer: it loads the
+      // IIFE build from the first local path that exists, so it always draws
+      // with the stickyflow.js you have checked out. Without one, the SFL
+      // source stays readable in the "SFL source" panels.
+      const RENDERER_CANDIDATES = [
+        "../media/stickyflow/stickyflow-diagram.global.js",
+        "../../../stickyflow.js/dist/stickyflow-diagram.global.js"
+      ];
+
+      function mountDiagrams() {
+        for (const el of document.querySelectorAll("stickyflow-diagram[data-sfl]")) {
+          el.source = document.getElementById(el.dataset.sfl).textContent.trim();
+          // The element sizes its SVG at natural pixel size; scale it to the column.
+          const fit = document.createElement("style");
+          fit.textContent = "svg { width: 100%; height: auto; }";
+          el.shadowRoot?.append(fit);
+        }
+      }
+
+      function showRendererMissing() {
+        document.documentElement.classList.add("renderer-missing");
+        for (const details of document.querySelectorAll(".diagram details")) details.open = true;
+      }
+
+      function loadRenderer(index) {
+        if (index >= RENDERER_CANDIDATES.length) {
+          showRendererMissing();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = RENDERER_CANDIDATES[index];
+        script.onload = mountDiagrams;
+        script.onerror = () => {
+          script.remove();
+          loadRenderer(index + 1);
+        };
+        document.head.append(script);
+      }
+
+      for (const pre of document.querySelectorAll("pre[data-sfl]")) {
+        pre.textContent = document.getElementById(pre.dataset.sfl).textContent.trim();
+      }
+      loadRenderer(0);
+    </script>
+  </body>
+</html>
