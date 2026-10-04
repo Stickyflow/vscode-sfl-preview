@@ -26,7 +26,7 @@
 //    `selectionChange` event to the extension host as `sfl/reveal`, and
 //    applies incoming `sfl/select` messages via `viewer.select()` — the two
 //    halves of canvas<->editor selection sync (see panel.ts).
-//  - wires "+ Entity"/"+ Link" toolbar buttons to `insertEntity`/
+//  - wires "+ Entity"/"+ Link" toolbar buttons to `insertCanvasObject`/
 //    `insertLink`, the same pure patchers `applyXChange` uses, so canvas-side
 //    creation round-trips into the document exactly like a drag-to-move does.
 //  - wires "Export SVG"/"Export PNG" toolbar buttons to stickyflow.js's own
@@ -121,7 +121,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   <script type="module" nonce="${nonce}">
     import {
       bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange,
-      insertEntity, removeEntity, insertLink, removeLink,
+      insertCanvasObject, removeCanvasObject, insertLink, removeLink, insertConnection,
+      applyPropertyChange, applySankeyNodeMoveChange, applySankeyNodeRenameChange,
     } from '${interactionModuleUri}';
     import { render, sflToCanvasState } from '${coreModuleUri}';
     import { bindPanControls } from '${panControlsModuleUri}';
@@ -135,7 +136,32 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     // but the link router only draws a clean edge to a rectangular owner, so
     // linking to one from the canvas leaves a stub ending mid-shape — link
     // those by editing the SFL. Frame/swimlane are Container render roles.
-    const LINKABLE_ROLES = ['entity', 'frame', 'swimlane', 'table'];
+    const LINKABLE_ROLES = ['shape', 'frame', 'swimlane', 'table'];
+
+    // Isometric objects connect only to each other, through a face-attached
+    // Connection block rather than a Link (stickyflow.js routes a Connection
+    // between cube faces; a 2D side/fraction means nothing on a cube).
+    const ISOMETRIC_ROLE = 'isometric';
+    // Screen-space unit vectors of the three isometric axes, matching
+    // isometricFaces() in stickyflow.js/src/model/isometricObject/geometry.ts
+    // (30° axes: width runs down-right, depth down-left, height straight down).
+    const ISO_COS = Math.cos(Math.PI / 6);
+    const ISO_SIN = Math.sin(Math.PI / 6);
+    const ISO_AXES = {
+      width: { x: ISO_COS, y: ISO_SIN },
+      depth: { x: -ISO_COS, y: ISO_SIN },
+      height: { x: 0, y: 1 },
+    };
+    // The six cube-face "+" bubbles: which axis the copy is pushed along, and
+    // which faces the new Connection joins (source face, then facing face).
+    const ISO_DUPLICATE = {
+      'iso-width-pos': { axis: 'width', sign: 1, fromFace: 'right', toFace: 'left' },
+      'iso-width-neg': { axis: 'width', sign: -1, fromFace: 'left', toFace: 'right' },
+      'iso-depth-pos': { axis: 'depth', sign: 1, fromFace: 'front', toFace: 'back' },
+      'iso-depth-neg': { axis: 'depth', sign: -1, fromFace: 'back', toFace: 'front' },
+      'iso-height-pos': { axis: 'height', sign: 1, fromFace: 'bottom', toFace: 'top' },
+      'iso-height-neg': { axis: 'height', sign: -1, fromFace: 'top', toFace: 'bottom' },
+    };
     let currentSource = ${initialSourceJson};
     el.source = currentSource;
 
@@ -204,6 +230,75 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       vscodeApi.postMessage({ type: 'sfl/edit', source: currentSource });
     }
 
+    function isometricDepth(object) {
+      return (object.isometric && object.isometric.depth) || 24;
+    }
+
+    // Visual center of an isometric object's projected bounding box (see
+    // isometricBounds() in stickyflow.js).
+    function isometricCenter(object) {
+      const span = object.width + isometricDepth(object);
+      return { x: object.x + (span * ISO_COS) / 2, y: object.y + (object.height + span * ISO_SIN) / 2 };
+    }
+
+    // Faces for a canvas-drawn Connection: decompose the center-to-center
+    // offset into the width and depth axes and attach along whichever
+    // dominates, so the line leaves the face that actually points at the target.
+    function connectionFaces(from, to) {
+      const a = isometricCenter(from);
+      const b = isometricCenter(to);
+      const dx = (b.x - a.x) / ISO_COS;
+      const dy = (b.y - a.y) / ISO_SIN;
+      const alongWidth = (dx + dy) / 2;
+      const alongDepth = (dy - dx) / 2;
+      if (Math.abs(alongWidth) >= Math.abs(alongDepth)) {
+        return alongWidth >= 0 ? { fromFace: 'right', toFace: 'left' } : { fromFace: 'left', toFace: 'right' };
+      }
+      return alongDepth >= 0 ? { fromFace: 'front', toFace: 'back' } : { fromFace: 'back', toFace: 'front' };
+    }
+
+    // A cube-face "+" bubble: a copy of the cube pushed one full length (plus
+    // a gap) along that face's axis, joined to the source by a Connection.
+    function duplicateIsometric(e) {
+      const plan = ISO_DUPLICATE[e.direction];
+      const source = sflToCanvasState(currentSource).canvasObjects.find((o) => o.id === e.owner.id);
+      if (!plan || !source) return;
+      const depth = isometricDepth(source);
+      const length = { width: source.width, depth, height: source.height }[plan.axis];
+      const step = (length + 40) * plan.sign;
+      const axis = ISO_AXES[plan.axis];
+      const id = nextId('object');
+      const fill = source.props && source.props.fill;
+      let next = insertCanvasObject(currentSource, {
+        id,
+        kind: 'isometric',
+        text: 'New object',
+        x: Math.round(source.x + axis.x * step),
+        y: Math.round(source.y + axis.y * step),
+        width: source.width,
+        height: source.height,
+        depth,
+        body: fill ? ['style {', '    fill: ' + JSON.stringify(fill), '}'].join('\\n') : undefined,
+      });
+      if (next === currentSource) return;
+      const linked = insertConnection(next, { id: nextId('connection', next), fromId: source.id, toId: id, fromFace: plan.fromFace, toFace: plan.toFace });
+      if (linked !== next) next = linked;
+      applyPatch(next);
+      el.viewer.select([id]);
+    }
+
+    // A dragged isometric label emits labelOffsetX and labelOffsetY as two
+    // synchronous propertyChange events; commit them as one edit so a single
+    // drag is a single undo step.
+    let pendingProperties = [];
+    function flushProperties() {
+      const changes = pendingProperties;
+      pendingProperties = [];
+      let next = currentSource;
+      for (const change of changes) next = applyPropertyChange(next, change);
+      applyPatch(next);
+    }
+
     // bindEditing() emits one moveChange per moved owner, synchronously, and
     // a dragged frame/swimlane brings its contained children along with the
     // same delta. Child positions are relative to the parent's origin, so
@@ -239,14 +334,14 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     // A fresh <prefix>_<n> id not already declared anywhere in \`src\` (the live
-    // document by default). insertEntity/insertLink themselves silently no-op
+    // document by default). insertCanvasObject/insertLink themselves silently no-op
     // on a collision (see patchSfl.ts), so this only needs to be a good-faith
     // pick, not a guaranteed-unique one. Pass an explicit \`src\` to pick a
     // second id against a document already patched but not yet committed.
     function nextId(prefix, src) {
       const text = src || currentSource;
       const taken = new Set(
-        [...text.matchAll(/\\b(?:Shape|Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
+        [...text.matchAll(/\\b(?:Shape|Entity|Container|Table|Link|Isometric|Connection)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
       );
       let n = taken.size + 1;
       while (taken.has(\`\${prefix}_\${n}\`)) n++;
@@ -270,7 +365,14 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         // offset in the clicked direction, plus a link from the shape into it
         // — the bubble is an "add connected next step" affordance, not a plain
         // copy. Falls back to a bare duplicate if the source isn't linkable.
+        editing.on('propertyChange', (e) => {
+          if (pendingProperties.length === 0) queueMicrotask(flushProperties);
+          pendingProperties.push(e);
+        });
+        editing.on('sankeyNodeMove', (e) => applyPatch(applySankeyNodeMoveChange(currentSource, e)));
+        editing.on('sankeyNodeRename', (e) => applyPatch(applySankeyNodeRenameChange(currentSource, e)));
         editing.on('quickDuplicate', (e) => {
+          if (e.direction.startsWith('iso-')) { duplicateIsometric(e); return; }
           const source = sflToCanvasState(currentSource).canvasObjects.find((en) => en.id === e.owner.id);
           if (!source) return;
           const w = source.width || NEW_ENTITY_SIZE.width;
@@ -283,7 +385,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
           else if (e.direction === 'bottom') y = source.y + h + gap;
           else if (e.direction === 'top') y = source.y - h - gap;
           const id = nextId('entity');
-          let next = insertEntity(currentSource, { id, kind: 'shape', text: 'New entity', x, y, width: w, height: h, body: NEW_ENTITY_STYLE });
+          let next = insertCanvasObject(currentSource, { id, kind: 'shape', text: 'New entity', x, y, width: w, height: h, body: NEW_ENTITY_STYLE });
           if (next === currentSource) return;
           if (LINKABLE_ROLES.includes(e.owner.role)) {
             const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[e.direction];
@@ -316,13 +418,14 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         });
         editing.on('delete', (e) => {
           let next = currentSource;
-          for (const owner of e.owners) next = owner.role === 'link' ? removeLink(next, owner.id) : removeEntity(next, owner.id);
+          for (const owner of e.owners) next = owner.role === 'link' ? removeLink(next, owner.id) : removeCanvasObject(next, owner.id);
           applyPatch(next);
         });
       } else if (!on && editing) {
         editing.destroy();
         editing = null;
         pendingMoves = [];
+        pendingProperties = [];
       }
       if (!on) cancelLinking(); // turning editing off must also drop a pending "+ Link" gesture, not leave it armed
       const btn = document.getElementById('sf-toggle-edit');
@@ -453,7 +556,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       }
 
       const id = nextId('entity');
-      let next = insertEntity(currentSource, {
+      let next = insertCanvasObject(currentSource, {
         id,
         kind: 'shape',
         text: 'New entity',
@@ -464,7 +567,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         body: NEW_ENTITY_STYLE,
       });
       if (next === currentSource) {
-        // insertEntity no-ops (never throws) on an id collision or a document
+        // insertCanvasObject no-ops (never throws) on an id collision or a document
         // with no top-level Model block — surfaced rather than left silent.
         vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not add entity "\${id}" — check that the document has a top-level Model block and that id isn't already used.\` });
         return;
@@ -480,13 +583,13 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     });
 
     // "+ Link" — a two-click gesture: arm it, click a source entity, click a
-    // target entity. Listens on the viewer's own entityClick (fires
+    // target entity. Listens on the viewer's own canvasObjectClick (fires
     // alongside selectionChange on every click, which the reveal sync
     // above already handles on its own) rather than re-deriving clicks from
     // selectionChange, so this stays a simple additive listener with no
     // interaction with normal click-to-select/reveal behavior. The button is
     // only visible in edit mode (see setEditMode), and both this click handler
-    // and the entityClick handler below re-check the editing flag, so a link
+    // and the canvasObjectClick handler below re-check the editing flag, so a link
     // can never be armed or created while edit mode is off.
     let linkState = null; // null (off) | 'from' (armed, waiting for source) | { from } (waiting for target)
 
@@ -512,10 +615,10 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     });
 
     if (el.viewer) {
-      el.viewer.on('entityClick', (e) => {
+      el.viewer.on('canvasObjectClick', (e) => {
         if (!editing) return; // belt-and-suspenders: mutation only proceeds while edit mode is actually on
         if (linkState === 'from') {
-          if (!LINKABLE_ROLES.includes(e.owner.role)) {
+          if (!LINKABLE_ROLES.includes(e.owner.role) && e.owner.role !== ISOMETRIC_ROLE) {
             vscodeApi.postMessage({ type: 'sfl/warn', message: \`Can't link from "\${e.owner.id}" — it's a \${e.owner.role}. Canvas links connect entities, containers and tables.\` });
             cancelLinking();
             return;
@@ -527,7 +630,27 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         if (linkState && linkState.from) {
           if (e.owner.id === linkState.from.id) { cancelLinking(); return; } // clicked the same entity twice — cancel, not a self-link
           const fromId = linkState.from.id;
+          const fromIsometric = linkState.from.role === ISOMETRIC_ROLE;
           cancelLinking();
+          if (fromIsometric || e.owner.role === ISOMETRIC_ROLE) {
+            if (!fromIsometric || e.owner.role !== ISOMETRIC_ROLE) {
+              vscodeApi.postMessage({ type: 'sfl/warn', message: 'Isometric objects connect only to other isometric objects.' });
+              return;
+            }
+            const objects = sflToCanvasState(currentSource).canvasObjects;
+            const from = objects.find((o) => o.id === fromId);
+            const to = objects.find((o) => o.id === e.owner.id);
+            if (!from || !to) return;
+            const id = nextId('connection');
+            const next = insertConnection(currentSource, { id, fromId, toId: e.owner.id, ...connectionFaces(from, to) });
+            if (next === currentSource) {
+              vscodeApi.postMessage({ type: 'sfl/warn', message: 'Could not connect "' + fromId + '" to "' + e.owner.id + '".' });
+              return;
+            }
+            applyPatch(next);
+            el.viewer.select([id]);
+            return;
+          }
           if (!LINKABLE_ROLES.includes(e.owner.role)) {
             vscodeApi.postMessage({ type: 'sfl/warn', message: \`Can't link to "\${e.owner.id}" — it's a \${e.owner.role}. Canvas links connect entities, containers and tables.\` });
             return;

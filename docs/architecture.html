@@ -860,7 +860,7 @@
                 <thead><tr><th>Piece</th><th>Source</th><th>Responsibility</th></tr></thead>
                 <tbody>
                   <tr><td><code>&lt;stickyflow-diagram interactive&gt;</code></td><td><code>media/stickyflow/stickyflow-diagram.global.js</code></td><td>Viewer with camera and selection, mounted once and updated in place.</td></tr>
-                  <tr><td>Interaction tier</td><td><code>media/stickyflow/interaction/index.js</code></td><td><code>bindEditing()</code> gestures and the pure <code>apply*Change</code>, <code>insertEntity</code>, <code>insertLink</code> patchers.</td></tr>
+                  <tr><td>Interaction tier</td><td><code>media/stickyflow/interaction/index.js</code></td><td><code>bindEditing()</code> gestures and the pure <code>apply*Change</code>, <code>insertCanvasObject</code>, <code>insertLink</code> patchers.</td></tr>
                   <tr><td>Core</td><td><code>media/stickyflow/index.js</code></td><td><code>render()</code> for full-bounds SVG and PNG export, <code>sflToCanvasState()</code> for frame hierarchy.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
                   <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight.</td></tr>
