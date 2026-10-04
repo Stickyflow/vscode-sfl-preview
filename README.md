@@ -81,9 +81,39 @@ your file. Toggle **Editing: On** in the toolbar, then:
 - **+ Entity** adds a shape in the middle of the view. **+ Link** connects
   two shapes: click the source, then the target (Escape cancels).
 - **Route** cycles a selected link between orthogonal, curved and straight.
+- **Isometric objects**: resize along each axis with the arrow handles, drag
+  the label to move it, and click a cube-face **+** bubble to add a connected
+  copy in that direction. **+ Link** between two isometric objects creates a
+  `Connection` attached to the faces that point at each other.
 
 Every change becomes a normal text edit in the `.sfl` file, so it shows up
 in the undo stack and in your diff.
+
+### Isometric diagrams
+
+`Isometric` blocks draw 3D objects and `Connection` blocks join them face to
+face. For software architects this is the view between a whiteboard sketch
+and a cloud console: the system's shape at a glance, still precise enough to
+review.
+
+- **Tiers read as tiers.** Edge, services and data each get their own row,
+  so where a request enters and where state lives is obvious at a glance.
+- **Size carries meaning.** Width, height and depth are separate values, so
+  a stateful store can stand taller than a stateless service, or a shared
+  queue sit wider than a single worker.
+- **Dependencies have a direction.** A connection leaves one face and enters
+  another, keeping the main request path, side calls (auth, caching) and
+  async work through a queue visually apart.
+- **It lives next to the code.** The diagram is plain SFL in your repo, so an
+  architecture change lands in the same pull request as the code behind it,
+  and reviewers see a diff instead of a stale image.
+
+Typical uses: deployment and service topology overviews, design reviews and
+ADRs, onboarding docs, and before/after views of a migration.
+
+<p align="center">
+  <img src="assets/screenshot-isometric.png" alt="An SFL file open in VS Code with the live preview beside it, showing a checkout platform architecture drawn as isometric cubes" width="900">
+</p>
 
 ### Seeing what changed
 
