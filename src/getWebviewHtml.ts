@@ -26,7 +26,7 @@
 //    `selectionChange` event to the extension host as `sfl/reveal`, and
 //    applies incoming `sfl/select` messages via `viewer.select()` — the two
 //    halves of canvas<->editor selection sync (see panel.ts).
-//  - wires "+ Entity"/"+ Link" toolbar buttons to `insertEntity`/
+//  - wires "+ Entity"/"+ Link" toolbar buttons to `insertCanvasObject`/
 //    `insertLink`, the same pure patchers `applyXChange` uses, so canvas-side
 //    creation round-trips into the document exactly like a drag-to-move does.
 //  - wires "Export SVG"/"Export PNG" toolbar buttons to stickyflow.js's own
@@ -121,7 +121,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   <script type="module" nonce="${nonce}">
     import {
       bindEditing, applyTextChange, applyMoveChange, applyResizeChange, applyLinkReconnectChange,
-      insertEntity, removeEntity, insertLink, removeLink,
+      insertCanvasObject, removeCanvasObject, insertLink, removeLink,
     } from '${interactionModuleUri}';
     import { render, sflToCanvasState } from '${coreModuleUri}';
     import { bindPanControls } from '${panControlsModuleUri}';
@@ -239,14 +239,14 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     }
 
     // A fresh <prefix>_<n> id not already declared anywhere in \`src\` (the live
-    // document by default). insertEntity/insertLink themselves silently no-op
+    // document by default). insertCanvasObject/insertLink themselves silently no-op
     // on a collision (see patchSfl.ts), so this only needs to be a good-faith
     // pick, not a guaranteed-unique one. Pass an explicit \`src\` to pick a
     // second id against a document already patched but not yet committed.
     function nextId(prefix, src) {
       const text = src || currentSource;
       const taken = new Set(
-        [...text.matchAll(/\\b(?:Shape|Entity|Container|Table|Link)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
+        [...text.matchAll(/\\b(?:Shape|Entity|Container|Table|Link|Isometric|Connection)\\s+([A-Za-z_][A-Za-z0-9_]*)\\b/g)].map((m) => m[1]),
       );
       let n = taken.size + 1;
       while (taken.has(\`\${prefix}_\${n}\`)) n++;
@@ -283,7 +283,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
           else if (e.direction === 'bottom') y = source.y + h + gap;
           else if (e.direction === 'top') y = source.y - h - gap;
           const id = nextId('entity');
-          let next = insertEntity(currentSource, { id, kind: 'shape', text: 'New entity', x, y, width: w, height: h, body: NEW_ENTITY_STYLE });
+          let next = insertCanvasObject(currentSource, { id, kind: 'shape', text: 'New entity', x, y, width: w, height: h, body: NEW_ENTITY_STYLE });
           if (next === currentSource) return;
           if (LINKABLE_ROLES.includes(e.owner.role)) {
             const opposite = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }[e.direction];
@@ -316,7 +316,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         });
         editing.on('delete', (e) => {
           let next = currentSource;
-          for (const owner of e.owners) next = owner.role === 'link' ? removeLink(next, owner.id) : removeEntity(next, owner.id);
+          for (const owner of e.owners) next = owner.role === 'link' ? removeLink(next, owner.id) : removeCanvasObject(next, owner.id);
           applyPatch(next);
         });
       } else if (!on && editing) {
@@ -453,7 +453,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
       }
 
       const id = nextId('entity');
-      let next = insertEntity(currentSource, {
+      let next = insertCanvasObject(currentSource, {
         id,
         kind: 'shape',
         text: 'New entity',
@@ -464,7 +464,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
         body: NEW_ENTITY_STYLE,
       });
       if (next === currentSource) {
-        // insertEntity no-ops (never throws) on an id collision or a document
+        // insertCanvasObject no-ops (never throws) on an id collision or a document
         // with no top-level Model block — surfaced rather than left silent.
         vscodeApi.postMessage({ type: 'sfl/warn', message: \`Could not add entity "\${id}" — check that the document has a top-level Model block and that id isn't already used.\` });
         return;
@@ -480,13 +480,13 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     });
 
     // "+ Link" — a two-click gesture: arm it, click a source entity, click a
-    // target entity. Listens on the viewer's own entityClick (fires
+    // target entity. Listens on the viewer's own canvasObjectClick (fires
     // alongside selectionChange on every click, which the reveal sync
     // above already handles on its own) rather than re-deriving clicks from
     // selectionChange, so this stays a simple additive listener with no
     // interaction with normal click-to-select/reveal behavior. The button is
     // only visible in edit mode (see setEditMode), and both this click handler
-    // and the entityClick handler below re-check the editing flag, so a link
+    // and the canvasObjectClick handler below re-check the editing flag, so a link
     // can never be armed or created while edit mode is off.
     let linkState = null; // null (off) | 'from' (armed, waiting for source) | { from } (waiting for target)
 
@@ -512,7 +512,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     });
 
     if (el.viewer) {
-      el.viewer.on('entityClick', (e) => {
+      el.viewer.on('canvasObjectClick', (e) => {
         if (!editing) return; // belt-and-suspenders: mutation only proceeds while edit mode is actually on
         if (linkState === 'from') {
           if (!LINKABLE_ROLES.includes(e.owner.role)) {
