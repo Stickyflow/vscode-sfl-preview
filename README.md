@@ -126,7 +126,7 @@ them happen.
 ### Style templates
 
 **Style** opens vscode-sfl's template picker (Night Lime, Midnight Violet,
-Graphite Mono, Paper Navy) for the previewed file. The template is written
+Graphite Mono, Paper Navy, Charcoal Pastel) for the previewed file. The template is written
 into the `.sfl`, so it's one undo step and shows up in your diff. Its canvas
 color becomes the preview's background.
 
