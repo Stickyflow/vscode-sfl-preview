@@ -10,6 +10,16 @@ First working version. Not yet published to the Marketplace (`publisher` in
 
 ### Changed
 
+- The webview script is now typed modules under `webview/` (edit mode, edit
+  actions, "+ Entity", "+ Link", Route, selection sync, export, host
+  messaging). `getWebviewHtml.ts` keeps only the HTML and a short bootstrap
+  that hands stickyflow.js to `startPreview()`. The modules use stickyflow.js
+  through the types in `webview/stickyflow.ts`, so a renamed or removed export
+  (like the `insertEntity` rename that blanked the panel) now fails
+  `npm run compile`.
+- `copy-media` records the stickyflow.js version and commit it copied in
+  `media/stickyflow/SOURCE.json` and prints it.
+- `npm run check` runs compile, the unit tests and `verify:webview` in one go.
 - Built against stickyflow.js `main` after its Publishing-Refactoring merge
   (#12). Frames, swimlanes, tables and charts are now moved and resized by
   stickyflow.js's own edit mode, so the preview's supplemental
@@ -23,6 +33,10 @@ First working version. Not yet published to the Marketplace (`publisher` in
 
 ### Fixed
 
+- A preview opened on a file that didn't render (a syntax error, say) stayed
+  on the error message even after the file was fixed: every update hit the
+  missing viewer and threw. It now re-renders and wires up the toolbar as soon
+  as the text renders.
 - "+ Entity", the "+" bubbles and frame-drag previews read
   `sflToCanvasState().canvasObjects` (renamed from `entities` in
   stickyflow.js); with the old name "+ Entity" threw and did nothing.
