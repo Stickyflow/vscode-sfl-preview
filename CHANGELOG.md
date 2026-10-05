@@ -43,6 +43,10 @@ First working version. Not yet published to the Marketplace (`publisher` in
 
 ### Added
 
+- "Style" toolbar button: runs vscode-sfl's *Apply Style Template* for the
+  previewed document.
+- The canvas color from a style template (`Style tpl_canvas { fill }`) is
+  painted behind the diagram and used as the SVG and PNG export background.
 - `SFL: Open Preview` / `SFL: Open Preview to the Side` commands, plus an
   editor-title icon, mirroring VS Code's built-in Markdown preview UX.
 - Webview rendering via stickyflow.js's `<stickyflow-diagram>` web component,

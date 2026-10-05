@@ -95,6 +95,10 @@ export class SflPreviewPanel {
         typeof message.data === 'string'
       ) {
         void exportDiagram(document.uri, message.format, message.data);
+      } else if (message?.type === 'sfl/pickTemplate') {
+        // The template logic lives in vscode-sfl (a dependency of this
+        // extension); its command shows the picker and writes the edit.
+        void vscode.commands.executeCommand('sfl.applyStyleTemplate', document.uri);
       }
     });
     this.panel.onDidDispose(() => {

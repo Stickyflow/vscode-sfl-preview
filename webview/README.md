@@ -41,6 +41,7 @@ Rules for anything in here:
 | `linkTool.ts` | "+ Link": click source, click target. Links for 2D objects, face-attached Connections for cubes. |
 | `routeButton.ts` | "Route:": cycles the selected link's routing. |
 | `selectionSync.ts` | Canvas <-> editor selection sync without echo loops. |
+| `canvas.ts` | Reads a style template's canvas color (`Style tpl_canvas { fill }`) and paints it behind the viewer. |
 | `exportDiagram.ts` | SVG / PNG export via stickyflow.js's static `render()`. |
 | `placement.ts` | Pure: where new 2D objects land, their default size and style, which roles can be linked. |
 | `isometric.ts` | Pure: isometric geometry for cube copies and Connection faces. |

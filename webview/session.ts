@@ -27,6 +27,8 @@ export interface DocumentSession {
   objectById(id: string): CanvasObject | undefined;
   /** A fresh `<prefix>_<n>` id, checked against `within` (default: the current text). */
   nextId(prefix: string, within?: string): string;
+  /** Called after every commit or receive that changed the text. */
+  onChange(listener: (source: string) => void): void;
 }
 
 export interface PreviewContext {
@@ -40,6 +42,10 @@ export interface PreviewContext {
 
 export function createDocumentSession(viewer: Viewer, core: CoreApi, host: HostPort, initial: string): DocumentSession {
   let source = initial;
+  const listeners: Array<(source: string) => void> = [];
+  const changed = () => {
+    for (const listener of listeners) listener(source);
+  };
 
   const objects = (): CanvasObject[] => {
     try {
@@ -58,6 +64,7 @@ export function createDocumentSession(viewer: Viewer, core: CoreApi, host: HostP
       source = next;
       viewer.update({ source });
       host.edit(source);
+      changed();
     },
     receive(next, likelyExternalRewrite) {
       if (next === source) return;
@@ -65,9 +72,13 @@ export function createDocumentSession(viewer: Viewer, core: CoreApi, host: HostP
       // highlightChanges only here, not in commit(): the user just watched
       // their own drag/resize/create happen and doesn't need it flashed back.
       viewer.update({ source, highlightChanges: likelyExternalRewrite ? { color: EXTERNAL_REWRITE_COLOR } : true });
+      changed();
     },
     objects,
     objectById: (id) => objects().find((o) => o.id === id),
     nextId: (prefix, within) => nextId(prefix, within ?? source),
+    onChange: (listener) => {
+      listeners.push(listener);
+    },
   };
 }

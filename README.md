@@ -123,10 +123,18 @@ briefly flash. It's an easy way to see exactly what an edit touched, and
 what it didn't. Your own canvas edits don't flash, since you just watched
 them happen.
 
+### Style templates
+
+**Style** opens vscode-sfl's template picker (Night Lime, Midnight Violet,
+Graphite Mono, Paper Navy) for the previewed file. The template is written
+into the `.sfl`, so it's one undo step and shows up in your diff. Its canvas
+color becomes the preview's background.
+
 ### Exporting
 
 **Export SVG** and **Export PNG** save the whole diagram, not just the part
-currently in view. PNGs are rendered at 2x for a crisp result.
+currently in view. PNGs are rendered at 2x for a crisp result. With a style
+template applied, both exports use its canvas color as the background.
 
 ## Development
 

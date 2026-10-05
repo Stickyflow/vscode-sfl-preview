@@ -12,7 +12,9 @@ import type { HostPort } from './host.js';
  *  the display's DPI: the reader's screen shouldn't decide the file's size. */
 const PNG_EXPORT_SCALE = 2;
 
-export function exportDiagram(core: CoreApi, host: HostPort, source: string, format: 'svg' | 'png'): void {
+/** `background` is the style template's canvas color; without one, SVG stays
+ *  transparent and PNG gets white. */
+export function exportDiagram(core: CoreApi, host: HostPort, source: string, format: 'svg' | 'png', background: string | null): void {
   let result: ReturnType<CoreApi['render']>;
   try {
     result = core.render(source, { padding: 16 });
@@ -20,11 +22,12 @@ export function exportDiagram(core: CoreApi, host: HostPort, source: string, for
     host.warn(`Could not export: ${err instanceof Error ? err.message : String(err)}`);
     return;
   }
+  const svg = background ? withBackground(result.svg, background) : result.svg;
   if (format === 'svg') {
-    host.export('svg', result.svg);
+    host.export('svg', svg);
     return;
   }
-  const { svg, width, height } = result;
+  const { width, height } = result;
   const img = new Image();
   img.onload = () => {
     const canvas = document.createElement('canvas');
@@ -35,13 +38,22 @@ export function exportDiagram(core: CoreApi, host: HostPort, source: string, for
       host.warn('Could not rasterize the diagram for PNG export.');
       return;
     }
-    // The SVG has no background (transparent by design), so fill white:
-    // text tuned for a light canvas would vanish on a dark surface.
-    ctx.fillStyle = '#ffffff';
+    // Without a template the SVG has no background (transparent by design),
+    // so fill white: text tuned for a light canvas would vanish on a dark one.
+    ctx.fillStyle = background ?? '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     host.export('png', canvas.toDataURL('image/png'));
   };
   img.onerror = () => host.warn('Could not rasterize the diagram for PNG export.');
   img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+}
+
+/** Paints `color` behind everything, as the first child of the root <svg>. */
+function withBackground(svg: string, color: string): string {
+  const open = /<svg[^>]*>/.exec(svg);
+  if (!open) return svg;
+  const at = open.index + open[0].length;
+  const rect = `<rect width="100%" height="100%" fill="${color.replace(/"/g, '&quot;')}"/>`;
+  return svg.slice(0, at) + rect + svg.slice(at);
 }

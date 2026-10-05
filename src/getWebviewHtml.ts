@@ -39,7 +39,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
        edit-mode gesture — would fail to load while the diagram still renders. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'strict-dynamic';" />
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--vscode-editor-background); }
+    html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--sf-canvas, var(--vscode-editor-background)); }
     stickyflow-diagram { width: 100%; height: 100%; display: block; }
     .sf-toolbar {
       position: fixed; top: 8px; right: 8px; z-index: 10;
@@ -81,6 +81,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <button id="sf-add-link" title="Link two entities" aria-pressed="false" hidden>+ Link</button>
     <button id="sf-link-route" title="Cycle the selected link's routing: orthogonal, curved, straight" hidden>Route</button>
     <button id="sf-toggle-edit" title="Toggle edit mode" aria-pressed="false">Editing: Off</button>
+    <span class="sf-sep"></span>
+    <button id="sf-pick-template" title="Apply a style template to this file">Style</button>
     <span class="sf-sep"></span>
     <button id="sf-export-svg" title="Export the diagram as an SVG file">Export SVG</button>
     <button id="sf-export-png" title="Export the diagram as a PNG image">Export PNG</button>

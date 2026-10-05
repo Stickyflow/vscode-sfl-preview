@@ -8,6 +8,7 @@ export type WebviewToHostMessage =
   | { type: 'sfl/reveal'; id: string | null }
   | { type: 'sfl/warn'; message: string }
   | { type: 'sfl/export'; format: 'svg' | 'png'; data: string }
+  | { type: 'sfl/pickTemplate' }
   | { type: 'sfl/sceneDiff'; added: string[]; removed: string[]; changed: string[] };
 
 export type HostToWebviewMessage =
@@ -19,6 +20,8 @@ export interface HostPort {
   reveal(id: string | null): void;
   warn(message: string): void;
   export(format: 'svg' | 'png', data: string): void;
+  /** Opens vscode-sfl's "Apply Style Template" picker for this document. */
+  pickTemplate(): void;
   sceneDiff(diff: { added: string[]; removed: string[]; changed: string[] }): void;
 }
 
@@ -33,6 +36,7 @@ export function createHostPort(api: VsCodeApi): HostPort {
     reveal: (id) => post({ type: 'sfl/reveal', id }),
     warn: (message) => post({ type: 'sfl/warn', message }),
     export: (format, data) => post({ type: 'sfl/export', format, data }),
+    pickTemplate: () => post({ type: 'sfl/pickTemplate' }),
     sceneDiff: ({ added, removed, changed }) => post({ type: 'sfl/sceneDiff', added, removed, changed }),
   };
 }
