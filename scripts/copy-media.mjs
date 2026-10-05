@@ -9,7 +9,8 @@
 // cherry picking files would silently break those imports. Requires
 // stickyflow.js (repo root, sibling of vscode-extensions/) to have been
 // built first (`npm run build` there).
-import { cpSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { cpSync, mkdirSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -29,4 +30,19 @@ if (!existsSync(srcDir)) {
 rmSync(destDir, { recursive: true, force: true });
 mkdirSync(destDir, { recursive: true });
 cpSync(srcDir, destDir, { recursive: true });
-console.log('[vscode-sfl-preview] copied stickyflow.js/dist -> media/stickyflow/');
+
+// Which stickyflow.js this build was made from. There's no published package
+// to pin yet, so record the version and commit next to the copy: it shows up
+// in the build log, and media/stickyflow/SOURCE.json answers "which
+// stickyflow.js is this .vsix running?" later.
+const pkgDir = path.dirname(srcDir);
+const { version } = JSON.parse(readFileSync(path.join(pkgDir, 'package.json'), 'utf8'));
+const git = (...args) => {
+  const result = spawnSync('git', ['-C', pkgDir, ...args], { encoding: 'utf8' });
+  return result.status === 0 ? result.stdout.trim() : null;
+};
+const source = { version, commit: git('rev-parse', '--short', 'HEAD'), branch: git('rev-parse', '--abbrev-ref', 'HEAD') };
+writeFileSync(path.join(destDir, 'SOURCE.json'), JSON.stringify(source, null, 2) + '\n');
+console.log(
+  `[vscode-sfl-preview] copied stickyflow.js ${version} (${source.branch ?? '?'} @ ${source.commit ?? '?'}) dist -> media/stickyflow/`,
+);

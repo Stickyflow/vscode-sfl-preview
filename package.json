@@ -70,13 +70,14 @@
   },
   "scripts": {
     "copy-media": "node ./scripts/copy-media.mjs",
-    "compile:webview": "tsc -p ./tsconfig.webview.json",
+    "compile:webview": "node -e \"require('fs').rmSync('media/webview', { recursive: true, force: true })\" && tsc -p ./tsconfig.webview.json",
     "compile": "npm run copy-media && tsc -p ./ && npm run compile:webview",
     "watch": "npm run copy-media && npm run compile:webview && tsc -p ./ --watch",
     "watch:webview": "tsc -p ./tsconfig.webview.json --watch",
     "test": "vitest run",
     "test:watch": "vitest",
     "verify:webview": "node ./scripts/verify-webview.mjs",
+    "check": "npm run compile && npm test && npm run verify:webview",
     "package": "npm run compile && vsce package"
   },
   "devDependencies": {
