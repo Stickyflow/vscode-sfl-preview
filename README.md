@@ -152,13 +152,15 @@ Press **F5** with this folder open to launch an Extension Development Host.
 ```bash
 npm test                 # unit tests (vitest), no browser needed
 npm run verify:webview   # end-to-end check in headless Chrome
+npm run check            # compile + both of the above
 ```
 
 The unit tests cover the SFL text patchers and the drag/resize geometry.
 `verify:webview` loads the real webview in Chrome and exercises panning,
 edit mode, dragging, resizing and link routing. It needs a local Chrome
 (set `CHROME_PATH` if it's somewhere unusual) and skips itself if none is
-found. Run it after touching `getWebviewHtml.ts` or anything in `webview/`.
+found. Run it (or `npm run check`) after touching `getWebviewHtml.ts` or
+anything in `webview/`.
 
 ## 🙌 Contributing
 

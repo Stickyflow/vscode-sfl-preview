@@ -665,8 +665,8 @@
               </article>
               <article class="card">
                 <span class="card-number">06</span>
-                <h3>Pure logic, thin glue</h3>
-                <p>SFL patchers, routing cycles and pan math are pure functions with unit tests. DOM glue stays small and is checked end to end.</p>
+                <h3>Typed against the renderer</h3>
+                <p>Webview modules see stickyflow.js only through its <code>.d.ts</code> types. A renamed or removed export fails <code>npm run compile</code> instead of blanking the panel. Pure logic stays separate from DOM glue.</p>
               </article>
             </div>
           </section>
@@ -721,6 +721,7 @@
                 <span><i class="swatch" style="background: var(--violet)"></i>webview</span>
                 <span><i class="swatch" style="background: var(--amber)"></i>stickyflow.js</span>
                 <span><i class="swatch dashed" style="color: var(--amber)"></i>build step</span>
+                <span><i class="swatch dashed" style="color: var(--violet)"></i>type-only</span>
               </figcaption>
               <details>
                 <summary>SFL source</summary>
@@ -729,15 +730,16 @@
             </figure>
             <div class="rule-box">
               The webview's CSP is <code>default-src 'none'</code> with a per-load nonce and <code>'strict-dynamic'</code>.
-              The nonce authorizes the inline module; <code>'strict-dynamic'</code> extends that trust to the code-split
-              <code>chunk-*.js</code> files stickyflow.js imports, which a bare nonce would block.
+              The nonce authorizes the inline bootstrap; <code>'strict-dynamic'</code> extends that trust to everything it
+              imports: <code>media/webview/main.js</code> and its modules, and the code-split <code>chunk-*.js</code> files
+              stickyflow.js imports, which a bare nonce would block.
             </div>
           </section>
 
           <section id="protocol">
             <div class="section-head">
               <h2>Message protocol</h2>
-              <p>Everything that crosses the boundary. Messages are plain objects, validated by shape on the receiving side.</p>
+              <p>Everything that crosses the boundary. Messages are plain objects, validated by shape on the receiving side. In the webview, <code>webview/host.ts</code> declares both directions as types and is the only place that calls <code>postMessage</code>.</p>
             </div>
             <div class="table-wrap">
               <table>
@@ -770,24 +772,24 @@
                 <span class="timeline-index">01</span>
                 <div>
                   <h3>Gesture</h3>
-                  <p>With <strong>Editing: On</strong>, <code>bindEditing()</code> from stickyflow.js's interaction tier emits a <code>moveChange</code> for each moved owner. Moves are collected for the gesture.</p>
-                  <span class="function-path">getWebviewHtml.ts (inline module) → stickyflow/interaction</span>
+                  <p>With <strong>Editing: On</strong>, <code>bindEditing()</code> from stickyflow.js's interaction tier emits a <code>moveChange</code> for each moved owner. A batcher collects the gesture's moves until the next microtask.</p>
+                  <span class="function-path">editMode.ts → stickyflow/interaction → editActions.ts</span>
                 </div>
               </article>
               <article class="timeline-step">
                 <span class="timeline-index">02</span>
                 <div>
                   <h3>Patch the text</h3>
-                  <p><code>flushMoves()</code> drops moves whose ancestor frame also moved (children are relative to their parent), then folds the rest through <code>applyMoveChange()</code> into one new source string.</p>
-                  <span class="function-path">flushMoves() → sflToCanvasState() → applyMoveChange()</span>
+                  <p><code>withoutNestedMoves()</code> drops moves whose ancestor frame also moved (children are relative to their parent), then the rest fold through <code>applyMoveChange()</code> into one new source string.</p>
+                  <span class="function-path">moves.ts → session.objects() → applyMoveChange()</span>
                 </div>
               </article>
               <article class="timeline-step">
                 <span class="timeline-index">03</span>
                 <div>
                   <h3>Update locally, then report</h3>
-                  <p><code>applyPatch()</code> updates the viewer immediately without highlighting (you just watched it happen) and posts <code>sfl/edit</code> with the full source.</p>
-                  <span class="function-path">applyPatch() → viewer.update() → postMessage('sfl/edit')</span>
+                  <p><code>doc.commit()</code> updates the viewer immediately without highlighting (you just watched it happen) and sends <code>sfl/edit</code> with the full source.</p>
+                  <span class="function-path">session.ts commit() → viewer.update() → host.edit()</span>
                 </div>
               </article>
               <article class="timeline-step">
@@ -802,7 +804,7 @@
                 <span class="timeline-index">05</span>
                 <div>
                   <h3>Echo, ignored</h3>
-                  <p>The edit fires <code>onDidChangeTextDocument</code>, which schedules an <code>sfl/update</code>. The webview sees the source equals <code>currentSource</code> and does nothing.</p>
+                  <p>The edit fires <code>onDidChangeTextDocument</code>, which schedules an <code>sfl/update</code>. <code>doc.receive()</code> sees the source equals the one it holds and does nothing.</p>
                   <span class="function-path">extension.ts → SflPreviewPanel.updateIfOpen() → scheduleUpdate()</span>
                 </div>
               </article>
@@ -819,13 +821,28 @@
 ├─ src/                     Extension host (Node)
 │  ├─ extension.ts          Commands, document and selection listeners
 │  ├─ panel.ts              SflPreviewPanel: lifecycle, debounce, message handling
-│  ├─ getWebviewHtml.ts     HTML shell, CSP, toolbar, inline module script
+│  ├─ getWebviewHtml.ts     HTML shell, CSP, toolbar, ~10-line bootstrap
 │  └─ sflOwnerBlocks.ts     Line ranges of Shape/Container/Table/Link blocks
 ├─ webview/                 Browser ES modules, compiled to media/webview/
+│  ├─ main.ts               startPreview(): composition root
+│  ├─ stickyflow.ts         Type-only port to stickyflow.js (.d.ts)
+│  ├─ host.ts               HostPort + sfl/* message types
+│  ├─ session.ts            DocumentSession: commit / receive, PreviewContext
+│  ├─ editMode.ts           Editing toggle, owns bindEditing()
+│  ├─ editActions.ts        Edit gestures → SFL patches
+│  ├─ addEntity.ts          "+ Entity"
+│  ├─ linkTool.ts           "+ Link" (Links and cube Connections)
+│  ├─ routeButton.ts        "Route:" button
+│  ├─ selectionSync.ts      Canvas ↔ editor selection
+│  ├─ exportDiagram.ts      SVG / PNG export
+│  ├─ placement.ts          Pure: where new 2D objects land
+│  ├─ isometric.ts          Pure: cube copies and Connection faces
+│  ├─ moves.ts              Pure: nested-move filter, gesture batching
+│  ├─ ids.ts                Pure: fresh block ids
 │  ├─ panControls.ts        Drag and wheel panning fed to the viewer
 │  └─ linkRoute.ts          Route cycling as a pure SFL patch
 ├─ scripts/
-│  ├─ copy-media.mjs        stickyflow.js/dist → media/stickyflow/
+│  ├─ copy-media.mjs        stickyflow.js/dist → media/stickyflow/ (+ SOURCE.json)
 │  └─ verify-webview.mjs    End-to-end check in headless Chrome
 └─ media/                   Generated, git-ignored
    ├─ stickyflow/           Prebuilt renderer (IIFE + ESM chunks)
@@ -843,7 +860,7 @@
                 <tbody>
                   <tr><td><code>extension.ts</code></td><td><code>activate()</code>, <code>looksLikeExternalRewrite()</code></td><td>Registers both commands and a serializer that discards stale panels on reload. Forwards document changes and cursor moves to the open panel. Guesses external rewrites from the change shape.</td></tr>
                   <tr><td><code>panel.ts</code></td><td><code>SflPreviewPanel</code></td><td>One panel per URI. Debounces updates, handles every incoming message, applies edits, reveals blocks, writes exports.</td></tr>
-                  <tr><td><code>getWebviewHtml.ts</code></td><td><code>getWebviewHtml()</code></td><td>Webview URIs, nonce, CSP, toolbar markup, and the inline module that wires viewer, editing, selection and export.</td></tr>
+                  <tr><td><code>getWebviewHtml.ts</code></td><td><code>getWebviewHtml()</code></td><td>Webview URIs, nonce, CSP, toolbar markup, and a bootstrap that imports stickyflow.js and calls <code>startPreview()</code>. No behavior of its own.</td></tr>
                   <tr><td><code>sflOwnerBlocks.ts</code></td><td><code>findOwnerRange()</code>, <code>findEnclosingOwnerId()</code></td><td>Brace-depth scan for block line ranges, used only for selection sync.</td></tr>
                 </tbody>
               </table>
@@ -853,7 +870,7 @@
           <section id="webview-modules">
             <div class="section-head">
               <h2>Webview</h2>
-              <p>Runs in the sandbox. No <code>vscode</code>, no Node built-ins; it reaches the host only through <code>postMessage</code>.</p>
+              <p>Runs in the sandbox. No <code>vscode</code>, no Node built-ins, no runtime import of stickyflow.js: the bootstrap hands its modules to <code>startPreview()</code>, and every feature gets them through a <code>PreviewContext</code>.</p>
             </div>
             <div class="table-wrap">
               <table>
@@ -862,8 +879,18 @@
                   <tr><td><code>&lt;stickyflow-diagram interactive&gt;</code></td><td><code>media/stickyflow/stickyflow-diagram.global.js</code></td><td>Viewer with camera and selection, mounted once and updated in place.</td></tr>
                   <tr><td>Interaction tier</td><td><code>media/stickyflow/interaction/index.js</code></td><td><code>bindEditing()</code> gestures and the pure <code>apply*Change</code>, <code>insertCanvasObject</code>, <code>insertLink</code> patchers.</td></tr>
                   <tr><td>Core</td><td><code>media/stickyflow/index.js</code></td><td><code>render()</code> for full-bounds SVG and PNG export, <code>sflToCanvasState()</code> for frame hierarchy.</td></tr>
+                  <tr><td><code>main.ts</code></td><td><code>startPreview()</code></td><td>Composition root: host port, document session, every feature bound to the viewer, host messages routed. If the first text doesn't render there's no viewer yet, so it remounts on each update until one appears.</td></tr>
+                  <tr><td><code>stickyflow.ts</code></td><td><code>InteractionApi</code>, <code>CoreApi</code>, <code>Viewer</code></td><td>Type-only port: re-exports stickyflow.js's types from the copied <code>.d.ts</code> files. Emits nothing.</td></tr>
+                  <tr><td><code>host.ts</code></td><td><code>HostPort</code>, <code>asHostMessage()</code></td><td>The <code>sfl/*</code> messages in both directions as types, and the only <code>postMessage</code> call.</td></tr>
+                  <tr><td><code>session.ts</code></td><td><code>DocumentSession</code>, <code>PreviewContext</code></td><td>Holds the current text. <code>commit()</code> for canvas edits (no highlight, sent to the host), <code>receive()</code> for host edits (highlighted, not echoed).</td></tr>
+                  <tr><td><code>editMode.ts</code></td><td><code>createEditMode()</code></td><td>The Editing toggle. Owns the <code>bindEditing()</code> session, hides resize handles and "+" bubbles while off, notifies the other features.</td></tr>
+                  <tr><td><code>editActions.ts</code></td><td><code>bindEditActions()</code></td><td>Turns edit gestures into patches: text, move, resize, reconnect, properties, sankey, delete, the "+" bubbles (2D and isometric) and bubble-to-target links.</td></tr>
+                  <tr><td><code>addEntity.ts</code>, <code>linkTool.ts</code>, <code>routeButton.ts</code></td><td><code>bind*()</code></td><td>"+ Entity", "+ Link" (a Link between 2D objects, a face-attached Connection between cubes) and the Route button.</td></tr>
+                  <tr><td><code>selectionSync.ts</code></td><td><code>bindSelectionSync()</code></td><td>Canvas ↔ editor selection, skipping an id it just sent or received.</td></tr>
+                  <tr><td><code>exportDiagram.ts</code></td><td><code>exportDiagram()</code></td><td>Full-bounds SVG through <code>render()</code>, PNG through an offscreen canvas at 2x.</td></tr>
+                  <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, nested-move filtering and gesture batching, fresh ids.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
-                  <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight.</td></tr>
+                  <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight. Stays until stickyflow.js's <code>applyPropertyChange</code> indents a property it inserts into a multi-line block correctly.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -878,7 +905,7 @@
               <article class="card">
                 <span class="card-number">B1</span>
                 <h3>Copy the renderer</h3>
-                <p>The whole <code>dist/</code> tree is copied, because the ESM entries import sibling <code>chunk-*.js</code> files by relative path.</p>
+                <p>The whole <code>dist/</code> tree is copied, because the ESM entries import sibling <code>chunk-*.js</code> files by relative path. <code>SOURCE.json</code> records the stickyflow.js version, branch and commit that was copied.</p>
                 <span class="path">npm run copy-media</span>
               </article>
               <article class="card">
@@ -890,7 +917,7 @@
               <article class="card">
                 <span class="card-number">B3</span>
                 <h3>Compile the webview</h3>
-                <p><code>webview/</code> compiles to <code>media/webview/</code> as ES2022 modules with DOM types.</p>
+                <p><code>webview/</code> compiles to a cleared <code>media/webview/</code> as ES2022 modules with DOM types, type-checked against the copied stickyflow.js <code>.d.ts</code> files.</p>
                 <span class="path">npm run compile:webview</span>
               </article>
             </div>
@@ -921,7 +948,14 @@
                 <h3>Export re-renders</h3>
                 <p>Export calls <code>render()</code> on the current source instead of serializing the live SVG, whose viewBox follows pan and zoom.</p>
                 <ul><li>Cost: one extra render per export.</li></ul>
-                <span class="path">exportDiagram() in the webview</span>
+                <span class="path">webview/exportDiagram.ts</span>
+              </article>
+              <article class="card">
+                <span class="card-number">D4</span>
+                <h3>Inject, don't import</h3>
+                <p>The webview modules never import stickyflow.js at runtime. The bootstrap passes its namespaces in, and the modules type them from the copied <code>.d.ts</code>. No bundler, no import paths that differ between source and output.</p>
+                <ul><li>Cost: the types are only as current as the last <code>copy-media</code>.</li></ul>
+                <span class="path">webview/stickyflow.ts, webview/main.ts</span>
               </article>
             </div>
           </section>
@@ -934,12 +968,13 @@
             <div class="checks">
               <div class="check">Vitest covers the owner-block scanner used for selection sync.</div>
               <div class="check">Vitest covers link route patching and pan geometry in <code>webview/__tests__/</code>.</div>
+              <div class="check"><code>tsc -p tsconfig.webview.json</code> checks every webview module against stickyflow.js's types.</div>
               <div class="check"><code>npm run verify:webview</code> loads the generated HTML in headless Chrome.</div>
               <div class="check">It exercises panning, edit mode, dragging, resizing and link routing end to end.</div>
             </div>
             <div class="rule-box">
-              Run <code>npm run verify:webview</code> after touching <code>getWebviewHtml.ts</code> or anything in
-              <code>webview/</code>. It needs a local Chrome (set <code>CHROME_PATH</code> if needed) and skips itself
+              Run <code>npm run check</code> (compile, unit tests, <code>verify:webview</code>) after touching
+              <code>getWebviewHtml.ts</code> or anything in <code>webview/</code>. It needs a local Chrome (set <code>CHROME_PATH</code> if needed) and skips itself
               when none is found.
             </div>
           </section>
@@ -1054,7 +1089,7 @@
           }
           Shape prev_client : PrevNode {
             kind: component
-            text: "webview/*\npan, link route"
+            text: "webview/*\ntyped modules"
             layout { position: 20, 252; size: 210, 60 }
           }
         }
@@ -1152,21 +1187,22 @@
       Style HostFlow  : Flow { stroke: "#4dd7d0"; strokeWidth: 2 }
       Style MsgFlow   : Flow { stroke: "#a989ff"; strokeWidth: 2 }
       Style BuildFlow : Flow { stroke: "#ffc66d"; strokeStyle: dashed }
-      
+      Style TypeFlow  : Flow { stroke: "#a989ff"; strokeStyle: dashed }
+
       Model vscode_sfl_preview {
         text: "vscode-sfl-preview internals"
-      
+
         Shape doc : DocNode {
           kind: input
           text: ".sfl TextDocument"
           layout { position: 150, 0; size: 240, 70 }
         }
-      
+
         Container host : HostFrame {
           kind: frame
           text: "Extension host (Node)"
-          layout { position: 0, 140; size: 540, 400 }
-      
+          layout { position: 0, 140; size: 540, 510 }
+
           Shape ext : HostNode {
             kind: component
             text: "extension.ts\ncommands + listeners"
@@ -1184,7 +1220,7 @@
           }
           Shape html : HostNode {
             kind: component
-            text: "getWebviewHtml.ts\nCSP nonce, toolbar, script"
+            text: "getWebviewHtml.ts\nCSP nonce, toolbar, bootstrap"
             layout { position: 290, 180; size: 230, 64 }
           }
           Shape save : HostNode {
@@ -1193,15 +1229,15 @@
             layout { position: 290, 304; size: 230, 64 }
           }
         }
-      
+
         Container wv : WvFrame {
           kind: frame
-          text: "Webview sandbox (browser)"
-          layout { position: 660, 140; size: 540, 400 }
-      
-          Shape inline : WvNode {
+          text: "Webview sandbox (browser)  ·  webview/*.ts"
+          layout { position: 660, 140; size: 540, 510 }
+
+          Shape main : WvNode {
             kind: process
-            text: "inline module script\nedit mode, toolbar, sync"
+            text: "main.ts  ·  startPreview()\ncomposition root"
             layout { position: 20, 56; size: 230, 64 }
           }
           Shape element : WvNode {
@@ -1209,33 +1245,43 @@
             text: "<stickyflow-diagram>\nviewer, camera, selection"
             layout { position: 290, 56; size: 230, 64 }
           }
-          Shape interaction : LibNode {
+          Shape session : WvNode {
             kind: component
-            text: "stickyflow/interaction\nbindEditing, apply*Change"
-            layout { position: 20, 180; size: 230, 64 }
+            text: "session.ts + host.ts\ncommit / receive"
+            layout { position: 20, 170; size: 210, 64 }
+          }
+          Shape features : WvNode {
+            kind: component
+            text: "feature modules\nedit mode, toolbar, sync"
+            layout { position: 290, 170; size: 230, 64 }
           }
           Shape core : LibNode {
             kind: component
-            text: "stickyflow core\nrender() for export"
-            layout { position: 290, 180; size: 230, 64 }
+            text: "stickyflow core\nrender, canvas state"
+            layout { position: 20, 290; size: 230, 64 }
           }
-          Shape pan : WvNode {
+          Shape interaction : LibNode {
             kind: component
-            text: "webview/panControls.ts\ndrag + wheel panning"
-            layout { position: 20, 304; size: 230, 64 }
+            text: "stickyflow/interaction\nbindEditing, patchers"
+            layout { position: 290, 290; size: 230, 64 }
           }
-          Shape route : WvNode {
+          Shape types : WvNode {
             kind: component
-            text: "webview/linkRoute.ts\nRoute button patcher"
-            layout { position: 290, 304; size: 230, 64 }
+            text: "stickyflow.ts\ntype-only port (.d.ts)"
+            layout { position: 20, 410; size: 230, 64 }
+          }
+          Shape pure : WvNode {
+            kind: component
+            text: "pure helpers\ngeometry, ids, routes"
+            layout { position: 290, 410; size: 230, 64 }
           }
         }
-      
+
         Container build : BuildFrame {
           kind: frame
           text: "npm run compile"
-          layout { position: 660, 620; size: 540, 150 }
-      
+          layout { position: 660, 730; size: 540, 150 }
+
           Shape dist : DistNode {
             kind: component
             text: "stickyflow.js/dist"
@@ -1247,7 +1293,7 @@
             layout { position: 290, 58; size: 230, 64 }
           }
         }
-      
+
         Link l_doc_ext : HostFlow {
           from: doc, bottom (0.3)
           to: host.ext, top (0.5)
@@ -1277,25 +1323,51 @@
         }
         Link l_host_to_wv : MsgFlow {
           from: host.panel, right (0.3)
-          to: wv.inline, left (0.3)
+          to: wv.main, left (0.3)
           text: "sfl/update · select"
         }
         Link l_wv_to_host : MsgFlow {
-          from: wv.inline, left (0.7)
+          from: wv.session, left (0.5)
           to: host.panel, right (0.7)
           text: "sfl/edit · reveal · export"
         }
-        Link l_inline_element : MsgFlow {
-          from: wv.inline, right (0.5)
+        Link l_main_element : MsgFlow {
+          from: wv.main, right (0.5)
           to: wv.element, left (0.5)
         }
-        Link l_inline_interaction : MsgFlow {
-          from: wv.inline, bottom (0.5)
+        Link l_main_session : MsgFlow {
+          from: wv.main, bottom (0.5)
+          to: wv.session, top (0.5)
+        }
+        Link l_main_features : MsgFlow {
+          from: wv.main, bottom (0.97)
+          to: wv.features, left (0.1)
+        }
+        Link l_features_session : MsgFlow {
+          from: wv.features, left (0.75)
+          to: wv.session, right (0.6)
+          text: "commit"
+        }
+        Link l_session_core : MsgFlow {
+          from: wv.session, bottom (0.5)
+          to: wv.core, top (0.5)
+        }
+        Link l_features_interaction : MsgFlow {
+          from: wv.features, bottom (0.5)
           to: wv.interaction, top (0.5)
         }
-        Link l_inline_core : MsgFlow {
-          from: wv.inline, bottom (0.85)
-          to: wv.core, left (0.5)
+        Link l_features_pure : MsgFlow {
+          from: wv.features, right (0.5)
+          to: wv.pure, right (0.5)
+        }
+        Link l_types_core : TypeFlow {
+          from: wv.types, top (0.5)
+          to: wv.core, bottom (0.5)
+          text: "types"
+        }
+        Link l_types_interaction : TypeFlow {
+          from: wv.types, right (0.3)
+          to: wv.interaction, left (0.7)
         }
         Link l_dist_copy : BuildFlow {
           from: build.dist, right (0.5)
