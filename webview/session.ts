@@ -27,7 +27,10 @@ export interface DocumentSession {
   objectById(id: string): CanvasObject | undefined;
   /** A fresh `<prefix>_<n>` id, checked against `within` (default: the current text). */
   nextId(prefix: string, within?: string): string;
-  /** Called after every commit or receive that changed the text. */
+  /** Shows `next` instead of the document until the next receive() or
+   *  commit(), or the document again with `null`. Nothing is sent to the host. */
+  showTransient(next: string | null): void;
+  /** Called with the text on screen whenever it changes. */
   onChange(listener: (source: string) => void): void;
 }
 
@@ -42,9 +45,11 @@ export interface PreviewContext {
 
 export function createDocumentSession(viewer: Viewer, core: CoreApi, host: HostPort, initial: string): DocumentSession {
   let source = initial;
+  // Text on screen in place of `source` (see showTransient), or null.
+  let transient: string | null = null;
   const listeners: Array<(source: string) => void> = [];
-  const changed = () => {
-    for (const listener of listeners) listener(source);
+  const changed = (shown = source) => {
+    for (const listener of listeners) listener(shown);
   };
 
   const objects = (): CanvasObject[] => {
@@ -60,19 +65,42 @@ export function createDocumentSession(viewer: Viewer, core: CoreApi, host: HostP
       return source;
     },
     commit(next) {
-      if (next === source) return;
+      if (next === source && transient === null) return;
+      transient = null;
+      if (next !== source) host.edit(next);
       source = next;
       viewer.update({ source });
-      host.edit(source);
       changed();
     },
     receive(next, likelyExternalRewrite) {
-      if (next === source) return;
+      const shown = transient;
+      transient = null;
+      if (next === shown) {
+        // The previewed template was applied: it's already on screen, so
+        // adopt the text without re-rendering or flashing every block.
+        source = next;
+        return;
+      }
+      if (next === source) {
+        if (shown !== null) {
+          viewer.update({ source });
+          changed();
+        }
+        return;
+      }
       source = next;
       // highlightChanges only here, not in commit(): the user just watched
       // their own drag/resize/create happen and doesn't need it flashed back.
       viewer.update({ source, highlightChanges: likelyExternalRewrite ? { color: EXTERNAL_REWRITE_COLOR } : true });
       changed();
+    },
+    showTransient(next) {
+      const target = next === source ? null : next;
+      if (target === transient) return;
+      transient = target;
+      const shown = transient ?? source;
+      viewer.update({ source: shown });
+      changed(shown);
     },
     objects,
     objectById: (id) => objects().find((o) => o.id === id),

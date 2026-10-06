@@ -56,6 +56,8 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi }
         el.source = source;
         if (el.viewer) preview = attach(el.viewer);
       }
+    } else if (message.type === 'sfl/transient') {
+      preview?.doc.showTransient(message.source);
     } else if (message.type === 'sfl/select') {
       preview?.selectFromHost(message.id);
     }

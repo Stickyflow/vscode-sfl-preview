@@ -44,7 +44,9 @@ First working version. Not yet published to the Marketplace (`publisher` in
 ### Added
 
 - "Style" toolbar button: runs vscode-sfl's *Apply Style Template* for the
-  previewed document.
+  previewed document. The template highlighted in the picker is shown live
+  (internal `sfl.preview.showTransientSource` command) without editing the
+  document; dismissing the picker shows the document again.
 - The canvas color from a style template (`Style tpl_canvas { fill }`) is
   painted behind the diagram and used as the SVG and PNG export background.
 - `SFL: Open Preview` / `SFL: Open Preview to the Side` commands, plus an

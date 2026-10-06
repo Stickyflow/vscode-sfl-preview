@@ -126,9 +126,13 @@ them happen.
 ### Style templates
 
 **Style** opens vscode-sfl's template picker (Night Lime, Midnight Violet,
-Graphite Mono, Paper Navy, Charcoal Pastel) for the previewed file. The template is written
-into the `.sfl`, so it's one undo step and shows up in your diff. Its canvas
-color becomes the preview's background.
+Graphite Mono, Paper Navy, Charcoal Pastel) for the previewed file. While
+the picker is open, the highlighted template shows live in the preview, so
+you can arrow through them; Esc goes back to the file as it was. The picked
+template is written into the `.sfl`, so it's one undo step and shows up in
+your diff. Its canvas color becomes the preview's background. **None** (the
+last entry, once the file has a template) removes it, and the preview
+follows the VS Code theme again.
 
 ### Exporting
 

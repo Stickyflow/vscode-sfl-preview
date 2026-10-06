@@ -13,6 +13,9 @@ export type WebviewToHostMessage =
 
 export type HostToWebviewMessage =
   | { type: 'sfl/update'; source: string; likelyExternalRewrite?: boolean }
+  /** Text to show without it being the document (a style template the picker
+   *  has highlighted); `null` shows the document again. */
+  | { type: 'sfl/transient'; source: string | null }
   | { type: 'sfl/select'; id: string | null };
 
 export interface HostPort {
@@ -46,6 +49,7 @@ export function asHostMessage(data: unknown): HostToWebviewMessage | null {
   if (!data || typeof data !== 'object') return null;
   const message = data as { type?: unknown; source?: unknown; id?: unknown };
   if (message.type === 'sfl/update' && typeof message.source === 'string') return message as HostToWebviewMessage;
+  if (message.type === 'sfl/transient') return { type: 'sfl/transient', source: typeof message.source === 'string' ? message.source : null };
   if (message.type === 'sfl/select') return { type: 'sfl/select', id: typeof message.id === 'string' && message.id ? message.id : null };
   return null;
 }
