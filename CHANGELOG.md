@@ -49,6 +49,10 @@ First working version. Not yet published to the Marketplace (`publisher` in
   document; dismissing the picker shows the document again.
 - The canvas color from a style template (`Style tpl_canvas { fill }`) is
   painted behind the diagram and used as the SVG and PNG export background.
+- Bundled Inter (`@fontsource-variable/inter`, latin and latin-ext, OFL,
+  copied to `media/fonts/` by `copy-media`): the preview loads it as
+  `@font-face`, and SVG/PNG exports embed the subsets their text uses, so
+  diagrams no longer fall back to another font where Inter isn't installed.
 - `SFL: Open Preview` / `SFL: Open Preview to the Side` commands, plus an
   editor-title icon, mirroring VS Code's built-in Markdown preview UX.
 - Webview rendering via stickyflow.js's `<stickyflow-diagram>` web component,

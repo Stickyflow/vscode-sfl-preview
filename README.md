@@ -140,6 +140,11 @@ follows the VS Code theme again.
 currently in view. PNGs are rendered at 2x for a crisp result. With a style
 template applied, both exports use its canvas color as the background.
 
+The preview ships its own copy of Inter, the font the style templates (and
+stickyflow.js's defaults) use, so diagrams look the same whether or not
+Inter is installed. Exports embed the parts of it their text needs (about
+65 KB for Latin text), so an exported SVG renders the same anywhere.
+
 ## Development
 
 The preview uses a prebuilt copy of `stickyflow.js`, so build that first:

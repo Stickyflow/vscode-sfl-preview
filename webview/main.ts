@@ -6,7 +6,7 @@ import { bindAddEntity } from './addEntity.js';
 import { canvasColor, paintCanvas } from './canvas.js';
 import { bindEditActions } from './editActions.js';
 import { createEditMode } from './editMode.js';
-import { exportDiagram } from './exportDiagram.js';
+import { exportDiagram, type BundledFont } from './exportDiagram.js';
 import { asHostMessage, createHostPort, type VsCodeApi } from './host.js';
 import { bindLinkTool } from './linkTool.js';
 import { bindPanControls } from './panControls.js';
@@ -21,9 +21,11 @@ export interface PreviewOptions {
   interaction: InteractionApi;
   core: CoreApi;
   vscodeApi: VsCodeApi;
+  /** The bundled Inter subsets, embedded into exports. */
+  fonts: BundledFont[];
 }
 
-export function startPreview({ el, initialSource, interaction, core, vscodeApi }: PreviewOptions): void {
+export function startPreview({ el, initialSource, interaction, core, vscodeApi, fonts }: PreviewOptions): void {
   const host = createHostPort(vscodeApi);
   // The text before a viewer exists; afterwards the document session owns it.
   let source = initialSource;
@@ -33,7 +35,8 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi }
   repaint(source);
 
   // Export and templates work from the text alone, with or without a live viewer.
-  const exportAs = (format: 'svg' | 'png') => exportDiagram(core, host, currentSource(), format, canvasColor(core, currentSource()));
+  const exportAs = (format: 'svg' | 'png') =>
+    void exportDiagram(core, host, currentSource(), format, canvasColor(core, currentSource()), fonts);
   button('sf-export-svg').addEventListener('click', () => exportAs('svg'));
   button('sf-export-png').addEventListener('click', () => exportAs('png'));
   button('sf-pick-template').addEventListener('click', () => host.pickTemplate());
