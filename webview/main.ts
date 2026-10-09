@@ -7,6 +7,7 @@ import { canvasColor, paintCanvas } from './canvas.js';
 import { bindEditActions } from './editActions.js';
 import { createEditMode } from './editMode.js';
 import { exportDiagram, type BundledFont } from './exportDiagram.js';
+import { diagramToToon } from './toon.js';
 import { asHostMessage, createHostPort, type VsCodeApi } from './host.js';
 import { bindLinkTool } from './linkTool.js';
 import { bindPanControls } from './panControls.js';
@@ -39,6 +40,14 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi, 
     void exportDiagram(core, host, currentSource(), format, canvasColor(core, currentSource()), fonts);
   button('sf-export-svg').addEventListener('click', () => exportAs('svg'));
   button('sf-export-png').addEventListener('click', () => exportAs('png'));
+  button('sf-export-md').addEventListener('click', () => host.export('md', currentSource()));
+  button('sf-export-toon').addEventListener('click', () => {
+    try {
+      host.export('toon', diagramToToon(core.sflToCanvasState(currentSource())));
+    } catch (err) {
+      host.warn(`Could not export: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  });
   button('sf-pick-template').addEventListener('click', () => host.pickTemplate());
 
   // The web component has no viewer when the text it was given doesn't

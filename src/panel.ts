@@ -5,6 +5,7 @@
 import * as path from 'node:path';
 import * as vscode from 'vscode';
 import { getWebviewHtml } from './getWebviewHtml';
+import { sflToMarkdown } from './markdownExport';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
 
 export const VIEW_TYPE = 'sfl.preview';
@@ -101,7 +102,7 @@ export class SflPreviewPanel {
         void vscode.window.showWarningMessage(`SFL Preview: ${message.message}`);
       } else if (
         message?.type === 'sfl/export' &&
-        (message.format === 'svg' || message.format === 'png') &&
+        isExportFormat(message.format) &&
         typeof message.data === 'string'
       ) {
         void exportDiagram(document.uri, message.format, message.data);
@@ -205,7 +206,21 @@ async function applyEditToDocument(uri: vscode.Uri, newSource: string): Promise<
 // checkout-flow.sfl -> checkout-flow.svg. Just the *starting point* for the
 // save dialog below, not a forced destination: the dialog lets the reader
 // browse anywhere and rename before writing.
-function defaultExportUri(documentUri: vscode.Uri, ext: 'svg' | 'png'): vscode.Uri {
+type ExportFormat = 'svg' | 'png' | 'md' | 'toon';
+
+// Save dialog wording per format; the format is also the file extension.
+const EXPORT_FORMATS: Record<ExportFormat, { label: string; filter: string }> = {
+  svg: { label: 'SVG', filter: 'SVG Image' },
+  png: { label: 'PNG', filter: 'PNG Image' },
+  md: { label: 'Markdown', filter: 'Markdown' },
+  toon: { label: 'TOON', filter: 'TOON' },
+};
+
+function isExportFormat(value: unknown): value is ExportFormat {
+  return typeof value === 'string' && Object.hasOwn(EXPORT_FORMATS, value);
+}
+
+function defaultExportUri(documentUri: vscode.Uri, ext: ExportFormat): vscode.Uri {
   const base = baseName(documentUri.fsPath).replace(/\.sfl$/i, '');
   const dir = vscode.Uri.file(path.dirname(documentUri.fsPath));
   return vscode.Uri.joinPath(dir, `${base}.${ext}`);
@@ -217,16 +232,23 @@ function defaultExportUri(documentUri: vscode.Uri, ext: 'svg' | 'png'): vscode.U
 // an SVG string, or a PNG `data:` URL. This just owns the one thing the
 // webview sandbox can't do itself — a native save dialog and a filesystem
 // write.
-async function exportDiagram(documentUri: vscode.Uri, format: 'svg' | 'png', data: string): Promise<void> {
+async function exportDiagram(documentUri: vscode.Uri, format: ExportFormat, data: string): Promise<void> {
+  const { label, filter } = EXPORT_FORMATS[format];
   const uri = await vscode.window.showSaveDialog({
     defaultUri: defaultExportUri(documentUri, format),
-    filters: format === 'png' ? { 'PNG Image': ['png'] } : { 'SVG Image': ['svg'] },
-    title: `Export SFL Preview as ${format.toUpperCase()}`,
+    filters: { [filter]: [format] },
+    title: `Export SFL Preview as ${label}`,
   });
   if (!uri) return;
-  const contents = format === 'png'
-    ? Buffer.from(data.slice(data.indexOf(',') + 1), 'base64')
-    : Buffer.from(data, 'utf8');
+  let contents: Buffer;
+  if (format === 'png') {
+    contents = Buffer.from(data.slice(data.indexOf(',') + 1), 'base64');
+  } else if (format === 'md') {
+    // The webview sends the source; the heading comes from the file name.
+    contents = Buffer.from(sflToMarkdown(baseName(documentUri.fsPath).replace(/\.sfl$/i, ''), data), 'utf8');
+  } else {
+    contents = Buffer.from(data, 'utf8');
+  }
   await vscode.workspace.fs.writeFile(uri, contents);
   const reveal = 'Reveal in Explorer';
   const choice = await vscode.window.showInformationMessage(`Exported ${baseName(uri.fsPath)}.`, reveal);
