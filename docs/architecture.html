@@ -676,8 +676,10 @@
               <h2>Two extensions, one document</h2>
               <p>
                 <a href="https://github.com/Stickyflow/vscode-sfl">vscode-sfl</a> understands the text, vscode-sfl-preview
-                draws it. They never call each other: both react to the same <code>.sfl</code> document, and installing
-                either one installs both.
+                draws it. They share no code and no process: both react to the same <code>.sfl</code> document, and
+                installing either one installs both. The one call between them is a VS Code command: the
+                preview's <strong>Style</strong> button runs vscode-sfl's <code>sfl.applyStyleTemplate</code>, so the
+                template logic lives in one place.
               </p>
             </div>
             <figure class="diagram" style="margin: 0">
@@ -963,6 +965,13 @@
                 <p>The webview modules never import stickyflow.js at runtime. The bootstrap passes its namespaces in, and the modules type them from the copied <code>.d.ts</code>. No bundler, no import paths that differ between source and output.</p>
                 <ul><li>Cost: the types are only as current as the last <code>copy-media</code>.</li></ul>
                 <span class="path">webview/stickyflow.ts, webview/main.ts</span>
+              </article>
+              <article class="card">
+                <span class="card-number">D5</span>
+                <h3>Templates stay in vscode-sfl</h3>
+                <p>The Style button sends <code>sfl/pickTemplate</code>, and the host runs vscode-sfl's <code>sfl.applyStyleTemplate</code> instead of carrying its own copy. The template edit comes back as an ordinary <code>sfl/update</code>; the preview only reads <code>tpl_canvas</code> for the background.</p>
+                <ul><li>Cost: the Style button needs vscode-sfl installed, which the extension pack guarantees.</li></ul>
+                <span class="path">src/panel.ts, webview/canvas.ts</span>
               </article>
             </div>
           </section>
