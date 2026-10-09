@@ -5,7 +5,7 @@
 // the stickyflow.js render runtime, so installing/activating the language
 // server doesn't pull in the diagram renderer, and vice versa.
 import * as vscode from 'vscode';
-import { SflPreviewPanel, VIEW_TYPE } from './panel';
+import { SflPreviewPanel, TRANSIENT_SOURCE_COMMAND, VIEW_TYPE } from './panel';
 
 // Heuristic, not real provenance: VS Code's onDidChangeTextDocument carries
 // no signal for *who* made an edit, so this guesses from the SHAPE of the
@@ -53,6 +53,9 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
     vscode.commands.registerCommand('sfl.showPreview', () => openPreview(vscode.ViewColumn.Active)),
     vscode.commands.registerCommand('sfl.showPreviewToSide', () => openPreview(vscode.ViewColumn.Beside)),
+    vscode.commands.registerCommand(TRANSIENT_SOURCE_COMMAND, (uri: vscode.Uri, source: string | null) => {
+      SflPreviewPanel.showTransientIfOpen(uri, typeof source === 'string' ? source : null);
+    }),
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document.languageId === 'sfl') {
         SflPreviewPanel.updateIfOpen(event.document, looksLikeExternalRewrite(event));

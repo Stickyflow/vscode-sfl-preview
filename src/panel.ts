@@ -8,6 +8,8 @@ import { getWebviewHtml } from './getWebviewHtml';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
 
 export const VIEW_TYPE = 'sfl.preview';
+/** Internal command (not in the palette): `(uri, source | null)`, see showTransientIfOpen. */
+export const TRANSIENT_SOURCE_COMMAND = 'sfl.preview.showTransientSource';
 const UPDATE_DEBOUNCE_MS = 150;
 
 export class SflPreviewPanel {
@@ -40,6 +42,14 @@ export class SflPreviewPanel {
 
   static updateIfOpen(document: vscode.TextDocument, likelyExternalRewrite = false): void {
     SflPreviewPanel.panels.get(document.uri.toString())?.scheduleUpdate(document.getText(), likelyExternalRewrite);
+  }
+
+  /** Shows `source` in the document's preview without editing the document,
+   *  or with `null` goes back to the document's own text. vscode-sfl's style
+   *  template picker calls this (through TRANSIENT_SOURCE_COMMAND) for every
+   *  template the user highlights. A no-op without an open panel. */
+  static showTransientIfOpen(uri: vscode.Uri, source: string | null): void {
+    SflPreviewPanel.panels.get(uri.toString())?.postTransient(source);
   }
 
   /** Called on every text-editor selection change (see extension.ts) so the
@@ -95,6 +105,10 @@ export class SflPreviewPanel {
         typeof message.data === 'string'
       ) {
         void exportDiagram(document.uri, message.format, message.data);
+      } else if (message?.type === 'sfl/pickTemplate') {
+        // The template logic lives in vscode-sfl (a dependency of this
+        // extension); its command shows the picker and writes the edit.
+        void vscode.commands.executeCommand('sfl.applyStyleTemplate', document.uri);
       }
     });
     this.panel.onDidDispose(() => {
@@ -112,6 +126,13 @@ export class SflPreviewPanel {
       void this.panel.webview.postMessage({ type: 'sfl/update', source, likelyExternalRewrite: this.pendingLikelyExternal });
       this.pendingLikelyExternal = false;
     }, UPDATE_DEBOUNCE_MS);
+  }
+
+  // Not debounced like scheduleUpdate: the picker sends one per highlighted
+  // item, and a late "back to the document" would undo a newer preview.
+  private postTransient(source: string | null): void {
+    if (this.disposed) return;
+    void this.panel.webview.postMessage({ type: 'sfl/transient', source });
   }
 
   // Canvas -> editor: a shape/link was clicked (or selection cleared) in the

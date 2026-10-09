@@ -46,3 +46,17 @@ writeFileSync(path.join(destDir, 'SOURCE.json'), JSON.stringify(source, null, 2)
 console.log(
   `[vscode-sfl-preview] copied stickyflow.js ${version} (${source.branch ?? '?'} @ ${source.commit ?? '?'}) dist -> media/stickyflow/`,
 );
+
+// Inter, the font every style template sets (and stickyflow.js's default
+// fontFamily starts with). Bundled so the preview and its exports look the
+// same on machines without Inter installed. Only the subsets
+// src/getWebviewHtml.ts declares (INTER_FACES), plus the OFL license.
+const interDir = path.resolve(here, '..', 'node_modules', '@fontsource-variable', 'inter');
+const fontsDir = path.resolve(here, '..', 'media', 'fonts');
+rmSync(fontsDir, { recursive: true, force: true });
+mkdirSync(fontsDir, { recursive: true });
+for (const file of ['inter-latin-wght-normal.woff2', 'inter-latin-ext-wght-normal.woff2']) {
+  cpSync(path.join(interDir, 'files', file), path.join(fontsDir, file));
+}
+cpSync(path.join(interDir, 'LICENSE'), path.join(fontsDir, 'Inter-LICENSE.txt'));
+console.log('[vscode-sfl-preview] copied Inter (latin, latin-ext) -> media/fonts/');

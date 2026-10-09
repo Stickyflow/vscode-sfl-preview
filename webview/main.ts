@@ -3,9 +3,10 @@
 // startPreview() with it; everything else is wired from here.
 
 import { bindAddEntity } from './addEntity.js';
+import { canvasColor, paintCanvas } from './canvas.js';
 import { bindEditActions } from './editActions.js';
 import { createEditMode } from './editMode.js';
-import { exportDiagram } from './exportDiagram.js';
+import { exportDiagram, type BundledFont } from './exportDiagram.js';
 import { asHostMessage, createHostPort, type VsCodeApi } from './host.js';
 import { bindLinkTool } from './linkTool.js';
 import { bindPanControls } from './panControls.js';
@@ -20,18 +21,25 @@ export interface PreviewOptions {
   interaction: InteractionApi;
   core: CoreApi;
   vscodeApi: VsCodeApi;
+  /** The bundled Inter subsets, embedded into exports. */
+  fonts: BundledFont[];
 }
 
-export function startPreview({ el, initialSource, interaction, core, vscodeApi }: PreviewOptions): void {
+export function startPreview({ el, initialSource, interaction, core, vscodeApi, fonts }: PreviewOptions): void {
   const host = createHostPort(vscodeApi);
   // The text before a viewer exists; afterwards the document session owns it.
   let source = initialSource;
   el.source = source;
   const currentSource = () => preview?.doc.source ?? source;
+  const repaint = (text: string) => paintCanvas(canvasColor(core, text));
+  repaint(source);
 
-  // Export works from the text alone, with or without a live viewer.
-  button('sf-export-svg').addEventListener('click', () => exportDiagram(core, host, currentSource(), 'svg'));
-  button('sf-export-png').addEventListener('click', () => exportDiagram(core, host, currentSource(), 'png'));
+  // Export and templates work from the text alone, with or without a live viewer.
+  const exportAs = (format: 'svg' | 'png') =>
+    void exportDiagram(core, host, currentSource(), format, canvasColor(core, currentSource()), fonts);
+  button('sf-export-svg').addEventListener('click', () => exportAs('svg'));
+  button('sf-export-png').addEventListener('click', () => exportAs('png'));
+  button('sf-pick-template').addEventListener('click', () => host.pickTemplate());
 
   // The web component has no viewer when the text it was given doesn't
   // render (it shows the error instead). Until a later update renders, keep
@@ -47,9 +55,12 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi }
         preview.doc.receive(message.source, !!message.likelyExternalRewrite);
       } else if (message.source !== source) {
         source = message.source;
+        repaint(source);
         el.source = source;
         if (el.viewer) preview = attach(el.viewer);
       }
+    } else if (message.type === 'sfl/transient') {
+      preview?.doc.showTransient(message.source);
     } else if (message.type === 'sfl/select') {
       preview?.selectFromHost(message.id);
     }
@@ -58,6 +69,7 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi }
   function attach(viewer: Viewer) {
     const doc = createDocumentSession(viewer, core, host, source);
     const ctx: PreviewContext = { el, viewer, interaction, core, host, doc };
+    doc.onChange(repaint);
 
     bindNavigation(viewer);
     const sync = bindSelectionSync(ctx);

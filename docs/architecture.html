@@ -751,6 +751,7 @@
                   <tr><td><code>sfl/reveal</code></td><td class="dir to-host">webview → host</td><td><code>id</code> of the selected shape or link. Moves the editor selection to its header line without stealing focus.</td></tr>
                   <tr><td><code>sfl/sceneDiff</code></td><td class="dir to-host">webview → host</td><td><code>added</code>, <code>removed</code>, <code>changed</code>. Shown as a 3 second status bar message.</td></tr>
                   <tr><td><code>sfl/warn</code></td><td class="dir to-host">webview → host</td><td><code>message</code>. Explains a canvas action that could not be applied.</td></tr>
+                  <tr><td><code>sfl/pickTemplate</code></td><td class="dir to-host">webview → host</td><td>No payload. Host runs vscode-sfl's <code>sfl.applyStyleTemplate</code> for this document; the edit comes back as a normal <code>sfl/update</code>.</td></tr>
                   <tr><td><code>sfl/export</code></td><td class="dir to-host">webview → host</td><td><code>format</code> (svg or png) and <code>data</code>. Host opens a save dialog and writes the file.</td></tr>
                 </tbody>
               </table>
@@ -835,6 +836,7 @@
 │  ├─ routeButton.ts        "Route:" button
 │  ├─ selectionSync.ts      Canvas ↔ editor selection
 │  ├─ exportDiagram.ts      SVG / PNG export
+│  ├─ canvas.ts             Style template canvas color → page background
 │  ├─ placement.ts          Pure: where new 2D objects land
 │  ├─ isometric.ts          Pure: cube copies and Connection faces
 │  ├─ moves.ts              Pure: nested-move filter, gesture batching
@@ -887,6 +889,7 @@
                   <tr><td><code>editActions.ts</code></td><td><code>bindEditActions()</code></td><td>Turns edit gestures into patches: text, move, resize, reconnect, properties, sankey, delete, the "+" bubbles (2D and isometric) and bubble-to-target links.</td></tr>
                   <tr><td><code>addEntity.ts</code>, <code>linkTool.ts</code>, <code>routeButton.ts</code></td><td><code>bind*()</code></td><td>"+ Entity", "+ Link" (a Link between 2D objects, a face-attached Connection between cubes) and the Route button.</td></tr>
                   <tr><td><code>selectionSync.ts</code></td><td><code>bindSelectionSync()</code></td><td>Canvas ↔ editor selection, skipping an id it just sent or received.</td></tr>
+                  <tr><td><code>canvas.ts</code></td><td><code>canvasColor()</code>, <code>paintCanvas()</code></td><td>Reads <code>Style tpl_canvas { fill }</code> from the text and paints it behind the viewer; export uses it as the background.</td></tr>
                   <tr><td><code>exportDiagram.ts</code></td><td><code>exportDiagram()</code></td><td>Full-bounds SVG through <code>render()</code>, PNG through an offscreen canvas at 2x.</td></tr>
                   <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, nested-move filtering and gesture batching, fresh ids.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
