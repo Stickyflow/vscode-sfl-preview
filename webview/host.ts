@@ -3,11 +3,15 @@
 // through a `HostPort`, so the feature modules never touch `acquireVsCodeApi`
 // and the message shapes live in one place.
 
+/** What the export buttons produce. SVG and PNG are rendered here; Markdown
+ *  carries the source for the host to wrap, TOON the encoded diagram. */
+export type ExportFormat = 'svg' | 'png' | 'md' | 'toon';
+
 export type WebviewToHostMessage =
   | { type: 'sfl/edit'; source: string }
   | { type: 'sfl/reveal'; id: string | null }
   | { type: 'sfl/warn'; message: string }
-  | { type: 'sfl/export'; format: 'svg' | 'png'; data: string }
+  | { type: 'sfl/export'; format: ExportFormat; data: string }
   | { type: 'sfl/pickTemplate' }
   | { type: 'sfl/sceneDiff'; added: string[]; removed: string[]; changed: string[] };
 
@@ -22,7 +26,7 @@ export interface HostPort {
   edit(source: string): void;
   reveal(id: string | null): void;
   warn(message: string): void;
-  export(format: 'svg' | 'png', data: string): void;
+  export(format: ExportFormat, data: string): void;
   /** Opens vscode-sfl's "Apply Style Template" picker for this document. */
   pickTemplate(): void;
   sceneDiff(diff: { added: string[]; removed: string[]; changed: string[] }): void;

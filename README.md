@@ -142,6 +142,26 @@ follows the VS Code theme again.
 currently in view. PNGs are rendered at 2x for a crisp result. With a style
 template applied, both exports use its canvas color as the background.
 
+**Export MD** saves a Markdown note: a heading named after the file and the
+diagram's source in a fenced `sfl` block, ready to drop into an Obsidian
+vault (where the SFL plugin renders it live) or any docs folder.
+
+**Export TOON** saves what the diagram says, not how it looks: its nodes
+(id, kind, shape, text, frame, group), links (from, to, text, condition),
+isometric connections and groups, in
+[TOON](https://toonformat.dev), a compact format for LLM prompts. Columns
+nobody uses are left out, so a simple flow stays a few short tables:
+
+```
+nodes[3]{id,kind,shape,text}:
+  start,start,pill,Start
+  check,decision,diamond,Valid?
+  done,end,pill,Done
+links[2]{id,from,to,condition}:
+  l1,start,check,null
+  l2,check,done,yes
+```
+
 The preview ships its own copy of Inter, the font the style templates (and
 stickyflow.js's defaults) use, so diagrams look the same whether or not
 Inter is installed. Exports embed the parts of it their text needs (about

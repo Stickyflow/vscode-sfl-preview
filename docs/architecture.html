@@ -752,7 +752,7 @@
                   <tr><td><code>sfl/sceneDiff</code></td><td class="dir to-host">webview → host</td><td><code>added</code>, <code>removed</code>, <code>changed</code>. Shown as a 3 second status bar message.</td></tr>
                   <tr><td><code>sfl/warn</code></td><td class="dir to-host">webview → host</td><td><code>message</code>. Explains a canvas action that could not be applied.</td></tr>
                   <tr><td><code>sfl/pickTemplate</code></td><td class="dir to-host">webview → host</td><td>No payload. Host runs vscode-sfl's <code>sfl.applyStyleTemplate</code> for this document; the edit comes back as a normal <code>sfl/update</code>.</td></tr>
-                  <tr><td><code>sfl/export</code></td><td class="dir to-host">webview → host</td><td><code>format</code> (svg or png) and <code>data</code>. Host opens a save dialog and writes the file.</td></tr>
+                  <tr><td><code>sfl/export</code></td><td class="dir to-host">webview → host</td><td><code>format</code> (svg, png, md or toon) and <code>data</code>. Host opens a save dialog and writes the file; for md it wraps the source with <code>sflToMarkdown()</code> first.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -823,7 +823,8 @@
 │  ├─ extension.ts          Commands, document and selection listeners
 │  ├─ panel.ts              SflPreviewPanel: lifecycle, debounce, message handling
 │  ├─ getWebviewHtml.ts     HTML shell, CSP, toolbar, ~10-line bootstrap
-│  └─ sflOwnerBlocks.ts     Line ranges of Shape/Container/Table/Link blocks
+│  ├─ sflOwnerBlocks.ts     Line ranges of Shape/Container/Table/Link blocks
+│  └─ markdownExport.ts     Pure: source → Markdown note with a fenced sfl block
 ├─ webview/                 Browser ES modules, compiled to media/webview/
 │  ├─ main.ts               startPreview(): composition root
 │  ├─ stickyflow.ts         Type-only port to stickyflow.js (.d.ts)
@@ -836,6 +837,7 @@
 │  ├─ routeButton.ts        "Route:" button
 │  ├─ selectionSync.ts      Canvas ↔ editor selection
 │  ├─ exportDiagram.ts      SVG / PNG export
+│  ├─ toon.ts               Pure: canvas state → TOON for "Export TOON"
 │  ├─ canvas.ts             Style template canvas color → page background
 │  ├─ placement.ts          Pure: where new 2D objects land
 │  ├─ isometric.ts          Pure: cube copies and Connection faces
@@ -864,6 +866,7 @@
                   <tr><td><code>panel.ts</code></td><td><code>SflPreviewPanel</code></td><td>One panel per URI. Debounces updates, handles every incoming message, applies edits, reveals blocks, writes exports.</td></tr>
                   <tr><td><code>getWebviewHtml.ts</code></td><td><code>getWebviewHtml()</code></td><td>Webview URIs, nonce, CSP, toolbar markup, and a bootstrap that imports stickyflow.js and calls <code>startPreview()</code>. No behavior of its own.</td></tr>
                   <tr><td><code>sflOwnerBlocks.ts</code></td><td><code>findOwnerRange()</code>, <code>findEnclosingOwnerId()</code></td><td>Brace-depth scan for block line ranges, used only for selection sync.</td></tr>
+                  <tr><td><code>markdownExport.ts</code></td><td><code>sflToMarkdown()</code></td><td>"Export MD": a heading from the file name and the source in a fenced <code>sfl</code> block, the fence longer than any backtick run inside.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -891,6 +894,7 @@
                   <tr><td><code>selectionSync.ts</code></td><td><code>bindSelectionSync()</code></td><td>Canvas ↔ editor selection, skipping an id it just sent or received.</td></tr>
                   <tr><td><code>canvas.ts</code></td><td><code>canvasColor()</code>, <code>paintCanvas()</code></td><td>Reads <code>Style tpl_canvas { fill }</code> from the text and paints it behind the viewer; export uses it as the background.</td></tr>
                   <tr><td><code>exportDiagram.ts</code></td><td><code>exportDiagram()</code></td><td>Full-bounds SVG through <code>render()</code>, PNG through an offscreen canvas at 2x.</td></tr>
+                  <tr><td><code>toon.ts</code></td><td><code>diagramToToon()</code></td><td>"Export TOON": nodes, links, connections and groups from <code>sflToCanvasState()</code> as TOON tables, unused columns dropped. Semantics only; the .sfl stays the full-fidelity format.</td></tr>
                   <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, nested-move filtering and gesture batching, fresh ids.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
                   <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight. Stays until stickyflow.js's <code>applyPropertyChange</code> indents a property it inserts into a multi-line block correctly.</td></tr>

@@ -111,6 +111,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <span class="sf-sep"></span>
     <button id="sf-export-svg" title="Export the diagram as an SVG file">Export SVG</button>
     <button id="sf-export-png" title="Export the diagram as a PNG image">Export PNG</button>
+    <button id="sf-export-md" title="Export the diagram as a Markdown note with a fenced sfl block">Export MD</button>
+    <button id="sf-export-toon" title="Export the diagram's nodes and links as TOON, a compact format for LLM prompts">Export TOON</button>
   </div>
   <script nonce="${nonce}" src="${diagramScriptUri}"></script>
   <script type="module" nonce="${nonce}">
