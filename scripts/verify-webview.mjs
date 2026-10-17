@@ -1,6 +1,6 @@
 // Real-browser smoke test for the preview webview's edit-mode gestures.
 //
-// `npm test` covers the pure logic (webview/linkRoute, webview/panControls
+// `npm test` covers the pure logic (webview/panControls
 // helpers). This drives the *actual* generated webview HTML — real CSP, the
 // real stickyflow.js bundle, the real inline script — in headless Chrome:
 // toggle edit mode, drag a frame / entity / table, cycle a link's route, and
@@ -85,7 +85,7 @@ Model M {
     Entity b : Box { kind: process; text: "B"; layout { position: 40, 150; size: 160, 70 } }
   }
   Entity solo : Box { kind: process; text: "S"; layout { position: 480, 60; size: 160, 70 } }
-  Table tab { columns: ["x", "y"]; layout { position: 480, 240; size: 220, 120 } }
+  Container tab { kind: table; text: "T"; layout { position: 480, 240; size: 220, 120 } }
   Link e { from: a, right (0.5); to: solo, left (0.5) }
 }
 `;

@@ -169,16 +169,15 @@ Inter is installed. Exports embed the parts of it their text needs (about
 
 ## Development
 
-The preview uses a prebuilt copy of `stickyflow.js`, so build that first:
+The preview renders with the [`stickyflow`](https://www.npmjs.com/package/stickyflow)
+package, pinned in `package.json`:
 
 ```bash
-cd ../stickyflow.js && npm run build
-cd ../vscode-sfl-preview
 npm install
 npm run compile
 ```
 
-`npm run compile` copies `stickyflow.js/dist` into `media/stickyflow/`, then
+`npm run compile` copies `node_modules/stickyflow/dist` into `media/stickyflow/`, then
 compiles the extension (`src/` → `out/`) and the webview code
 (`webview/` → `media/webview/`). `npm run watch` watches the extension
 only; after changing anything under `webview/`, re-run `npm run compile`
