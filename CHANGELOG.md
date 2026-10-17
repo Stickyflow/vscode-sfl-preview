@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Published as **StickyFlow SFL Preview** under the `StickyFlowLab` publisher. The README
   links to the Marketplace and uses the new names.
+- New README banner, matching the artwork on stickyflow.org.
 
 ## [0.1.0] - 2026-10-17
 

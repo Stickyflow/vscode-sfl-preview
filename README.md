@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/banner-dark.png">
-    <img src="assets/banner-light.png" alt="SFL Preview for VS Code" width="900">
+    <img src="assets/banner-light.png" alt="StickyFlow SFL Preview: an isometric Bauhaus interior with a violet chair and a plant" width="900">
   </picture>
 </p>
 
