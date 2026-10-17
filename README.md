@@ -37,7 +37,7 @@ resizing a table. For those, turn on edit mode and do it on the canvas: the
 result is plain SFL in your file, and Ctrl+Z undoes it like any other edit.
 
 <p align="center">
-  <img src="assets/screenshot-edit-mode.png" alt="An SFL file open in VS Code with the live preview beside it, edit mode on" width="900">
+  <img src="assets/screenshot-agent-loop.png" alt="An SFL file open in VS Code with the live preview beside it: an AI agent loop drawn in a Bauhaus style, from You to the Agent, a context check that pulls from tools, and a pull request that gets merged" width="900">
 </p>
 
 ## Installation
