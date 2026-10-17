@@ -18,7 +18,7 @@ Rules for anything in here:
   `sfl/*` message shapes. Never call `postMessage` directly.
 - **Change the SFL text only through the document session** (`session.ts`):
   `commit()` for canvas edits, `receive()` for edits from the host.
-- **Relative imports need the `.js` extension** (`./linkRoute.js`): the
+- **Relative imports need the `.js` extension** (`./session.js`): the
   browser loads these as-is; `tsconfig.webview.json` (`moduleResolution:
   bundler`) resolves the `.js` specifier back to the `.ts` source for
   type-checking but does not rewrite it.
@@ -35,11 +35,12 @@ Rules for anything in here:
 | `stickyflow.ts` | Type-only port to stickyflow.js (`InteractionApi`, `CoreApi`, `Viewer`, event types). |
 | `host.ts` | `HostPort` and the `sfl/*` message types, both directions. |
 | `session.ts` | `DocumentSession` (current text, `commit` / `receive`, canvas objects, fresh ids) and the `PreviewContext` every feature gets. |
+| `handleSkin.ts` | The StickyFlow-Web Playground's selection look (rounded ring, round handles, floating "+" bubbles) as an adopted stylesheet. |
 | `editMode.ts` | The "Editing" toggle: owns the `bindEditing()` session, hides the edit-only canvas affordances while off, notifies the other features. |
 | `editActions.ts` | Edit gestures to SFL patches: text, move (batched, nested moves dropped), resize, reconnect, properties, sankey, delete, the "+" bubbles (2D and isometric) and drag-a-bubble-onto-a-target links. |
 | `addEntity.ts` | "+ Entity": a new shape linked below the selected one (or the last one added). |
 | `linkTool.ts` | "+ Link": click source, click target. Links for 2D objects, face-attached Connections for cubes. |
-| `routeButton.ts` | "Route:": cycles the selected link's routing. |
+| `routeButton.ts` | "Route:": cycles the selected link's routing through stickyflow.js's `applyPropertyChange`. |
 | `selectionSync.ts` | Canvas <-> editor selection sync without echo loops. |
 | `canvas.ts` | Reads a style template's canvas color (`Style tpl_canvas { fill }`) and paints it behind the viewer. |
 | `exportDiagram.ts` | SVG / PNG export via stickyflow.js's static `render()`. |
@@ -47,5 +48,4 @@ Rules for anything in here:
 | `isometric.ts` | Pure: isometric geometry for cube copies and Connection faces. |
 | `moves.ts` | Pure: drop moves of children whose container moves too; batch a gesture's events into one edit. |
 | `ids.ts` | Pure: fresh `<prefix>_<n>` block ids. |
-| `linkRoute.ts` | `applyRouteChange(sfl, linkId, route)`: pure SFL text patch that forces one link's `route:`; `nextRoute()` for the toolbar's cycle button. stickyflow.js's `applyPropertyChange` could replace it once it indents a property it inserts into a multi-line block correctly. |
 | `panControls.ts` | `bindPanControls(svg)`: canvas panning the viewer doesn't offer: middle-button drag, left-drag on empty background, plain scroll wheel (Shift = horizontal; Ctrl/Cmd wheel still zooms), and a `grab`/`grabbing` cursor. Each gesture is fed to the viewer's own Ctrl-drag pan path as synthetic pointer events, so its `ViewportController` stays authoritative and zoom / `getViewport()` are unaffected. |

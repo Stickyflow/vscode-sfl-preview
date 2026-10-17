@@ -2,6 +2,7 @@
 // (bindEditing) and tells the other toolbar features when it flips, so each
 // of them shows or hides its own buttons.
 
+import { applyHandleSkin } from './handleSkin.js';
 import type { PreviewContext } from './session.js';
 import type { EditingSession } from './stickyflow.js';
 
@@ -23,6 +24,7 @@ export function createEditMode(
   const listeners: Array<(on: boolean) => void> = [];
 
   gateEditAffordances(ctx.el);
+  applyHandleSkin(ctx.el);
 
   const mode: EditMode = {
     get session() {

@@ -1,13 +1,23 @@
 // "Route:" cycles the selected link orthogonal -> curved -> straight. Shown
 // only with editing on and exactly one link selected, the one thing it acts
-// on; a visible button that silently does nothing is worse than none.
+// on; a visible button that silently does nothing is worse than none. The
+// text patch is stickyflow.js's applyPropertyChange: it replaces the link's
+// own `route:` or adds one, and leaves comments and formatting alone.
 
 import type { EditMode } from './editMode.js';
-import { applyRouteChange, nextRoute } from './linkRoute.js';
 import type { PreviewContext } from './session.js';
 
+/** SFL's link routing styles, in the order the button cycles them. */
+const ROUTES = ['orthogonal', 'curved', 'straight'] as const;
+
+/** The route after `current`; an unknown one (inherited from a Style, or none) starts the cycle. */
+export function nextRoute(current: string | null | undefined): string {
+  const index = (ROUTES as readonly string[]).indexOf(current ?? '');
+  return ROUTES[(index + 1) % ROUTES.length];
+}
+
 export function bindRouteButton(ctx: PreviewContext, editMode: EditMode, button: HTMLButtonElement): void {
-  const { doc, viewer } = ctx;
+  const { doc, viewer, interaction } = ctx;
   let selectedLinkId: string | null = null;
 
   // The link's current routing, read off its rendered path (the renderer
@@ -37,7 +47,12 @@ export function bindRouteButton(ctx: PreviewContext, editMode: EditMode, button:
   button.addEventListener('click', () => {
     if (!editMode.session || !selectedLinkId) return;
     const id = selectedLinkId;
-    const next = applyRouteChange(doc.source, id, nextRoute(currentRoute(id)));
+    const next = interaction.applyPropertyChange(doc.source, {
+      owner: { role: 'link', id },
+      path: 'route',
+      value: nextRoute(currentRoute(id)),
+      quote: false,
+    });
     if (next === doc.source) {
       ctx.host.warn(`Couldn't change the route of "${id}". Set its \`route:\` in the SFL instead.`);
       return;
