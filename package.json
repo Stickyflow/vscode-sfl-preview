@@ -1,7 +1,7 @@
 {
   "name": "vscode-sfl-preview",
   "displayName": "StickyFlow SFL Preview",
-  "description": "Live preview for SFL (.sfl) diagrams: renders the StickyFlow board in a webview using stickyflow.js.",
+  "description": "See your SFL diagrams live next to the code, and edit them right on the canvas.",
   "version": "0.1.1",
   "license": "Apache-2.0",
   "icon": "icons/icon.png",
