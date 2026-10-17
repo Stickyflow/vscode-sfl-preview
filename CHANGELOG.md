@@ -3,10 +3,17 @@
 All notable changes to the SFL Preview extension are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.0] - Unreleased
+## [0.1.1] - 2026-10-17
 
-First working version. Not yet published to the Marketplace (`publisher` in
-`package.json` is a placeholder).
+### Changed
+
+- Published as **StickyFlow SFL Preview** under the `StickyFlowLab` publisher. The README
+  links to the Marketplace and uses the new names.
+- New README banner, matching the artwork on stickyflow.org.
+
+## [0.1.0] - 2026-10-17
+
+First release on the VS Code Marketplace.
 
 ### Changed
 
