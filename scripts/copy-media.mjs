@@ -7,7 +7,7 @@
 // <script type="module"> imports. The whole tree is copied (not just those
 // files) because they import shared chunk-*.js siblings by relative path —
 // cherry picking files would silently break those imports. Requires
-// stickyflow.js (repo root, sibling of vscode-extensions/) to have been
+// stickyflow.js (the sibling folder of vscode-sfl-preview/) to have been
 // built first (`npm run build` there).
 import { spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -15,14 +15,14 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-// scripts/ -> vscode-sfl-preview/ -> vscode-extensions/ -> repo root -> stickyflow.js/dist
-const srcDir = path.resolve(here, '..', '..', '..', 'stickyflow.js', 'dist');
+// scripts/ -> vscode-sfl-preview/ -> the folder next to it -> stickyflow.js/dist
+const srcDir = path.resolve(here, '..', '..', 'stickyflow.js', 'dist');
 const destDir = path.resolve(here, '..', 'media', 'stickyflow');
 
 if (!existsSync(srcDir)) {
   console.error(
     `[vscode-sfl-preview] Missing ${srcDir}\n` +
-    '[vscode-sfl-preview] Build stickyflow.js first: (cd ../../stickyflow.js && npm run build)'
+    '[vscode-sfl-preview] Build stickyflow.js first: (cd ../stickyflow.js && npm run build)'
   );
   process.exit(1);
 }
