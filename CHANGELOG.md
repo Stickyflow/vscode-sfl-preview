@@ -3,6 +3,24 @@
 All notable changes to the SFL Preview extension are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- Renders with stickyflow.js 0.3.0 from npm (`stickyflow`, pinned in
+  `package.json`) instead of a copy of a local `stickyflow.js/dist`, so the
+  preview supports everything 0.3 does (`Text`, `Widget`, `Shader`,
+  `DataSource`, bindings, handlers, the new chart settings).
+- Selection looks like the StickyFlow-Web Playground: a rounded ring with a
+  soft glow, round corner handles and floating "+" bubbles.
+- The Route button sets `route:` with stickyflow.js's `applyPropertyChange`.
+
+### Removed
+
+- `webview/linkRoute.ts`, the preview's own `route:` patcher. stickyflow.js
+  0.3.0 indents a property it inserts into a multi-line block correctly, which
+  was the reason for keeping it.
+
 ## [0.1.1] - 2026-10-17
 
 ### Changed
