@@ -42,14 +42,14 @@ result is plain SFL in your file, and Ctrl+Z undoes it like any other edit.
 
 ## Installation
 
-Install **SFL Preview** from the
-[VS Code Marketplace](MARKETPLACE_URL), or from inside VS Code:
+Install **StickyFlow SFL Preview** from the
+[VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=StickyFlowLab.vscode-sfl-preview), or from inside VS Code:
 
 1. Open the Extensions view (Ctrl/Cmd+Shift+X).
-2. Search for **SFL Preview**.
+2. Search for **StickyFlow SFL Preview**.
 3. Click **Install**.
 
-This also installs [SFL Language Support](https://github.com/Stickyflow/vscode-sfl).
+This also installs [StickyFlow SFL](https://marketplace.visualstudio.com/items?itemName=StickyFlowLab.vscode-sfl).
 
 ## Usage
 
