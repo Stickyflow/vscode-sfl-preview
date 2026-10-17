@@ -1,0 +1,209 @@
+sfl 1.4
+
+// A spirit level for a phone: two vials, one per axis. The values are fixed so
+// the preview shows a frame where the phone is slightly off level; in an app a
+// DataSource and the binding runtime would move the bubbles live.
+
+Style tpl_canvas {
+  fill: "#e9ecf2"
+}
+
+Style Readout {
+  fontSize: 24
+  fontWeight: 600
+  textColor: "#1c1d24"
+  textAlign: right
+}
+
+Style Caption {
+  fontSize: 13
+  textColor: "#7a7d8c"
+  textAlign: left
+}
+
+Model level {
+  Shape card {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 400, 680
+      order: 0
+    }
+    style {
+      shape: rounded_rectangle
+      cornerRadius: 36
+      fill: "#ffffff"
+      stroke: none
+      shadow: "shadow(color:#1c1d24, opacity:0.14, blur:24, angle:90, distance:10)"
+    }
+  }
+
+  Text title {
+    text: "Level"
+    layout {
+      position: 32, 34
+      size: 200, 30
+      order: 1
+    }
+    style {
+      fontSize: 22
+      fontWeight: 700
+      textColor: "#1c1d24"
+      textAlign: left
+    }
+  }
+
+  Text hint : Caption {
+    text: "Lay the phone flat on the surface"
+    layout {
+      position: 32, 64
+      size: 300, 20
+      order: 1
+    }
+  }
+
+  // Cross tilt: -10° to 10°, currently 1.8°.
+  Widget crossVial {
+    type: ruler
+    value: 1.8
+    min: -10
+    max: 10
+
+    layout {
+      position: 20, 110
+      size: 360, 120
+      order: 1
+    }
+
+    style {
+      knob: crossBubble
+      axis: horizontal
+      ticks: 40
+      major: 10
+      line: 0.62
+      dent: 0
+      gap: 0
+      inset: 0.06
+      thickness: 0.006
+      length: 0.1
+      intensity: 0
+      color: "#aeb2c0"
+      accent: "#1c1d24"
+      peak: "#1c1d24"
+    }
+  }
+
+  Shape crossBubble {
+    text: ""
+    layout {
+      position: 211.5, 145
+      size: 34, 34
+      order: 2
+    }
+    style {
+      shape: circle
+      fill: "#f59e0b"
+      stroke: "#ffffff"
+      strokeWidth: 3
+    }
+  }
+
+  Text crossLabel : Caption {
+    text: "Cross tilt"
+    layout {
+      position: 32, 246
+      size: 160, 20
+      order: 1
+    }
+  }
+
+  Text crossValue : Readout {
+    text: "1.8°"
+    layout {
+      position: 248, 238
+      size: 120, 32
+      order: 1
+    }
+  }
+
+  // Lengthwise tilt: -10° to 10°, currently -0.6°.
+  Widget lengthVial {
+    type: ruler
+    value: -0.6
+    min: -10
+    max: 10
+
+    layout {
+      position: 130, 290
+      size: 140, 240
+      order: 1
+    }
+
+    style {
+      knob: lengthBubble
+      axis: vertical
+      ticks: 40
+      major: 10
+      line: 0.62
+      dent: 0
+      gap: 0
+      inset: 0.06
+      thickness: 0.006
+      length: 0.1
+      intensity: 0
+      color: "#aeb2c0"
+      accent: "#1c1d24"
+      peak: "#1c1d24"
+    }
+  }
+
+  Shape lengthBubble {
+    text: ""
+    layout {
+      position: 177, 399.3
+      size: 34, 34
+      order: 2
+    }
+    style {
+      shape: circle
+      fill: "#f59e0b"
+      stroke: "#ffffff"
+      strokeWidth: 3
+    }
+  }
+
+  Text lengthLabel : Caption {
+    text: "Lengthwise tilt"
+    layout {
+      position: 32, 552
+      size: 160, 20
+      order: 1
+    }
+  }
+
+  Text lengthValue : Readout {
+    text: "-0.6°"
+    layout {
+      position: 248, 544
+      size: 120, 32
+      order: 1
+    }
+  }
+
+  Shape status {
+    text: "Almost level"
+    layout {
+      position: 110, 600
+      size: 180, 44
+      order: 1
+    }
+    style {
+      shape: pill
+      fill: "#fef3c7"
+      stroke: none
+      textColor: "#92400e"
+      fontSize: 15
+      fontWeight: 600
+    }
+  }
+}

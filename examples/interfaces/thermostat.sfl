@@ -1,0 +1,217 @@
+sfl 1.4
+
+// A room thermostat: the arc of ticks shows the temperature on a 0 to 30 °C
+// scale, the number rolls when it changes, and the chips switch the mode.
+// The values are fixed for the preview: 21 °C in the room, heating to 22 °C.
+
+Style tpl_canvas {
+  fill: "#efe9e1"
+}
+
+Style Chip {
+  shape: pill
+  fill: "#f4efe8"
+  stroke: none
+  textColor: "#6d6459"
+  fontSize: 13
+  fontWeight: 600
+}
+
+Style RoundButton {
+  shape: circle
+  fill: "#f4efe8"
+  stroke: none
+  textColor: "#3a332b"
+  fontSize: 26
+  fontWeight: 300
+}
+
+Model thermostat {
+  Shape card {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 380, 600
+      order: 0
+    }
+    style {
+      shape: rounded_rectangle
+      cornerRadius: 40
+      fill: "#fffcf8"
+      stroke: none
+      shadow: "shadow(color:#5b4630, opacity:0.16, blur:28, angle:90, distance:12)"
+    }
+  }
+
+  Text room {
+    text: "Living room"
+    layout {
+      position: 32, 34
+      size: 220, 28
+      order: 1
+    }
+    style {
+      fontSize: 20
+      fontWeight: 700
+      textColor: "#2b251f"
+      textAlign: left
+    }
+  }
+
+  Text humidity {
+    text: "Humidity 46 %"
+    layout {
+      position: 32, 62
+      size: 220, 20
+      order: 1
+    }
+    style {
+      fontSize: 13
+      textColor: "#968b7e"
+      textAlign: left
+    }
+  }
+
+  Widget dial {
+    type: tickScale
+    value: 21
+    max: 30
+
+    layout {
+      position: 40, 100
+      size: 300, 300
+      order: 1
+    }
+
+    style {
+      color: "#e2d9cd"
+      accent: "#e8743b"
+      ticks: 60
+      major: 10
+      radius: 0.92
+      length: 0.07
+      thickness: 0.006
+      start: 225
+      sweep: 270
+      labels: false
+    }
+  }
+
+  Widget reading {
+    type: rollingNumber
+    value: 21
+    digits: 2
+    duration: 220
+
+    layout {
+      position: 110, 190
+      size: 140, 110
+      order: 2
+    }
+
+    style {
+      fontSize: 72
+      variant: plain
+      motion: fade
+      color: "#2b251f"
+      fontWeight: 200
+      fontFamily: "Inter, sans-serif"
+    }
+  }
+
+  Text unit {
+    text: "°C"
+    layout {
+      position: 212, 214
+      size: 40, 30
+      order: 2
+    }
+    style {
+      fontSize: 20
+      textColor: "#2b251f"
+      textAlign: left
+    }
+  }
+
+  Text goal {
+    text: "Heating to 22 °C"
+    layout {
+      position: 110, 300
+      size: 160, 22
+      order: 2
+    }
+    style {
+      fontSize: 14
+      fontWeight: 600
+      textColor: "#e8743b"
+      textAlign: center
+    }
+  }
+
+  Shape minus : RoundButton {
+    text: "−"
+    layout {
+      position: 92, 420
+      size: 56, 56
+      order: 1
+    }
+  }
+
+  Shape plus : RoundButton {
+    text: "+"
+    layout {
+      position: 232, 420
+      size: 56, 56
+      order: 1
+    }
+  }
+
+  Text step {
+    text: "0.5°"
+    layout {
+      position: 160, 438
+      size: 60, 20
+      order: 1
+    }
+    style {
+      fontSize: 13
+      textColor: "#968b7e"
+      textAlign: center
+    }
+  }
+
+  Shape heat {
+    text: "Heat"
+    layout {
+      position: 32, 512
+      size: 100, 44
+      order: 1
+    }
+    style {
+      shape: pill
+      fill: "#2b251f"
+      stroke: none
+      textColor: "#fffcf8"
+      fontSize: 13
+      fontWeight: 600
+    }
+  }
+
+  Shape eco : Chip {
+    text: "Eco"
+    layout {
+      position: 140, 512
+      size: 100, 44
+      order: 1
+    }
+  }
+
+  Shape off : Chip {
+    text: "Off"
+    layout {
+      position: 248, 512
+      size: 100, 44
+      order: 1
+    }
+  }
+}

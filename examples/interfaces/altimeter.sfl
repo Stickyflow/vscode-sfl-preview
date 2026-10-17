@@ -1,0 +1,292 @@
+sfl 1.4
+
+// An altimeter for a hike: the ruler is the height scale, its knob marks the
+// summit you are heading for, and the panel works out what it takes to get
+// there. Values are fixed (1,240 m now, 2,076 m target); in an app the
+// target would follow the knob as you drag it.
+
+Style tpl_canvas {
+  fill: "#0b0f16"
+}
+
+Style Caption {
+  fontSize: 11
+  fontWeight: 600
+  letterSpacing: 2
+  textColor: "#6f7a91"
+  textAlign: left
+}
+
+Style Value {
+  fontSize: 17
+  fontWeight: 500
+  textColor: "#e6ebf5"
+  textAlign: left
+}
+
+Model altimeter {
+  Shape card {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 400, 620
+      order: 0
+    }
+    style {
+      shape: rounded_rectangle
+      cornerRadius: 28
+      fill: "#121823"
+      stroke: "#1f2735"
+      strokeWidth: 1
+    }
+  }
+
+  Shape peakIcon {
+    text: ""
+    layout {
+      position: 28, 34
+      size: 26, 22
+      order: 1
+    }
+    style {
+      shape: triangle
+      fill: "#ff8a3d"
+      stroke: none
+    }
+  }
+
+  Text summit {
+    text: "Schneeberg"
+    layout {
+      position: 66, 30
+      size: 240, 28
+      order: 1
+    }
+    style {
+      fontSize: 20
+      fontWeight: 700
+      textColor: "#f4f6fb"
+      textAlign: left
+    }
+  }
+
+  Text route {
+    text: "Via the Fadensteig, 2,076 m"
+    layout {
+      position: 66, 58
+      size: 280, 20
+      order: 1
+    }
+    style {
+      fontSize: 13
+      textColor: "#7f8aa3"
+      textAlign: left
+    }
+  }
+
+  // Height scale from 1,000 m to 2,500 m, one tick per 100 m.
+  Widget scale {
+    type: ruler
+    value: 2076
+    min: 1000
+    max: 2500
+
+    layout {
+      position: 24, 120
+      size: 150, 420
+      order: 1
+    }
+
+    style {
+      knob: target
+      axis: vertical
+      ticks: 15
+      major: 5
+      line: 0.7
+      dent: 0
+      gap: 0
+      inset: 0.05
+      thickness: 0.008
+      length: 0.12
+      intensity: 0
+      labels: true
+      labelSize: 11
+      labelColor: "#6f7a91"
+      color: "#3a4458"
+      accent: "#ff8a3d"
+      peak: "#ff8a3d"
+    }
+  }
+
+  Shape target {
+    text: ""
+    layout {
+      position: 116, 235
+      size: 26, 26
+      order: 3
+    }
+    style {
+      shape: circle
+      fill: "#ff8a3d"
+      stroke: "#121823"
+      strokeWidth: 3
+    }
+  }
+
+  // Where you are now: 1,240 m.
+  Shape you {
+    text: "You"
+    layout {
+      position: 138, 448.5
+      size: 44, 20
+      order: 2
+    }
+    style {
+      shape: pill
+      fill: "#e6ebf5"
+      stroke: none
+      textColor: "#121823"
+      fontSize: 10
+      fontWeight: 700
+    }
+  }
+
+  Text targetCaption : Caption {
+    text: "TARGET"
+    layout {
+      position: 206, 150
+      size: 170, 16
+      order: 1
+    }
+  }
+
+  Text targetHeight {
+    text: "2,076 m"
+    layout {
+      position: 206, 168
+      size: 180, 42
+      order: 1
+    }
+    style {
+      fontSize: 34
+      fontWeight: 700
+      textColor: "#f4f6fb"
+      textAlign: left
+    }
+  }
+
+  Text climb {
+    text: "+836 m to climb"
+    layout {
+      position: 206, 212
+      size: 180, 24
+      order: 1
+    }
+    style {
+      fontSize: 16
+      fontWeight: 600
+      textColor: "#ff8a3d"
+      textAlign: left
+    }
+  }
+
+  Shape divider {
+    text: ""
+    layout {
+      position: 206, 254
+      size: 170, 1
+      order: 1
+    }
+    style {
+      shape: rectangle
+      fill: "#253043"
+      stroke: none
+    }
+  }
+
+  Text ascentCaption : Caption {
+    text: "ASCENT"
+    layout {
+      position: 206, 272
+      size: 170, 16
+      order: 1
+    }
+  }
+
+  Text ascent : Value {
+    text: "About 2 h 47 min"
+    layout {
+      position: 206, 290
+      size: 180, 24
+      order: 1
+    }
+  }
+
+  Text tempCaption : Caption {
+    text: "AT THE TOP"
+    layout {
+      position: 206, 330
+      size: 170, 16
+      order: 1
+    }
+  }
+
+  Text temp : Value {
+    text: "5.4 °C colder"
+    layout {
+      position: 206, 348
+      size: 180, 24
+      order: 1
+    }
+  }
+
+  Text pressureCaption : Caption {
+    text: "AIR PRESSURE"
+    layout {
+      position: 206, 388
+      size: 170, 16
+      order: 1
+    }
+  }
+
+  Text pressure : Value {
+    text: "787 hPa"
+    layout {
+      position: 206, 406
+      size: 180, 24
+      order: 1
+    }
+  }
+
+  Text nowCaption : Caption {
+    text: "NOW"
+    layout {
+      position: 206, 446
+      size: 170, 16
+      order: 1
+    }
+  }
+
+  Text now : Value {
+    text: "1,240 m"
+    layout {
+      position: 206, 464
+      size: 180, 24
+      order: 1
+    }
+  }
+
+  Text pace {
+    text: "Pace: 300 m per hour up, 500 m per hour down"
+    layout {
+      position: 24, 570
+      size: 352, 20
+      order: 1
+    }
+    style {
+      fontSize: 12
+      textColor: "#5b6579"
+      textAlign: left
+    }
+  }
+}

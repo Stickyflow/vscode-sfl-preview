@@ -1,0 +1,186 @@
+sfl 1.4
+
+// A dashboard speedometer drawn by a shader: the halo arc fills with the
+// speed and glows brighter past 55 km/h, the ring of ticks counts along.
+// Fixed at 62 km/h for the preview; in an app a DataSource drives progress.
+
+Style tpl_canvas {
+  fill: "#07060d"
+}
+
+Shader DrivingHalo {
+  program: halo
+  color: "#050713"
+  accent: "#8b76ff"
+  intensity: 1
+  speed: 0.16
+  thickness: 0.07
+  progress: 0.62
+  boost: 0.15
+}
+
+Style Face {
+  shape: circle
+  fill: "#050713"
+  stroke: "#3c3590"
+  strokeWidth: 2
+  shader: DrivingHalo
+}
+
+Style Stat {
+  fontSize: 15
+  fontWeight: 500
+  textColor: "#e9e6ff"
+  textAlign: center
+}
+
+Style StatCaption {
+  fontSize: 10
+  fontWeight: 600
+  letterSpacing: 2
+  textColor: "#7c76a8"
+  textAlign: center
+}
+
+Model dashboard {
+  Widget ticks {
+    type: tickScale
+    value: 62
+    max: 100
+
+    layout {
+      position: 10, 10
+      size: 380, 380
+      order: 0
+    }
+
+    style {
+      color: "#3b3760"
+      accent: "#c9bdff"
+      ticks: 50
+      major: 5
+      radius: 0.96
+      length: 0.04
+      thickness: 0.004
+      start: 225
+      sweep: 270
+      labels: false
+    }
+  }
+
+  Shape speedometer : Face {
+    layout {
+      position: 50, 50
+      size: 300, 300
+      order: 1
+    }
+  }
+
+  Widget speed {
+    type: rollingNumber
+    value: 62
+    digits: 2
+    duration: 220
+
+    layout {
+      position: 110, 110
+      size: 180, 180
+      order: 2
+    }
+
+    style {
+      variant: plain
+      motion: fade
+      color: "#f4f2ff"
+      fontWeight: 200
+      fontFamily: "Inter, sans-serif"
+    }
+  }
+
+  Text unit {
+    text: "KM/H"
+    layout {
+      position: 150, 232
+      size: 100, 20
+      order: 2
+    }
+    style {
+      fontSize: 11
+      fontWeight: 600
+      letterSpacing: 4
+      textColor: "#c9c4e8"
+    }
+  }
+
+  Shape mode {
+    text: "ECO"
+    layout {
+      position: 160, 268
+      size: 80, 26
+      order: 2
+    }
+    style {
+      shape: pill
+      fill: "rgba(139, 118, 255, 0.16)"
+      stroke: "rgba(139, 118, 255, 0.5)"
+      strokeWidth: 1
+      textColor: "#c9bdff"
+      fontSize: 10
+      fontWeight: 700
+    }
+  }
+
+  Text rangeCaption : StatCaption {
+    text: "RANGE"
+    layout {
+      position: 30, 400
+      size: 110, 16
+      order: 1
+    }
+  }
+
+  Text range : Stat {
+    text: "214 km"
+    layout {
+      position: 30, 418
+      size: 110, 22
+      order: 1
+    }
+  }
+
+  Text tripCaption : StatCaption {
+    text: "TRIP"
+    layout {
+      position: 145, 400
+      size: 110, 16
+      order: 1
+    }
+  }
+
+  Text trip : Stat {
+    text: "38.4 km"
+    layout {
+      position: 145, 418
+      size: 110, 22
+      order: 1
+    }
+  }
+
+  Text useCaption : StatCaption {
+    text: "AVERAGE"
+    layout {
+      position: 260, 400
+      size: 110, 16
+      order: 1
+    }
+  }
+
+  Text use : Stat {
+    text: "14.2 kWh"
+    layout {
+      position: 260, 418
+      size: 110, 22
+      order: 1
+    }
+  }
+}

@@ -9,3 +9,4 @@ vitest.config.ts
 **/*.map
 .git/**
 assets/**
+examples/**
