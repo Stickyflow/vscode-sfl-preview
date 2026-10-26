@@ -50,6 +50,18 @@
       }
     ],
     "menus": {
+      "explorer/context": [
+        {
+          "command": "sfl.showPreview",
+          "when": "resourceLangId == sfl",
+          "group": "navigation@10"
+        },
+        {
+          "command": "sfl.showPreviewToSide",
+          "when": "resourceLangId == sfl",
+          "group": "navigation@11"
+        }
+      ],
       "editor/title": [
         {
           "command": "sfl.showPreviewToSide",
