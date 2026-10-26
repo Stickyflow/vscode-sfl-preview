@@ -128,7 +128,7 @@ them happen.
 **Style** opens vscode-sfl's template picker (Night Lime, Midnight Violet,
 Graphite Mono, Paper Navy, Charcoal Pastel, Evergreen Ledger, Neon Dispatch,
 Calm Sage, Ember Noir, Studio Light, Violet Circuit, Deep Sea, Prism,
-Indigo Wire, Poolside) for the previewed file. While the picker is open, the
+Indigo Wire, Poolside, Mint Lemonade) for the previewed file. While the picker is open, the
 highlighted template shows live in the preview, so you can arrow through
 them; Esc goes back to the file as it was. The picked
 template is written into the `.sfl`, so it's one undo step and shows up in
