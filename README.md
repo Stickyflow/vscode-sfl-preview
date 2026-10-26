@@ -59,6 +59,9 @@ Open an `.sfl` file and run one of:
 - **SFL: Open Preview to the Side** to open it next to the editor (also the
   preview icon in the editor title bar).
 
+Both are also in the Explorer: right-click an `.sfl` file to preview it
+without opening it first.
+
 ### Navigating
 
 - **Zoom** with the `−` / `+` / `Fit` buttons, or Ctrl/Cmd+scroll.

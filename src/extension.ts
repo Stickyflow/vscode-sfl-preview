@@ -32,13 +32,17 @@ function looksLikeExternalRewrite(event: vscode.TextDocumentChangeEvent): boolea
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const openPreview = (column: vscode.ViewColumn) => {
-    const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'sfl') {
+  // From the Explorer context menu VS Code passes the clicked file's uri;
+  // from the palette or the editor title bar it's the active editor.
+  const openPreview = async (column: vscode.ViewColumn, uri?: unknown) => {
+    const document = uri instanceof vscode.Uri
+      ? await vscode.workspace.openTextDocument(uri)
+      : vscode.window.activeTextEditor?.document;
+    if (!document || document.languageId !== 'sfl') {
       void vscode.window.showWarningMessage('Open an .sfl file to preview it.');
       return;
     }
-    SflPreviewPanel.createOrShow(context.extensionUri, editor.document, column);
+    SflPreviewPanel.createOrShow(context.extensionUri, document, column);
   };
 
   context.subscriptions.push(
@@ -51,8 +55,8 @@ export function activate(context: vscode.ExtensionContext): void {
         panel.dispose();
       },
     }),
-    vscode.commands.registerCommand('sfl.showPreview', () => openPreview(vscode.ViewColumn.Active)),
-    vscode.commands.registerCommand('sfl.showPreviewToSide', () => openPreview(vscode.ViewColumn.Beside)),
+    vscode.commands.registerCommand('sfl.showPreview', (uri?: unknown) => openPreview(vscode.ViewColumn.Active, uri)),
+    vscode.commands.registerCommand('sfl.showPreviewToSide', (uri?: unknown) => openPreview(vscode.ViewColumn.Beside, uri)),
     vscode.commands.registerCommand(TRANSIENT_SOURCE_COMMAND, (uri: vscode.Uri, source: string | null) => {
       SflPreviewPanel.showTransientIfOpen(uri, typeof source === 'string' ? source : null);
     }),

@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **SFL: Open Preview** and **SFL: Open Preview to the Side** in the
+  Explorer context menu: right-click an `.sfl` file to preview it.
+
 ### Changed
 
 - Renders with stickyflow.js 0.3.0 from npm (`stickyflow`, pinned in
