@@ -1,0 +1,155 @@
+sfl 1.6
+
+// Toy City: one Template for a block, used in every cell of a Repeat
+// with a random height and color, in the palette Risograph.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Template block {
+  h: 40
+  color: "#0078BF"
+
+  Isometric body : flat {
+    layout {
+      position: 150 + (x - y - 24) * 0.866, 214 + (x + y) * 0.5 - h
+      size: 24, h, 24
+    }
+    style {
+      fill: color
+    }
+  }
+
+  Isometric roof : flat {
+    layout {
+      position: 150 + (x - y - 16) * 0.866, 214 + (x + y + 8) * 0.5 - h - 3
+      size: 16, 3, 16
+    }
+    style {
+      fill: shade(color, 1.25)
+    }
+  }
+}
+
+Model toy_city {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#F7F2E7"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric ground : flat {
+      layout {
+        position: -2.42, 126.0
+        size: 176, 4, 176
+      }
+      style {
+        fill: "#E7DFCF"
+      }
+    }
+
+    Repeat city {
+      columns: 6
+      rows: 6
+      origin: -84, -84
+      step: 28, 28
+      seed: 12
+      chance: 0.85
+      order: diagonal
+
+      Use house : block {
+        at: x, y
+        h: round(random(8, 48))
+        color: pick("#FF48B0", "#0078BF", "#FFE800", "#00A95C", "#0078BF")
+      }
+    }
+
+    Text title {
+      text: "Risograph"
+      layout {
+        position: 24, 300
+        size: 252, 36
+      }
+      style {
+        textColor: "#1B1B1B"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "One Template, thirty-six cells"
+      layout {
+        position: 24, 338
+        size: 252, 20
+      }
+      style {
+        textColor: "#1B1B1B"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#FF48B0"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#0078BF"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#FFE800"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#00A95C"
+        stroke: none
+      }
+    }
+  }
+}

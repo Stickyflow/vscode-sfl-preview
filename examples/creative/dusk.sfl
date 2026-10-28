@@ -1,0 +1,71 @@
+sfl 1.4
+
+// A type poster: one word, set big, cut by the horizon.
+
+Model type {
+  Shape top {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 220
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+
+  Shape bottom {
+    text: ""
+    layout {
+      position: 0, 220
+      size: 300, 180
+    }
+    style {
+      shape: rectangle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Text word {
+    text: "DUSK"
+    layout {
+      position: 18, 160
+      size: 264, 100
+    }
+    style {
+      textColor: "#F8AC6D"
+      fontSize: 86
+      fontWeight: 800
+      textAlign: left
+    }
+  }
+
+  Text line1 {
+    text: "SFL 1.4 / poster"
+    layout {
+      position: 20, 30
+      size: 260, 16
+    }
+    style {
+      textColor: "#767A89"
+      fontSize: 11
+      textAlign: left
+    }
+  }
+
+  Text line2 {
+    text: "Charming Peach on Fire Hydrant"
+    layout {
+      position: 20, 352
+      size: 260, 16
+    }
+    style {
+      textColor: "#330201"
+      fontSize: 11
+      textAlign: left
+    }
+  }
+}

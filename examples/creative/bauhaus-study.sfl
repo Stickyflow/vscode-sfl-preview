@@ -1,0 +1,99 @@
+sfl 1.4
+
+// A Bauhaus study: circles, a half disc and one bold bar.
+
+Model bauhaus {
+  Shape paper {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape moon {
+    text: ""
+    layout {
+      position: 40, 40
+      size: 150, 150
+    }
+    style {
+      shape: circle
+      fill: "#012D55"
+      stroke: none
+    }
+  }
+
+  Shape dot {
+    text: ""
+    layout {
+      position: 170, 120
+      size: 90, 90
+    }
+    style {
+      shape: circle
+      fill: "#FC1200"
+      stroke: none
+      opacity: 0.92
+    }
+  }
+
+  Shape bar {
+    text: ""
+    layout {
+      position: 40, 240
+      size: 220, 28
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+
+  Shape ringA {
+    text: ""
+    layout {
+      position: 60, 296
+      size: 64, 64
+    }
+    style {
+      shape: circle
+      fill: none
+      stroke: "#2B5378"
+      strokeWidth: 6
+    }
+  }
+
+  Shape ringB {
+    text: ""
+    layout {
+      position: 140, 296
+      size: 64, 64
+    }
+    style {
+      shape: circle
+      fill: none
+      stroke: "#FC1200"
+      strokeWidth: 6
+    }
+  }
+
+  Shape diamond {
+    text: ""
+    layout {
+      position: 220, 304
+      size: 48, 48
+    }
+    style {
+      shape: diamond
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+}

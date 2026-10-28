@@ -1,0 +1,293 @@
+sfl 1.5
+
+// Layers of colored glass, mixed by multiplying.
+// Style Definition
+
+// Style Definition
+Style layer { shape: rounded_rectangle; stroke: none }
+
+Model poster {
+  Shape paper {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 320, 430
+    }
+    style {
+      shape: rectangle
+      fill: "#e7ebcd"
+      stroke: none
+    }
+  }
+
+  Shape warm1 : layer {
+    text: ""
+    layout {
+      position: 35, 76
+      size: 250, 250
+    }
+    style {
+      fill: "#fbe39a"
+      cornerRadius: 115
+      opacity: 0.5
+      blend: multiply
+    }
+  }
+
+  Shape warm2 : layer {
+    text: ""
+    layout {
+      position: 43, 96
+      size: 234, 215
+    }
+    style {
+      fill: "#f9c96b"
+      cornerRadius: 98.9
+      opacity: 0.42
+      blend: multiply
+    }
+  }
+
+  Shape warm3 : layer {
+    text: ""
+    layout {
+      position: 50, 116
+      size: 220, 190
+    }
+    style {
+      fill: "#f59a3c"
+      cornerRadius: 87.4
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape warm4 : layer {
+    text: ""
+    layout {
+      position: 60, 143
+      size: 200, 175
+    }
+    style {
+      fill: "#ee6a2a"
+      cornerRadius: 80.5
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape warm5 : layer {
+    text: ""
+    layout {
+      position: 69, 163
+      size: 182, 165
+    }
+    style {
+      fill: "#d24a1e"
+      cornerRadius: 75.9
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape warm6 : layer {
+    text: ""
+    layout {
+      position: 78, 196
+      size: 164, 140
+    }
+    style {
+      fill: "#b02a16"
+      cornerRadius: 64.4
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape cool1 : layer {
+    text: ""
+    layout {
+      position: 26, 199
+      size: 268, 205
+    }
+    style {
+      fill: "#b5f0dc"
+      cornerRadius: 94.3
+      opacity: 0.5
+      blend: multiply
+    }
+  }
+
+  Shape cool2 : layer {
+    text: ""
+    layout {
+      position: 34, 209
+      size: 252, 195
+    }
+    style {
+      fill: "#6fd0d2"
+      cornerRadius: 89.7
+      opacity: 0.42
+      blend: multiply
+    }
+  }
+
+  Shape cool3 : layer {
+    text: ""
+    layout {
+      position: 42, 219
+      size: 236, 185
+    }
+    style {
+      fill: "#3d9bb8"
+      cornerRadius: 85.1
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape cool4 : layer {
+    text: ""
+    layout {
+      position: 50, 228
+      size: 220, 176
+    }
+    style {
+      fill: "#2a74a6"
+      cornerRadius: 81
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape cool5 : layer {
+    text: ""
+    layout {
+      position: 58, 236
+      size: 204, 168
+    }
+    style {
+      fill: "#1d4b86"
+      cornerRadius: 77.3
+      opacity: 0.4
+      blend: multiply
+    }
+  }
+
+  Shape cool6 : layer {
+    text: ""
+    layout {
+      position: 66, 244
+      size: 188, 160
+    }
+    style {
+      fill: "#14305e"
+      cornerRadius: 73.6
+      opacity: 0.45
+      blend: multiply
+    }
+  }
+
+  Path rule {
+    points: [[32, 46], [288, 46]]
+    layout {
+      position: 0, 0
+      size: 1, 1
+    }
+    style {
+      stroke: "#2b2f2a"
+      strokeWidth: 0.6
+    }
+  }
+
+  Shape sw1 {
+    text: ""
+    layout {
+      position: 133, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#a6ecd6"
+      stroke: none
+    }
+  }
+
+  Shape sw2 {
+    text: ""
+    layout {
+      position: 142.5, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#55cbcd"
+      stroke: none
+    }
+  }
+
+  Shape sw3 {
+    text: ""
+    layout {
+      position: 152, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#123a6e"
+      stroke: none
+    }
+  }
+
+  Shape sw4 {
+    text: ""
+    layout {
+      position: 161.5, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#151819"
+      stroke: none
+    }
+  }
+
+  Shape sw5 {
+    text: ""
+    layout {
+      position: 171, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#d3401e"
+      stroke: none
+    }
+  }
+
+  Shape sw6 {
+    text: ""
+    layout {
+      position: 180.5, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#f3a84a"
+      stroke: none
+    }
+  }
+
+  Shape sw7 {
+    text: ""
+    layout {
+      position: 190, 20
+      size: 7.5, 7.5
+    }
+    style {
+      shape: circle
+      fill: "#fbe39a"
+      stroke: none
+    }
+  }
+}

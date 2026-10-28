@@ -1,0 +1,305 @@
+sfl 1.6
+
+// Lighthouse: a striped tower of extruded octagons on the rocks,
+// in the palette Nordic Coast.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Symbol Octagon {
+  points: [[0.962, 0.691], [0.691, 0.962], [0.309, 0.962], [0.038, 0.691], [0.038, 0.309], [0.309, 0.038], [0.691, 0.038], [0.962, 0.309]]
+}
+
+Model lighthouse {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#DCE8EE"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric sea : flat {
+      layout {
+        position: -109.8, 160.0
+        size: 300, 4, 300
+      }
+      style {
+        fill: "#8DB3C7"
+      }
+    }
+
+    Isometric rock {
+      layout {
+        position: 73.79, 252.0
+        size: 60, 18, 48
+      }
+      style {
+        fill: "#5B6770"
+        stroke: none
+        seams: false
+        cornerRadius: 10
+      }
+    }
+
+    Isometric rock_2 {
+      layout {
+        position: 156.06, 259.0
+        size: 54, 16, 43
+      }
+      style {
+        fill: "#6E7B85"
+        stroke: none
+        seams: false
+        cornerRadius: 10
+      }
+    }
+
+    Isometric rock_3 {
+      layout {
+        position: 128.35, 302.0
+        size: 44, 13, 35
+      }
+      style {
+        fill: "#5B6770"
+        stroke: none
+        seams: false
+        cornerRadius: 10
+      }
+    }
+
+    Isometric rock_4 {
+      layout {
+        position: 61.67, 293.0
+        size: 40, 12, 32
+      }
+      style {
+        fill: "#6E7B85"
+        stroke: none
+        seams: false
+        cornerRadius: 10
+      }
+    }
+
+    Isometric rock_5 {
+      layout {
+        position: 161.26, 300.0
+        size: 34, 10, 27
+      }
+      style {
+        fill: "#5B6770"
+        stroke: none
+        seams: false
+        cornerRadius: 10
+      }
+    }
+
+    Isometric base : flat {
+      symbol: Octagon
+      layout {
+        position: 104.97, 264.0
+        size: 52, 14, 52
+      }
+      style {
+        fill: "#8A949B"
+      }
+    }
+
+    Isometric band : flat {
+      symbol: Octagon
+      layout {
+        position: 111.9, 242.0
+        size: 44, 26, 44
+      }
+      style {
+        fill: "#C8102E"
+      }
+    }
+
+    Isometric band_2 : flat {
+      symbol: Octagon
+      layout {
+        position: 114.49, 217.5
+        size: 41, 26, 41
+      }
+      style {
+        fill: "#F4F1EA"
+      }
+    }
+
+    Isometric band_3 : flat {
+      symbol: Octagon
+      layout {
+        position: 117.09, 193.0
+        size: 38, 26, 38
+      }
+      style {
+        fill: "#C8102E"
+      }
+    }
+
+    Isometric band_4 : flat {
+      symbol: Octagon
+      layout {
+        position: 119.69, 168.5
+        size: 35, 26, 35
+      }
+      style {
+        fill: "#F4F1EA"
+      }
+    }
+
+    Isometric band_5 : flat {
+      symbol: Octagon
+      layout {
+        position: 122.29, 144.0
+        size: 32, 26, 32
+      }
+      style {
+        fill: "#C8102E"
+      }
+    }
+
+    Isometric band_6 : flat {
+      symbol: Octagon
+      layout {
+        position: 124.89, 119.5
+        size: 29, 26, 29
+      }
+      style {
+        fill: "#F4F1EA"
+      }
+    }
+
+    Isometric gallery : flat {
+      symbol: Octagon
+      layout {
+        position: 111.9, 108.0
+        size: 44, 4, 44
+      }
+      style {
+        fill: "#1D3557"
+      }
+    }
+
+    Isometric lantern : flat {
+      symbol: Octagon
+      layout {
+        position: 127.48, 97.0
+        size: 26, 20, 26
+      }
+      style {
+        fill: "#F2B134"
+      }
+    }
+
+    Isometric cap : flat {
+      symbol: Octagon
+      layout {
+        position: 122.29, 90.0
+        size: 32, 4, 32
+      }
+      style {
+        fill: "#1D3557"
+      }
+    }
+
+    Isometric dome {
+      layout {
+        position: 129.22, 80.0
+        size: 24, 20, 24
+      }
+      style {
+        fill: "#C8102E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Text title {
+      text: "Nordic Coast"
+      layout {
+        position: 24, 26
+        size: 252, 36
+      }
+      style {
+        textColor: "#1D3557"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Bands extruded from one Symbol"
+      layout {
+        position: 24, 62
+        size: 252, 20
+      }
+      style {
+        textColor: "#1D3557"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#F4F1EA"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#C8102E"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#1D3557"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#F2B134"
+        stroke: none
+      }
+    }
+  }
+}

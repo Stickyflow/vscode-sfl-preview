@@ -1,0 +1,290 @@
+sfl 1.4
+
+// Fire Hydrant: a street hydrant on Paris paving, in the page palette.
+
+Model poster {
+  Shape wall {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 320, 440
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape pavement {
+    text: ""
+    layout {
+      position: 0, 330
+      size: 320, 110
+    }
+    style {
+      shape: rectangle
+      fill: "#727272"
+      stroke: none
+    }
+  }
+
+  Shape jointA {
+    text: ""
+    layout {
+      position: 0, 366
+      size: 320, 2
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape jointB {
+    text: ""
+    layout {
+      position: 0, 404
+      size: 320, 2
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape jointC {
+    text: ""
+    layout {
+      position: 70, 330
+      size: 2, 36
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape jointD {
+    text: ""
+    layout {
+      position: 210, 330
+      size: 2, 36
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape jointE {
+    text: ""
+    layout {
+      position: 140, 368
+      size: 2, 36
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape jointF {
+    text: ""
+    layout {
+      position: 260, 368
+      size: 2, 36
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.18
+    }
+  }
+
+  Shape shadow {
+    text: ""
+    layout {
+      position: 96, 318
+      size: 150, 22
+    }
+    style {
+      shape: oval
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.22
+    }
+  }
+
+  Shape dome {
+    text: ""
+    layout {
+      position: 120, 116
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape body {
+    text: ""
+    layout {
+      position: 122, 150
+      size: 76, 170
+    }
+    style {
+      shape: rectangle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape cap {
+    text: ""
+    layout {
+      position: 112, 144
+      size: 96, 16
+    }
+    style {
+      shape: pill
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape nozzleLeft {
+    text: ""
+    layout {
+      position: 94, 200
+      size: 44, 44
+    }
+    style {
+      shape: circle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape nozzleRight {
+    text: ""
+    layout {
+      position: 182, 200
+      size: 44, 44
+    }
+    style {
+      shape: circle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape boltLeft {
+    text: ""
+    layout {
+      position: 108, 214
+      size: 16, 16
+    }
+    style {
+      shape: circle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.55
+    }
+  }
+
+  Shape boltRight {
+    text: ""
+    layout {
+      position: 196, 214
+      size: 16, 16
+    }
+    style {
+      shape: circle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.55
+    }
+  }
+
+  Shape boltTop {
+    text: ""
+    layout {
+      position: 152, 106
+      size: 16, 16
+    }
+    style {
+      shape: circle
+      fill: "#02030A"
+      stroke: none
+      opacity: 0.55
+    }
+  }
+
+  Shape base {
+    text: ""
+    layout {
+      position: 110, 306
+      size: 100, 20
+    }
+    style {
+      shape: pill
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+
+  Shape shine {
+    text: ""
+    layout {
+      position: 134, 160
+      size: 8, 130
+    }
+    style {
+      shape: pill
+      fill: "#FCFCFC"
+      stroke: none
+      opacity: 0.3
+    }
+  }
+
+  Text title {
+    text: "Fire Hydrant"
+    layout {
+      position: 24, 30
+      size: 272, 34
+    }
+    style {
+      textColor: "#02030A"
+      fontSize: 28
+      fontWeight: 800
+      textAlign: left
+    }
+  }
+
+  Text caption {
+    text: "Paris Paving, rue de Rivoli"
+    layout {
+      position: 25, 66
+      size: 272, 18
+    }
+    style {
+      textColor: "#743F06"
+      fontSize: 12
+      textAlign: left
+    }
+  }
+}

@@ -9,13 +9,21 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **SFL: Open Preview** and **SFL: Open Preview to the Side** in the
   Explorer context menu: right-click an `.sfl` file to preview it.
+- Twenty creative examples in `examples/creative/`, shown in the README
+  under *Not just diagrams*: eight isometric buildings in palettes of their
+  own (written with SFL 1.6 `Repeat`, `Template`, extruded `Symbol` outlines
+  and `shape: sphere`), and twelve posters, patterns and screens from the
+  StickyFlow Creative Work page.
 
 ### Changed
 
-- Renders with stickyflow.js 0.3.0 from npm (`stickyflow`, pinned in
+- Renders with stickyflow.js 0.10.0 from npm (`stickyflow`, pinned in
   `package.json`) instead of a copy of a local `stickyflow.js/dist`, so the
-  preview supports everything 0.3 does (`Text`, `Widget`, `Shader`,
-  `DataSource`, bindings, handlers, the new chart settings).
+  preview supports everything up to SFL 1.6: `Text`, `Widget`, `Shader`,
+  `DataSource`, bindings, handlers, `Repeat`, `Template` / `Use`, extruded
+  `Symbol` outlines and spheres on `Isometric` blocks, `blend`, `blur`.
+- `examples/interfaces/halo-speedometer.sfl` gives its dial an empty
+  `text`, which stickyflow.js 0.10 asks of every `Shape`.
 - Selection looks like the StickyFlow-Web Playground: a rounded ring with a
   soft glow, round corner handles and floating "+" bubbles.
 - The Route button sets `route:` with stickyflow.js's `applyPropertyChange`.

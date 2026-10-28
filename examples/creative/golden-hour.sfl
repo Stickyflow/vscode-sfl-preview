@@ -1,0 +1,127 @@
+sfl 1.4
+
+// A small screen: a now-playing card with a toggle and a button.
+
+Model screen {
+  Shape device {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "gradient(90, #02030A 0%, #012D55 100%)"
+      stroke: none
+    }
+  }
+
+  Shape art {
+    text: ""
+    layout {
+      position: 30, 34
+      size: 240, 170
+    }
+    style {
+      shape: rectangle
+      fill: "gradient(90, #2B5378 0%, #F8AC6D 70%, #FC1200 100%)"
+      stroke: none
+      cornerRadius: 18
+    }
+  }
+
+  Text song {
+    text: "Golden Hour"
+    layout {
+      position: 30, 222
+      size: 240, 26
+    }
+    style {
+      textColor: "#FCFCFC"
+      fontSize: 20
+      fontWeight: 700
+      textAlign: left
+    }
+  }
+
+  Text artist {
+    text: "Shibuya Nights"
+    layout {
+      position: 30, 250
+      size: 240, 18
+    }
+    style {
+      textColor: "#6F9ACA"
+      fontSize: 13
+      textAlign: left
+    }
+  }
+
+  Shape track {
+    text: ""
+    layout {
+      position: 30, 286
+      size: 240, 6
+    }
+    style {
+      shape: pill
+      fill: "#2B5378"
+      stroke: none
+    }
+  }
+
+  Shape progress {
+    text: ""
+    layout {
+      position: 30, 286
+      size: 150, 6
+    }
+    style {
+      shape: pill
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape play {
+    text: "Play"
+    layout {
+      position: 30, 316
+      size: 150, 46
+    }
+    style {
+      shape: pill
+      fill: "#FC1200"
+      stroke: none
+      textColor: "#FCFCFC"
+      fontSize: 15
+      fontWeight: 600
+    }
+  }
+
+  Shape toggle {
+    text: ""
+    layout {
+      position: 210, 324
+      size: 60, 30
+    }
+    style {
+      shape: pill
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape knob {
+    text: ""
+    layout {
+      position: 244, 328
+      size: 22, 22
+    }
+    style {
+      shape: circle
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+}

@@ -1,0 +1,180 @@
+sfl 1.4
+
+// A repeat pattern: hexagons and diamonds on midnight.
+
+Model pattern {
+  Shape ground {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "#012D55"
+      stroke: none
+    }
+  }
+
+  Shape h1 {
+    text: ""
+    layout {
+      position: 20, 30
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape h2 {
+    text: ""
+    layout {
+      position: 115, 30
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: none
+      stroke: "#A1CDF8"
+      strokeWidth: 3
+    }
+  }
+
+  Shape h3 {
+    text: ""
+    layout {
+      position: 210, 30
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape d1 {
+    text: ""
+    layout {
+      position: 20, 130
+      size: 70, 70
+    }
+    style {
+      shape: diamond
+      fill: none
+      stroke: "#F8AC6D"
+      strokeWidth: 3
+    }
+  }
+
+  Shape d2 {
+    text: ""
+    layout {
+      position: 115, 130
+      size: 70, 70
+    }
+    style {
+      shape: diamond
+      fill: "#2B5378"
+      stroke: none
+    }
+  }
+
+  Shape d3 {
+    text: ""
+    layout {
+      position: 210, 130
+      size: 70, 70
+    }
+    style {
+      shape: diamond
+      fill: none
+      stroke: "#A1CDF8"
+      strokeWidth: 3
+    }
+  }
+
+  Shape h4 {
+    text: ""
+    layout {
+      position: 20, 230
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: "#2B5378"
+      stroke: none
+    }
+  }
+
+  Shape h5 {
+    text: ""
+    layout {
+      position: 115, 230
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape h6 {
+    text: ""
+    layout {
+      position: 210, 230
+      size: 70, 70
+    }
+    style {
+      shape: hexagon
+      fill: none
+      stroke: "#F8AC6D"
+      strokeWidth: 3
+    }
+  }
+
+  Shape o1 {
+    text: ""
+    layout {
+      position: 30, 330
+      size: 50, 50
+    }
+    style {
+      shape: circle
+      fill: none
+      stroke: "#2B5378"
+      strokeWidth: 3
+    }
+  }
+
+  Shape o2 {
+    text: ""
+    layout {
+      position: 125, 330
+      size: 50, 50
+    }
+    style {
+      shape: circle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape o3 {
+    text: ""
+    layout {
+      position: 220, 330
+      size: 50, 50
+    }
+    style {
+      shape: circle
+      fill: none
+      stroke: "#FC1200"
+      strokeWidth: 3
+    }
+  }
+}

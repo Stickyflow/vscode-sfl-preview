@@ -1,0 +1,408 @@
+sfl 1.6
+
+// Pavilion: a domed hall with four corner towers around a pool,
+// in the palette Marrakech.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Symbol Octagon {
+  points: [[0.962, 0.691], [0.691, 0.962], [0.309, 0.962], [0.038, 0.691], [0.038, 0.309], [0.309, 0.038], [0.691, 0.038], [0.962, 0.309]]
+}
+
+Model pavilion {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#F6EBDD"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric court : flat {
+      layout {
+        position: -40.52, 96.0
+        size: 220, 4, 220
+      }
+      style {
+        fill: "#EAD7BF"
+      }
+    }
+
+    Isometric pool : flat {
+      layout {
+        position: 54.74, 229.0
+        size: 28, 3, 30
+      }
+      style {
+        fill: "#5FA58C"
+      }
+    }
+
+    Isometric minaret : flat {
+      symbol: Octagon
+      layout {
+        position: 132.68, 46.0
+        size: 20, 76, 20
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric minaret_band : flat {
+      symbol: Octagon
+      layout {
+        position: 130.95, 56.0
+        size: 22, 5, 22
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric minaret_top {
+      layout {
+        position: 134.41, 35.0
+        size: 18, 16, 18
+      }
+      style {
+        fill: "#E9B949"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric minaret_2 : flat {
+      symbol: Octagon
+      layout {
+        position: 260.85, 120.0
+        size: 20, 76, 20
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric minaret_band_2 : flat {
+      symbol: Octagon
+      layout {
+        position: 259.12, 130.0
+        size: 22, 5, 22
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric minaret_top_2 {
+      layout {
+        position: 262.58, 109.0
+        size: 18, 16, 18
+      }
+      style {
+        fill: "#E9B949"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric minaret_3 : flat {
+      symbol: Octagon
+      layout {
+        position: 4.51, 120.0
+        size: 20, 76, 20
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric minaret_band_3 : flat {
+      symbol: Octagon
+      layout {
+        position: 2.78, 130.0
+        size: 22, 5, 22
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric minaret_top_3 {
+      layout {
+        position: 6.24, 109.0
+        size: 18, 16, 18
+      }
+      style {
+        fill: "#E9B949"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric hall : flat {
+      layout {
+        position: 53.01, 96.0
+        size: 112, 54, 112
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric frieze : flat {
+      layout {
+        position: 49.54, 98.0
+        size: 116, 6, 116
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric roof : flat {
+      layout {
+        position: 56.47, 100.0
+        size: 108, 2, 108
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric arch : flat {
+      layout {
+        position: 60.8, 179.0
+        size: 16, 32, 1
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_2 : flat {
+      layout {
+        position: 224.48, 179.0
+        size: 1, 32, 16
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_3 : flat {
+      layout {
+        position: 83.32, 192.0
+        size: 16, 32, 1
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_4 : flat {
+      layout {
+        position: 201.96, 192.0
+        size: 1, 32, 16
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_5 : flat {
+      layout {
+        position: 105.83, 205.0
+        size: 16, 32, 1
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_6 : flat {
+      layout {
+        position: 179.44, 205.0
+        size: 1, 32, 16
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_7 : flat {
+      layout {
+        position: 128.35, 218.0
+        size: 16, 32, 1
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric arch_8 : flat {
+      layout {
+        position: 156.93, 218.0
+        size: 1, 32, 16
+      }
+      style {
+        fill: "#D96C3B"
+      }
+    }
+
+    Isometric drum : flat {
+      symbol: Octagon
+      layout {
+        position: 91.11, 98.0
+        size: 68, 22, 68
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric drum_band : flat {
+      symbol: Octagon
+      layout {
+        position: 89.38, 99.0
+        size: 70, 6, 70
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric dome {
+      layout {
+        position: 94.58, 54.0
+        size: 64, 64, 64
+      }
+      style {
+        fill: "#E9B949"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric minaret_4 : flat {
+      symbol: Octagon
+      layout {
+        position: 132.68, 194.0
+        size: 20, 76, 20
+      }
+      style {
+        fill: "#FFF8EE"
+      }
+    }
+
+    Isometric minaret_band_4 : flat {
+      symbol: Octagon
+      layout {
+        position: 130.95, 204.0
+        size: 22, 5, 22
+      }
+      style {
+        fill: "#1F4E79"
+      }
+    }
+
+    Isometric minaret_top_4 {
+      layout {
+        position: 134.41, 183.0
+        size: 18, 16, 18
+      }
+      style {
+        fill: "#E9B949"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Text title {
+      text: "Marrakech"
+      layout {
+        position: 24, 300
+        size: 252, 36
+      }
+      style {
+        textColor: "#1F4E79"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Spheres, octagons and a pool"
+      layout {
+        position: 24, 338
+        size: 252, 20
+      }
+      style {
+        textColor: "#1F4E79"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#1F4E79"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#D96C3B"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#E9B949"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#5FA58C"
+        stroke: none
+      }
+    }
+  }
+}

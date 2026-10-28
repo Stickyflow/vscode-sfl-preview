@@ -1,0 +1,171 @@
+sfl 1.4
+
+// Palette from a photo: Raven's Coat, Midnight Ocean, 3AM in Shibuya,
+// Charming Peach and Fire Hydrant.
+
+Model poster {
+  Shape sky {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 320, 300
+    }
+    style {
+      shape: rectangle
+      fill: "gradient(90, #02030A 0%, #012D55 40%, #2B5378 62%, #F8AC6D 86%, #FC1200 100%)"
+      stroke: none
+    }
+  }
+
+  Shape starA {
+    text: ""
+    layout {
+      position: 52, 46
+      size: 3, 3
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.8
+    }
+  }
+
+  Shape starB {
+    text: ""
+    layout {
+      position: 196, 30
+      size: 2, 2
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.6
+    }
+  }
+
+  Shape starC {
+    text: ""
+    layout {
+      position: 266, 84
+      size: 3, 3
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.7
+    }
+  }
+
+  Shape starD {
+    text: ""
+    layout {
+      position: 120, 104
+      size: 2, 2
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.5
+    }
+  }
+
+  Shape sun {
+    text: ""
+    layout {
+      position: 100, 236
+      size: 120, 120
+    }
+    style {
+      shape: circle
+      fill: "#FC1200"
+      stroke: none
+      shadow: "shadow(color:#FC1200, opacity:0.6, blur:36)"
+    }
+  }
+
+  Shape sea {
+    text: ""
+    layout {
+      position: 0, 296
+      size: 320, 144
+    }
+    style {
+      shape: rectangle
+      fill: "gradient(90, #012D55 0%, #02030A 100%)"
+      stroke: none
+    }
+  }
+
+  Shape glintA {
+    text: ""
+    layout {
+      position: 104, 308
+      size: 112, 5
+    }
+    style {
+      shape: pill
+      fill: "#FC1200"
+      stroke: none
+      opacity: 0.85
+    }
+  }
+
+  Shape glintB {
+    text: ""
+    layout {
+      position: 122, 324
+      size: 76, 4
+    }
+    style {
+      shape: pill
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.7
+    }
+  }
+
+  Shape glintC {
+    text: ""
+    layout {
+      position: 140, 340
+      size: 40, 3
+    }
+    style {
+      shape: pill
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.5
+    }
+  }
+
+  Text title {
+    text: "After Hours"
+    layout {
+      position: 24, 372
+      size: 272, 34
+    }
+    style {
+      textColor: "#F8AC6D"
+      fontSize: 26
+      fontWeight: 700
+      textAlign: left
+    }
+  }
+
+  Text caption {
+    text: "Written in SFL, drawn live"
+    layout {
+      position: 24, 404
+      size: 272, 18
+    }
+    style {
+      textColor: "#6F9ACA"
+      fontSize: 12
+      textAlign: left
+    }
+  }
+}
