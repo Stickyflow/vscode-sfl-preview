@@ -69,6 +69,7 @@ Model dashboard {
   }
 
   Shape speedometer : Face {
+    text: ""
     layout {
       position: 50, 50
       size: 300, 300
