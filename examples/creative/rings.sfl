@@ -1,0 +1,486 @@
+sfl 1.4
+
+// Rings: a grid of concentric circles in three turning colours.
+
+Model rings {
+  Shape paper {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "#EFE9DD"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_1_1 {
+    text: ""
+    layout {
+      position: 20, 25
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_1_2 {
+    text: ""
+    layout {
+      position: 33, 38
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_1_3 {
+    text: ""
+    layout {
+      position: 46, 51
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_2_1 {
+    text: ""
+    layout {
+      position: 110, 25
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_2_2 {
+    text: ""
+    layout {
+      position: 123, 38
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_2_3 {
+    text: ""
+    layout {
+      position: 136, 51
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_3_1 {
+    text: ""
+    layout {
+      position: 200, 25
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_3_2 {
+    text: ""
+    layout {
+      position: 213, 38
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_1_3_3 {
+    text: ""
+    layout {
+      position: 226, 51
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_1_1 {
+    text: ""
+    layout {
+      position: 20, 115
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_1_2 {
+    text: ""
+    layout {
+      position: 33, 128
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_1_3 {
+    text: ""
+    layout {
+      position: 46, 141
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_2_1 {
+    text: ""
+    layout {
+      position: 110, 115
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_2_2 {
+    text: ""
+    layout {
+      position: 123, 128
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_2_3 {
+    text: ""
+    layout {
+      position: 136, 141
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_3_1 {
+    text: ""
+    layout {
+      position: 200, 115
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_3_2 {
+    text: ""
+    layout {
+      position: 213, 128
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_2_3_3 {
+    text: ""
+    layout {
+      position: 226, 141
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_1_1 {
+    text: ""
+    layout {
+      position: 20, 205
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_1_2 {
+    text: ""
+    layout {
+      position: 33, 218
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_1_3 {
+    text: ""
+    layout {
+      position: 46, 231
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_2_1 {
+    text: ""
+    layout {
+      position: 110, 205
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_2_2 {
+    text: ""
+    layout {
+      position: 123, 218
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_2_3 {
+    text: ""
+    layout {
+      position: 136, 231
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_3_1 {
+    text: ""
+    layout {
+      position: 200, 205
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_3_2 {
+    text: ""
+    layout {
+      position: 213, 218
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_3_3_3 {
+    text: ""
+    layout {
+      position: 226, 231
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_1_1 {
+    text: ""
+    layout {
+      position: 20, 295
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_1_2 {
+    text: ""
+    layout {
+      position: 33, 308
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_1_3 {
+    text: ""
+    layout {
+      position: 46, 321
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_2_1 {
+    text: ""
+    layout {
+      position: 110, 295
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_2_2 {
+    text: ""
+    layout {
+      position: 123, 308
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_2_3 {
+    text: ""
+    layout {
+      position: 136, 321
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_3_1 {
+    text: ""
+    layout {
+      position: 200, 295
+      size: 80, 80
+    }
+    style {
+      shape: circle
+      fill: "#F6C85F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_3_2 {
+    text: ""
+    layout {
+      position: 213, 308
+      size: 54, 54
+    }
+    style {
+      shape: circle
+      fill: "#1F3A5F"
+      stroke: none
+    }
+  }
+
+  Shape ring_4_3_3 {
+    text: ""
+    layout {
+      position: 226, 321
+      size: 28, 28
+    }
+    style {
+      shape: circle
+      fill: "#E94F37"
+      stroke: none
+    }
+  }
+}

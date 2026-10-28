@@ -1,0 +1,57 @@
+sfl 1.4
+
+// Three blocks on a peach ground, drawn as isometric boxes.
+
+Model city {
+  Shape ground {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Isometric low {
+    text: ""
+    layout {
+      position: 50, 140
+      size: 60, 50, 60
+    }
+    style {
+      fill: "#2B5378"
+      stroke: "#02030A"
+      cornerRadius: 4
+    }
+  }
+
+  Isometric tall {
+    text: ""
+    layout {
+      position: 120, 100
+      size: 60, 150, 60
+    }
+    style {
+      fill: "#012D55"
+      stroke: "#02030A"
+      cornerRadius: 4
+    }
+  }
+
+  Isometric mid {
+    text: ""
+    layout {
+      position: 190, 140
+      size: 60, 90, 60
+    }
+    style {
+      fill: "#FC1200"
+      stroke: "#02030A"
+      cornerRadius: 4
+    }
+  }
+}

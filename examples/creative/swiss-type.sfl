@@ -1,0 +1,114 @@
+sfl 1.4
+
+// Swiss Type: a red block, oversized letters and a small column of text.
+
+Model swiss_type {
+  Shape paper {
+    text: ""
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      shape: rectangle
+      fill: "#F2F0EB"
+      stroke: none
+    }
+  }
+
+  Shape block {
+    text: ""
+    layout {
+      position: 24, 24
+      size: 150, 210
+    }
+    style {
+      shape: rectangle
+      fill: "#E2382B"
+      stroke: none
+    }
+  }
+
+  Shape rule {
+    text: ""
+    layout {
+      position: 24, 330
+      size: 252, 4
+    }
+    style {
+      shape: rectangle
+      fill: "#111111"
+      stroke: none
+    }
+  }
+
+  Text title {
+    text: "SFL"
+    layout {
+      position: 24, 200
+      size: 260, 120
+    }
+    style {
+      textColor: "#111111"
+      fontSize: 104
+      fontWeight: 900
+      textAlign: left
+    }
+  }
+
+  Text subtitle {
+    text: "Structured Flow Language"
+    layout {
+      position: 186, 24
+      size: 100, 60
+    }
+    style {
+      textColor: "#111111"
+      fontSize: 11
+      fontWeight: 700
+      textAlign: left
+    }
+  }
+
+  Text issue {
+    text: "No. 05"
+    layout {
+      position: 186, 90
+      size: 100, 20
+    }
+    style {
+      textColor: "#9A9A9A"
+      fontSize: 11
+      fontWeight: 600
+      textAlign: left
+    }
+  }
+
+  Text footer {
+    text: "Shapes, text and colour as plain text."
+    layout {
+      position: 24, 344
+      size: 252, 20
+    }
+    style {
+      textColor: "#111111"
+      fontSize: 10
+      fontWeight: 500
+      textAlign: left
+    }
+  }
+
+  Text year {
+    text: "2026"
+    layout {
+      position: 24, 366
+      size: 252, 20
+    }
+    style {
+      textColor: "#9A9A9A"
+      fontSize: 10
+      fontWeight: 600
+      textAlign: left
+    }
+  }
+}

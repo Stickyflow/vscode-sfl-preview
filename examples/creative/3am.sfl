@@ -1,0 +1,307 @@
+sfl 1.4
+
+// 3AM in Shibuya: a skyline under the moon, in the page palette.
+
+Model poster {
+  Shape sky {
+    layout {
+      position: 0, 0
+      size: 320, 440
+    }
+    style {
+      shape: rectangle
+      fill: "gradient(90, #02030A 0%, #012D55 62%, #2B5378 100%)"
+      stroke: none
+    }
+  }
+
+  Shape starA {
+    layout {
+      position: 40, 150
+      size: 3, 3
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.7
+    }
+  }
+
+  Shape starB {
+    layout {
+      position: 150, 120
+      size: 2, 2
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.5
+    }
+  }
+
+  Shape starC {
+    layout {
+      position: 290, 170
+      size: 3, 3
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      opacity: 0.6
+    }
+  }
+
+  Shape moon {
+    layout {
+      position: 196, 44
+      size: 84, 84
+    }
+    style {
+      shape: circle
+      fill: "#A1CDF8"
+      stroke: none
+      shadow: "shadow(color:#A1CDF8, opacity:0.55, blur:40)"
+    }
+  }
+
+  Shape towerA {
+    layout {
+      position: 0, 250
+      size: 62, 190
+    }
+    style {
+      shape: rectangle
+      fill: "#2B5378"
+      stroke: none
+    }
+  }
+
+  Shape towerB {
+    layout {
+      position: 56, 196
+      size: 74, 244
+    }
+    style {
+      shape: rectangle
+      fill: "#012D55"
+      stroke: none
+    }
+  }
+
+  Shape towerC {
+    layout {
+      position: 124, 286
+      size: 56, 154
+    }
+    style {
+      shape: rectangle
+      fill: "#2B5378"
+      stroke: none
+    }
+  }
+
+  Shape towerD {
+    layout {
+      position: 176, 226
+      size: 82, 214
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+
+  Shape towerE {
+    layout {
+      position: 252, 268
+      size: 68, 172
+    }
+    style {
+      shape: rectangle
+      fill: "#012D55"
+      stroke: none
+    }
+  }
+
+  Shape windowA {
+    layout {
+      position: 70, 214
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape windowB {
+    layout {
+      position: 92, 214
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.5
+    }
+  }
+
+  Shape windowC {
+    layout {
+      position: 70, 238
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.8
+    }
+  }
+
+  Shape windowD {
+    layout {
+      position: 114, 262
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape windowE {
+    layout {
+      position: 190, 244
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#FC1200"
+      stroke: none
+    }
+  }
+
+  Shape windowF {
+    layout {
+      position: 212, 244
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.6
+    }
+  }
+
+  Shape windowG {
+    layout {
+      position: 234, 292
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+    }
+  }
+
+  Shape windowH {
+    layout {
+      position: 212, 316
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.4
+    }
+  }
+
+  Shape windowI {
+    layout {
+      position: 266, 286
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.7
+    }
+  }
+
+  Shape windowJ {
+    layout {
+      position: 12, 270
+      size: 8, 11
+    }
+    style {
+      shape: rectangle
+      fill: "#F8AC6D"
+      stroke: none
+      opacity: 0.6
+    }
+  }
+
+  Shape street {
+    layout {
+      position: 0, 396
+      size: 320, 44
+    }
+    style {
+      shape: rectangle
+      fill: "#02030A"
+      stroke: none
+    }
+  }
+
+  Shape crossing {
+    layout {
+      position: 40, 414
+      size: 240, 4
+    }
+    style {
+      shape: rectangle
+      fill: "#FCFCFC"
+      stroke: none
+      opacity: 0.25
+    }
+  }
+
+  Text title {
+    text: "3AM"
+    layout {
+      position: 24, 34
+      size: 200, 70
+    }
+    style {
+      textColor: "#F8AC6D"
+      fontSize: 64
+      fontWeight: 800
+      textAlign: left
+    }
+  }
+
+  Text caption {
+    text: "Shibuya, after the last train"
+    layout {
+      position: 26, 100
+      size: 240, 18
+    }
+    style {
+      textColor: "#6F9ACA"
+      fontSize: 12
+      textAlign: left
+    }
+  }
+}

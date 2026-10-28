@@ -9,6 +9,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **SFL: Open Preview** and **SFL: Open Preview to the Side** in the
   Explorer context menu: right-click an `.sfl` file to preview it.
+- Twelve creative examples in `examples/creative/` (posters, patterns, an
+  interface screen, an isometric scene) from the StickyFlow Creative Work
+  page, shown in the README under *Not just diagrams*.
 
 ### Changed
 
