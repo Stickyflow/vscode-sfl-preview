@@ -4,6 +4,7 @@ sfl 1.4
 
 Model type {
   Shape top {
+    text: ""
     layout {
       position: 0, 0
       size: 300, 220
@@ -16,6 +17,7 @@ Model type {
   }
 
   Shape bottom {
+    text: ""
     layout {
       position: 0, 220
       size: 300, 180

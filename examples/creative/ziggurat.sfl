@@ -1,0 +1,267 @@
+sfl 1.6
+
+// Ziggurat: three terraces and a long stair, the steps drawn by a Repeat,
+// in the palette Terracotta.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Model ziggurat {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#F6DDB8"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric sand : flat {
+      layout {
+        position: -75.16, 155.0
+        size: 260, 4, 260
+      }
+      style {
+        fill: "#EBC895"
+      }
+    }
+
+    Isometric tier_1 : flat {
+      layout {
+        position: 20.1, 161.0
+        size: 180, 34, 150
+      }
+      style {
+        fill: "#E2A35E"
+      }
+    }
+
+    Isometric tier_2 : flat {
+      layout {
+        position: 59.94, 155.0
+        size: 132, 30, 104
+      }
+      style {
+        fill: "#C5733A"
+      }
+    }
+
+    Isometric tier_3 : flat {
+      layout {
+        position: 98.04, 150.0
+        size: 84, 28, 62
+      }
+      style {
+        fill: "#94471F"
+      }
+    }
+
+    Isometric shrine : flat {
+      layout {
+        position: 129.22, 144.0
+        size: 40, 26, 30
+      }
+      style {
+        fill: "#C5733A"
+      }
+    }
+
+    Isometric door : flat {
+      layout {
+        position: 140.47, 176.0
+        size: 12, 16, 1
+      }
+      style {
+        fill: "#3B1D0E"
+      }
+    }
+
+    Repeat stair {
+      count: 23
+      run: 82 - index * 3.6
+
+      Isometric step : flat {
+        layout {
+          position: 150 + (-32 - run) * 0.866, 285 - 2 - index * 4
+          size: 28, 4, run
+        }
+        style {
+          fill: mix("#E2A35E", "#94471F", index / 22)
+        }
+      }
+    }
+
+    Isometric palm_trunk : flat {
+      layout {
+        position: -18.0, 220.0
+        size: 4, 40, 4
+      }
+      style {
+        fill: "#7A4B2A"
+      }
+    }
+
+    Isometric palm {
+      layout {
+        position: -38.79, 196.0
+        size: 28, 18, 28
+      }
+      style {
+        fill: "#2F6B5E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric palm_trunk_2 : flat {
+      layout {
+        position: -35.32, 240.0
+        size: 4, 40, 4
+      }
+      style {
+        fill: "#7A4B2A"
+      }
+    }
+
+    Isometric palm_2 {
+      layout {
+        position: -56.11, 216.0
+        size: 28, 18, 28
+      }
+      style {
+        fill: "#2F6B5E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric palm_trunk_3 : flat {
+      layout {
+        position: 163.86, 335.0
+        size: 4, 40, 4
+      }
+      style {
+        fill: "#7A4B2A"
+      }
+    }
+
+    Isometric palm_3 {
+      layout {
+        position: 143.07, 311.0
+        size: 28, 18, 28
+      }
+      style {
+        fill: "#2F6B5E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric palm_trunk_4 : flat {
+      layout {
+        position: 276.44, 280.0
+        size: 4, 40, 4
+      }
+      style {
+        fill: "#7A4B2A"
+      }
+    }
+
+    Isometric palm_4 {
+      layout {
+        position: 255.65, 256.0
+        size: 28, 18, 28
+      }
+      style {
+        fill: "#2F6B5E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Text title {
+      text: "Terracotta"
+      layout {
+        position: 24, 26
+        size: 252, 36
+      }
+      style {
+        textColor: "#94471F"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Twenty-three steps, one Repeat"
+      layout {
+        position: 24, 62
+        size: 252, 20
+      }
+      style {
+        textColor: "#94471F"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#E2A35E"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#C5733A"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#94471F"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#2F6B5E"
+        stroke: none
+      }
+    }
+  }
+}

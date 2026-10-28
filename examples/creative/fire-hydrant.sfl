@@ -4,6 +4,7 @@ sfl 1.4
 
 Model poster {
   Shape wall {
+    text: ""
     layout {
       position: 0, 0
       size: 320, 440
@@ -16,6 +17,7 @@ Model poster {
   }
 
   Shape pavement {
+    text: ""
     layout {
       position: 0, 330
       size: 320, 110
@@ -28,6 +30,7 @@ Model poster {
   }
 
   Shape jointA {
+    text: ""
     layout {
       position: 0, 366
       size: 320, 2
@@ -41,6 +44,7 @@ Model poster {
   }
 
   Shape jointB {
+    text: ""
     layout {
       position: 0, 404
       size: 320, 2
@@ -54,6 +58,7 @@ Model poster {
   }
 
   Shape jointC {
+    text: ""
     layout {
       position: 70, 330
       size: 2, 36
@@ -67,6 +72,7 @@ Model poster {
   }
 
   Shape jointD {
+    text: ""
     layout {
       position: 210, 330
       size: 2, 36
@@ -80,6 +86,7 @@ Model poster {
   }
 
   Shape jointE {
+    text: ""
     layout {
       position: 140, 368
       size: 2, 36
@@ -93,6 +100,7 @@ Model poster {
   }
 
   Shape jointF {
+    text: ""
     layout {
       position: 260, 368
       size: 2, 36
@@ -106,6 +114,7 @@ Model poster {
   }
 
   Shape shadow {
+    text: ""
     layout {
       position: 96, 318
       size: 150, 22
@@ -119,6 +128,7 @@ Model poster {
   }
 
   Shape dome {
+    text: ""
     layout {
       position: 120, 116
       size: 80, 80
@@ -131,6 +141,7 @@ Model poster {
   }
 
   Shape body {
+    text: ""
     layout {
       position: 122, 150
       size: 76, 170
@@ -143,6 +154,7 @@ Model poster {
   }
 
   Shape cap {
+    text: ""
     layout {
       position: 112, 144
       size: 96, 16
@@ -155,6 +167,7 @@ Model poster {
   }
 
   Shape nozzleLeft {
+    text: ""
     layout {
       position: 94, 200
       size: 44, 44
@@ -167,6 +180,7 @@ Model poster {
   }
 
   Shape nozzleRight {
+    text: ""
     layout {
       position: 182, 200
       size: 44, 44
@@ -179,6 +193,7 @@ Model poster {
   }
 
   Shape boltLeft {
+    text: ""
     layout {
       position: 108, 214
       size: 16, 16
@@ -192,6 +207,7 @@ Model poster {
   }
 
   Shape boltRight {
+    text: ""
     layout {
       position: 196, 214
       size: 16, 16
@@ -205,6 +221,7 @@ Model poster {
   }
 
   Shape boltTop {
+    text: ""
     layout {
       position: 152, 106
       size: 16, 16
@@ -218,6 +235,7 @@ Model poster {
   }
 
   Shape base {
+    text: ""
     layout {
       position: 110, 306
       size: 100, 20
@@ -230,6 +248,7 @@ Model poster {
   }
 
   Shape shine {
+    text: ""
     layout {
       position: 134, 160
       size: 8, 130

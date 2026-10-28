@@ -4,6 +4,7 @@ sfl 1.4
 
 Model bauhaus {
   Shape paper {
+    text: ""
     layout {
       position: 0, 0
       size: 300, 400
@@ -16,6 +17,7 @@ Model bauhaus {
   }
 
   Shape moon {
+    text: ""
     layout {
       position: 40, 40
       size: 150, 150
@@ -28,6 +30,7 @@ Model bauhaus {
   }
 
   Shape dot {
+    text: ""
     layout {
       position: 170, 120
       size: 90, 90
@@ -41,6 +44,7 @@ Model bauhaus {
   }
 
   Shape bar {
+    text: ""
     layout {
       position: 40, 240
       size: 220, 28
@@ -53,6 +57,7 @@ Model bauhaus {
   }
 
   Shape ringA {
+    text: ""
     layout {
       position: 60, 296
       size: 64, 64
@@ -66,6 +71,7 @@ Model bauhaus {
   }
 
   Shape ringB {
+    text: ""
     layout {
       position: 140, 296
       size: 64, 64
@@ -79,6 +85,7 @@ Model bauhaus {
   }
 
   Shape diamond {
+    text: ""
     layout {
       position: 220, 304
       size: 48, 48

@@ -1,0 +1,268 @@
+sfl 1.6
+
+// Desert Villa: a flat-roofed modernist house with a pool and two palms,
+// in the palette Palm Springs.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Model desert_villa {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#F4E3C8"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric lot : flat {
+      layout {
+        position: -40.52, 90.0
+        size: 220, 4, 200
+      }
+      style {
+        fill: "#E9D2AE"
+      }
+    }
+
+    Isometric terrace : flat {
+      layout {
+        position: -14.54, 131.0
+        size: 150, 4, 100
+      }
+      style {
+        fill: "#F7EEDD"
+      }
+    }
+
+    Isometric pool : flat {
+      layout {
+        position: 11.44, 160.0
+        size: 90, 5, 50
+      }
+      style {
+        fill: "#2AB3A6"
+      }
+    }
+
+    Isometric wing : flat {
+      layout {
+        position: 89.38, 59.0
+        size: 80, 46, 60
+      }
+      style {
+        fill: "#FFFDF7"
+      }
+    }
+
+    Isometric glass : flat {
+      layout {
+        position: 162.12, 109.0
+        size: 1, 34, 52
+      }
+      style {
+        fill: "#8FC9C4"
+      }
+    }
+
+    Isometric core : flat {
+      layout {
+        position: 184.64, 85.0
+        size: 50, 70, 50
+      }
+      style {
+        fill: "#FFFDF7"
+      }
+    }
+
+    Isometric door : flat {
+      layout {
+        position: 201.09, 160.0
+        size: 14, 30, 1
+      }
+      style {
+        fill: "#F26B5B"
+      }
+    }
+
+    Isometric stripe : flat {
+      layout {
+        position: 184.64, 95.0
+        size: 50, 6, 50
+      }
+      style {
+        fill: "#E8A33D"
+      }
+    }
+
+    Isometric roof : flat {
+      layout {
+        position: 70.33, 43.0
+        size: 110, 6, 82
+      }
+      style {
+        fill: "#FFFDF7"
+      }
+    }
+
+    Isometric roof_edge : flat {
+      layout {
+        position: 69.46, 84.0
+        size: 110, 6, 1
+      }
+      style {
+        fill: "#E8A33D"
+      }
+    }
+
+    Isometric trunk : flat {
+      layout {
+        position: 259.12, 125.0
+        size: 4, 70, 4
+      }
+      style {
+        fill: "#9B6B43"
+      }
+    }
+
+    Isometric crown {
+      layout {
+        position: 234.87, 93.0
+        size: 32, 26, 32
+      }
+      style {
+        fill: "#4E9F6E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric trunk_2 : flat {
+      layout {
+        position: 184.64, 178.0
+        size: 4, 54, 4
+      }
+      style {
+        fill: "#9B6B43"
+      }
+    }
+
+    Isometric crown_2 {
+      layout {
+        position: 160.39, 146.0
+        size: 32, 26, 32
+      }
+      style {
+        fill: "#4E9F6E"
+        shape: sphere
+        stroke: none
+      }
+    }
+
+    Isometric lounger : flat {
+      layout {
+        position: 82.45, 157.0
+        size: 24, 4, 8
+      }
+      style {
+        fill: "#F26B5B"
+      }
+    }
+
+    Isometric lounger_2 : flat {
+      layout {
+        position: 108.43, 172.0
+        size: 24, 4, 8
+      }
+      style {
+        fill: "#F26B5B"
+      }
+    }
+
+    Text title {
+      text: "Palm Springs"
+      layout {
+        position: 24, 300
+        size: 252, 40
+      }
+      style {
+        textColor: "#5A3E2B"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Concrete, glass and a pool"
+      layout {
+        position: 24, 338
+        size: 252, 20
+      }
+      style {
+        textColor: "#5A3E2B"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#FFFDF7"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#2AB3A6"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#F26B5B"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#E8A33D"
+        stroke: none
+      }
+    }
+  }
+}

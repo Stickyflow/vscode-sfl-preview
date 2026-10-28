@@ -1,0 +1,475 @@
+sfl 1.6
+
+// Night Towers: glass towers whose lit windows are drawn by Repeat blocks,
+// in the palette Neon Night.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Model night_towers {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#0E1033"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric plaza : flat {
+      layout {
+        position: -40.52, 232.0
+        size: 220, 4, 220
+      }
+      style {
+        fill: "#181B47"
+      }
+    }
+
+    Isometric tower_1 : flat {
+      layout {
+        position: 106.7, 76.0
+        size: 50, 176, 50
+      }
+      style {
+        fill: "#2E3480"
+      }
+    }
+
+    Isometric crown_1 : flat {
+      layout {
+        position: 106.7, 73.0
+        size: 50, 3, 50
+      }
+      style {
+        fill: "#06D6A0"
+      }
+    }
+
+    Repeat lights_1_right {
+      columns: 4
+      rows: 11
+      origin: -86, 8
+      step: 10, 14
+      seed: 7
+      chance: 0.55
+
+      Isometric window_1r : flat {
+        layout {
+          position: 150 + (-40 - x - 6) * 0.866, 342 + (-40 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_1_left {
+      columns: 4
+      rows: 11
+      origin: -86, 8
+      step: 10, 14
+      seed: 11
+      chance: 0.45
+
+      Isometric window_1l : flat {
+        layout {
+          position: 150 + (x - -40 - 1) * 0.866, 342 + (x + -40) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Isometric tower_2 : flat {
+      layout {
+        position: 181.18, 148.0
+        size: 44, 134, 44
+      }
+      style {
+        fill: "#22265C"
+      }
+    }
+
+    Isometric crown_2 : flat {
+      layout {
+        position: 181.18, 145.0
+        size: 44, 3, 44
+      }
+      style {
+        fill: "#EF476F"
+      }
+    }
+
+    Repeat lights_2_right {
+      columns: 3
+      rows: 8
+      origin: -96, 8
+      step: 10, 14
+      seed: 14
+      chance: 0.55
+
+      Isometric window_2r : flat {
+        layout {
+          position: 150 + (24 - x - 6) * 0.866, 342 + (24 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_2_left {
+      columns: 3
+      rows: 8
+      origin: -16, 8
+      step: 10, 14
+      seed: 22
+      chance: 0.45
+
+      Isometric window_2l : flat {
+        layout {
+          position: 150 + (x - -56 - 1) * 0.866, 342 + (x + -56) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Isometric tower_3 : flat {
+      layout {
+        position: 42.62, 162.0
+        size: 44, 120, 44
+      }
+      style {
+        fill: "#22265C"
+      }
+    }
+
+    Isometric crown_3 : flat {
+      layout {
+        position: 42.62, 159.0
+        size: 44, 3, 44
+      }
+      style {
+        fill: "#06D6A0"
+      }
+    }
+
+    Repeat lights_3_right {
+      columns: 3
+      rows: 7
+      origin: -16, 8
+      step: 10, 14
+      seed: 21
+      chance: 0.55
+
+      Isometric window_3r : flat {
+        layout {
+          position: 150 + (-56 - x - 6) * 0.866, 342 + (-56 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_3_left {
+      columns: 3
+      rows: 7
+      origin: -96, 8
+      step: 10, 14
+      seed: 33
+      chance: 0.45
+
+      Isometric window_3l : flat {
+        layout {
+          position: 150 + (x - 24 - 1) * 0.866, 342 + (x + 24) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Isometric tower_4 : flat {
+      layout {
+        position: 175.98, 250.0
+        size: 50, 92, 50
+      }
+      style {
+        fill: "#2E3480"
+      }
+    }
+
+    Isometric crown_4 : flat {
+      layout {
+        position: 175.98, 247.0
+        size: 50, 3, 50
+      }
+      style {
+        fill: "#EF476F"
+      }
+    }
+
+    Repeat lights_4_right {
+      columns: 4
+      rows: 5
+      origin: -36, 8
+      step: 10, 14
+      seed: 28
+      chance: 0.55
+
+      Isometric window_4r : flat {
+        layout {
+          position: 150 + (90 - x - 6) * 0.866, 342 + (90 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_4_left {
+      columns: 4
+      rows: 5
+      origin: 44, 8
+      step: 10, 14
+      seed: 44
+      chance: 0.45
+
+      Isometric window_4l : flat {
+        layout {
+          position: 150 + (x - 10 - 1) * 0.866, 342 + (x + 10) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Isometric tower_5 : flat {
+      layout {
+        position: 49.54, 259.0
+        size: 46, 78, 46
+      }
+      style {
+        fill: "#2E3480"
+      }
+    }
+
+    Isometric crown_5 : flat {
+      layout {
+        position: 49.54, 256.0
+        size: 46, 3, 46
+      }
+      style {
+        fill: "#06D6A0"
+      }
+    }
+
+    Repeat lights_5_right {
+      columns: 4
+      rows: 4
+      origin: 34, 8
+      step: 10, 14
+      seed: 35
+      chance: 0.55
+
+      Isometric window_5r : flat {
+        layout {
+          position: 150 + (6 - x - 6) * 0.866, 342 + (6 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_5_left {
+      columns: 4
+      rows: 4
+      origin: -36, 8
+      step: 10, 14
+      seed: 55
+      chance: 0.45
+
+      Isometric window_5l : flat {
+        layout {
+          position: 150 + (x - 76 - 1) * 0.866, 342 + (x + 76) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Isometric tower_6 : flat {
+      layout {
+        position: 106.7, 327.0
+        size: 40, 50, 40
+      }
+      style {
+        fill: "#22265C"
+      }
+    }
+
+    Isometric crown_6 : flat {
+      layout {
+        position: 106.7, 324.0
+        size: 40, 3, 40
+      }
+      style {
+        fill: "#EF476F"
+      }
+    }
+
+    Repeat lights_6_right {
+      columns: 3
+      rows: 2
+      origin: 44, 8
+      step: 10, 14
+      seed: 42
+      chance: 0.55
+
+      Isometric window_6r : flat {
+        layout {
+          position: 150 + (70 - x - 6) * 0.866, 342 + (70 + x) * 0.5 - 8 - y
+          size: 1, 8, 6
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#FFD166", "#EF476F", "#06D6A0")
+        }
+      }
+    }
+
+    Repeat lights_6_left {
+      columns: 3
+      rows: 2
+      origin: 34, 8
+      step: 10, 14
+      seed: 66
+      chance: 0.45
+
+      Isometric window_6l : flat {
+        layout {
+          position: 150 + (x - 80 - 1) * 0.866, 342 + (x + 80) * 0.5 - 8 - y
+          size: 6, 8, 1
+        }
+        style {
+          fill: pick("#FFD166", "#FFD166", "#EF476F")
+        }
+      }
+    }
+
+    Text title {
+      text: "Neon Night"
+      layout {
+        position: 24, 26
+        size: 252, 36
+      }
+      style {
+        textColor: "#FFFFFF"
+        fontSize: 30
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Every lit window is a Repeat"
+      layout {
+        position: 24, 62
+        size: 252, 20
+      }
+      style {
+        textColor: "#A9B0FF"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#22265C"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#2E3480"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#FFD166"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#EF476F"
+        stroke: none
+      }
+    }
+
+    Shape swatch_5 {
+      text: ""
+      layout {
+        position: 88, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#06D6A0"
+        stroke: none
+      }
+    }
+  }
+}

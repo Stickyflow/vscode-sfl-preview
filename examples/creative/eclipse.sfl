@@ -8,6 +8,7 @@ Style layer { shape: rounded_rectangle; stroke: none }
 
 Model poster {
   Shape paper {
+    text: ""
     layout {
       position: 0, 0
       size: 320, 430
@@ -20,6 +21,7 @@ Model poster {
   }
 
   Shape warm1 : layer {
+    text: ""
     layout {
       position: 35, 76
       size: 250, 250
@@ -33,6 +35,7 @@ Model poster {
   }
 
   Shape warm2 : layer {
+    text: ""
     layout {
       position: 43, 96
       size: 234, 215
@@ -46,6 +49,7 @@ Model poster {
   }
 
   Shape warm3 : layer {
+    text: ""
     layout {
       position: 50, 116
       size: 220, 190
@@ -59,6 +63,7 @@ Model poster {
   }
 
   Shape warm4 : layer {
+    text: ""
     layout {
       position: 60, 143
       size: 200, 175
@@ -72,6 +77,7 @@ Model poster {
   }
 
   Shape warm5 : layer {
+    text: ""
     layout {
       position: 69, 163
       size: 182, 165
@@ -85,6 +91,7 @@ Model poster {
   }
 
   Shape warm6 : layer {
+    text: ""
     layout {
       position: 78, 196
       size: 164, 140
@@ -98,6 +105,7 @@ Model poster {
   }
 
   Shape cool1 : layer {
+    text: ""
     layout {
       position: 26, 199
       size: 268, 205
@@ -111,6 +119,7 @@ Model poster {
   }
 
   Shape cool2 : layer {
+    text: ""
     layout {
       position: 34, 209
       size: 252, 195
@@ -124,6 +133,7 @@ Model poster {
   }
 
   Shape cool3 : layer {
+    text: ""
     layout {
       position: 42, 219
       size: 236, 185
@@ -137,6 +147,7 @@ Model poster {
   }
 
   Shape cool4 : layer {
+    text: ""
     layout {
       position: 50, 228
       size: 220, 176
@@ -150,6 +161,7 @@ Model poster {
   }
 
   Shape cool5 : layer {
+    text: ""
     layout {
       position: 58, 236
       size: 204, 168
@@ -163,6 +175,7 @@ Model poster {
   }
 
   Shape cool6 : layer {
+    text: ""
     layout {
       position: 66, 244
       size: 188, 160
@@ -188,6 +201,7 @@ Model poster {
   }
 
   Shape sw1 {
+    text: ""
     layout {
       position: 133, 20
       size: 7.5, 7.5
@@ -200,6 +214,7 @@ Model poster {
   }
 
   Shape sw2 {
+    text: ""
     layout {
       position: 142.5, 20
       size: 7.5, 7.5
@@ -212,6 +227,7 @@ Model poster {
   }
 
   Shape sw3 {
+    text: ""
     layout {
       position: 152, 20
       size: 7.5, 7.5
@@ -224,6 +240,7 @@ Model poster {
   }
 
   Shape sw4 {
+    text: ""
     layout {
       position: 161.5, 20
       size: 7.5, 7.5
@@ -236,6 +253,7 @@ Model poster {
   }
 
   Shape sw5 {
+    text: ""
     layout {
       position: 171, 20
       size: 7.5, 7.5
@@ -248,6 +266,7 @@ Model poster {
   }
 
   Shape sw6 {
+    text: ""
     layout {
       position: 180.5, 20
       size: 7.5, 7.5
@@ -260,6 +279,7 @@ Model poster {
   }
 
   Shape sw7 {
+    text: ""
     layout {
       position: 190, 20
       size: 7.5, 7.5

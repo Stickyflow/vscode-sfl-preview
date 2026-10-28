@@ -4,6 +4,7 @@ sfl 1.4
 
 Model screen {
   Shape device {
+    text: ""
     layout {
       position: 0, 0
       size: 300, 400
@@ -16,6 +17,7 @@ Model screen {
   }
 
   Shape art {
+    text: ""
     layout {
       position: 30, 34
       size: 240, 170
@@ -56,6 +58,7 @@ Model screen {
   }
 
   Shape track {
+    text: ""
     layout {
       position: 30, 286
       size: 240, 6
@@ -68,6 +71,7 @@ Model screen {
   }
 
   Shape progress {
+    text: ""
     layout {
       position: 30, 286
       size: 150, 6
@@ -96,6 +100,7 @@ Model screen {
   }
 
   Shape toggle {
+    text: ""
     layout {
       position: 210, 324
       size: 60, 30
@@ -108,6 +113,7 @@ Model screen {
   }
 
   Shape knob {
+    text: ""
     layout {
       position: 244, 328
       size: 22, 22

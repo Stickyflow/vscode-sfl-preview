@@ -1,0 +1,516 @@
+sfl 1.6
+
+// Canal Houses: a row of narrow painted houses on the water,
+// in the palette Burano.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Model canal_houses {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#FFF4E6"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric water : flat {
+      layout {
+        position: -94.8, 156.0
+        size: 240, 4, 140
+      }
+      style {
+        fill: "#9CC9E3"
+      }
+    }
+
+    Isometric quay : flat {
+      layout {
+        position: 26.44, 141.0
+        size: 240, 6, 18
+      }
+      style {
+        fill: "#E8DCC8"
+      }
+    }
+
+    Isometric house : flat {
+      layout {
+        position: 48.96, 40.0
+        size: 32, 84, 42
+      }
+      style {
+        fill: "#F28C8C"
+      }
+    }
+
+    Isometric cornice : flat {
+      layout {
+        position: 48.96, 36.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_2 : flat {
+      layout {
+        position: 76.67, 32.0
+        size: 32, 108, 42
+      }
+      style {
+        fill: "#F6CF65"
+      }
+    }
+
+    Isometric cornice_2 : flat {
+      layout {
+        position: 76.67, 28.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_3 : flat {
+      layout {
+        position: 104.38, 82.0
+        size: 32, 74, 42
+      }
+      style {
+        fill: "#7FC8A9"
+      }
+    }
+
+    Isometric cornice_3 : flat {
+      layout {
+        position: 104.38, 78.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_4 : flat {
+      layout {
+        position: 132.09, 54.0
+        size: 32, 118, 42
+      }
+      style {
+        fill: "#6CA0DC"
+      }
+    }
+
+    Isometric cornice_4 : flat {
+      layout {
+        position: 132.09, 50.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_5 : flat {
+      layout {
+        position: 159.8, 94.0
+        size: 32, 94, 42
+      }
+      style {
+        fill: "#B497D6"
+      }
+    }
+
+    Isometric cornice_5 : flat {
+      layout {
+        position: 159.8, 90.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_6 : flat {
+      layout {
+        position: 187.52, 124.0
+        size: 32, 80, 42
+      }
+      style {
+        fill: "#F6CF65"
+      }
+    }
+
+    Isometric cornice_6 : flat {
+      layout {
+        position: 187.52, 120.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Isometric house_7 : flat {
+      layout {
+        position: 215.23, 116.0
+        size: 32, 104, 42
+      }
+      style {
+        fill: "#F28C8C"
+      }
+    }
+
+    Isometric cornice_7 : flat {
+      layout {
+        position: 215.23, 112.0
+        size: 32, 4, 42
+      }
+      style {
+        fill: "#FFFFFF"
+      }
+    }
+
+    Repeat windows_1 {
+      columns: 2
+      rows: 2
+      origin: -105, 24
+      step: 11, 26
+
+      Isometric window_1 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door : flat {
+      layout {
+        position: 57.62, 134.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_2 {
+      columns: 2
+      rows: 3
+      origin: -73, 24
+      step: 11, 26
+
+      Isometric window_2 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_2 : flat {
+      layout {
+        position: 85.33, 150.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_3 {
+      columns: 2
+      rows: 2
+      origin: -41, 24
+      step: 11, 26
+
+      Isometric window_3 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_3 : flat {
+      layout {
+        position: 113.04, 166.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_4 {
+      columns: 2
+      rows: 3
+      origin: -9, 24
+      step: 11, 26
+
+      Isometric window_4 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_4 : flat {
+      layout {
+        position: 140.75, 182.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_5 {
+      columns: 2
+      rows: 2
+      origin: 23, 24
+      step: 11, 26
+
+      Isometric window_5 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_5 : flat {
+      layout {
+        position: 168.46, 198.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_6 {
+      columns: 2
+      rows: 2
+      origin: 55, 24
+      step: 11, 26
+
+      Isometric window_6 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_6 : flat {
+      layout {
+        position: 196.18, 214.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Repeat windows_7 {
+      columns: 2
+      rows: 3
+      origin: 87, 24
+      step: 11, 26
+
+      Isometric window_7 : flat {
+        layout {
+          position: 165 + (x - 23) * 0.866, 196 + (x + 22) * 0.5 - 12 - y
+          size: 7, 12, 1
+        }
+        style {
+          fill: "#FFFFFF"
+        }
+      }
+    }
+
+    Isometric door_7 : flat {
+      layout {
+        position: 223.89, 230.5
+        size: 10, 16, 1
+      }
+      style {
+        fill: "#3D3A4B"
+      }
+    }
+
+    Isometric boat : flat {
+      layout {
+        position: 17.78, 182.0
+        size: 30, 4, 10
+      }
+      style {
+        fill: "#F28C8C"
+      }
+    }
+
+    Isometric boat_2 : flat {
+      layout {
+        position: 38.56, 216.0
+        size: 30, 4, 10
+      }
+      style {
+        fill: "#7FC8A9"
+      }
+    }
+
+    Isometric boat_3 : flat {
+      layout {
+        position: 97.45, 228.0
+        size: 30, 4, 10
+      }
+      style {
+        fill: "#B497D6"
+      }
+    }
+
+    Isometric boat_4 : flat {
+      layout {
+        position: 118.24, 262.0
+        size: 30, 4, 10
+      }
+      style {
+        fill: "#F6CF65"
+      }
+    }
+
+    Isometric boat_5 : flat {
+      layout {
+        position: 177.12, 274.0
+        size: 30, 4, 10
+      }
+      style {
+        fill: "#6CA0DC"
+      }
+    }
+
+    Text title {
+      text: "Burano"
+      layout {
+        position: 24, 300
+        size: 252, 40
+      }
+      style {
+        textColor: "#3D3A4B"
+        fontSize: 34
+        fontWeight: 800
+        textAlign: left
+      }
+    }
+
+    Text caption {
+      text: "Seven houses, five colours"
+      layout {
+        position: 24, 340
+        size: 252, 20
+      }
+      style {
+        textColor: "#3D3A4B"
+        fontSize: 12
+        fontWeight: 500
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#F28C8C"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#F6CF65"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#7FC8A9"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#6CA0DC"
+        stroke: none
+      }
+    }
+
+    Shape swatch_5 {
+      text: ""
+      layout {
+        position: 88, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#B497D6"
+        stroke: none
+      }
+    }
+  }
+}

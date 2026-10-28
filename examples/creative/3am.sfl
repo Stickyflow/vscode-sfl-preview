@@ -4,6 +4,7 @@ sfl 1.4
 
 Model poster {
   Shape sky {
+    text: ""
     layout {
       position: 0, 0
       size: 320, 440
@@ -16,6 +17,7 @@ Model poster {
   }
 
   Shape starA {
+    text: ""
     layout {
       position: 40, 150
       size: 3, 3
@@ -29,6 +31,7 @@ Model poster {
   }
 
   Shape starB {
+    text: ""
     layout {
       position: 150, 120
       size: 2, 2
@@ -42,6 +45,7 @@ Model poster {
   }
 
   Shape starC {
+    text: ""
     layout {
       position: 290, 170
       size: 3, 3
@@ -55,6 +59,7 @@ Model poster {
   }
 
   Shape moon {
+    text: ""
     layout {
       position: 196, 44
       size: 84, 84
@@ -68,6 +73,7 @@ Model poster {
   }
 
   Shape towerA {
+    text: ""
     layout {
       position: 0, 250
       size: 62, 190
@@ -80,6 +86,7 @@ Model poster {
   }
 
   Shape towerB {
+    text: ""
     layout {
       position: 56, 196
       size: 74, 244
@@ -92,6 +99,7 @@ Model poster {
   }
 
   Shape towerC {
+    text: ""
     layout {
       position: 124, 286
       size: 56, 154
@@ -104,6 +112,7 @@ Model poster {
   }
 
   Shape towerD {
+    text: ""
     layout {
       position: 176, 226
       size: 82, 214
@@ -116,6 +125,7 @@ Model poster {
   }
 
   Shape towerE {
+    text: ""
     layout {
       position: 252, 268
       size: 68, 172
@@ -128,6 +138,7 @@ Model poster {
   }
 
   Shape windowA {
+    text: ""
     layout {
       position: 70, 214
       size: 8, 11
@@ -140,6 +151,7 @@ Model poster {
   }
 
   Shape windowB {
+    text: ""
     layout {
       position: 92, 214
       size: 8, 11
@@ -153,6 +165,7 @@ Model poster {
   }
 
   Shape windowC {
+    text: ""
     layout {
       position: 70, 238
       size: 8, 11
@@ -166,6 +179,7 @@ Model poster {
   }
 
   Shape windowD {
+    text: ""
     layout {
       position: 114, 262
       size: 8, 11
@@ -178,6 +192,7 @@ Model poster {
   }
 
   Shape windowE {
+    text: ""
     layout {
       position: 190, 244
       size: 8, 11
@@ -190,6 +205,7 @@ Model poster {
   }
 
   Shape windowF {
+    text: ""
     layout {
       position: 212, 244
       size: 8, 11
@@ -203,6 +219,7 @@ Model poster {
   }
 
   Shape windowG {
+    text: ""
     layout {
       position: 234, 292
       size: 8, 11
@@ -215,6 +232,7 @@ Model poster {
   }
 
   Shape windowH {
+    text: ""
     layout {
       position: 212, 316
       size: 8, 11
@@ -228,6 +246,7 @@ Model poster {
   }
 
   Shape windowI {
+    text: ""
     layout {
       position: 266, 286
       size: 8, 11
@@ -241,6 +260,7 @@ Model poster {
   }
 
   Shape windowJ {
+    text: ""
     layout {
       position: 12, 270
       size: 8, 11
@@ -254,6 +274,7 @@ Model poster {
   }
 
   Shape street {
+    text: ""
     layout {
       position: 0, 396
       size: 320, 44
@@ -266,6 +287,7 @@ Model poster {
   }
 
   Shape crossing {
+    text: ""
     layout {
       position: 40, 414
       size: 240, 4

@@ -1,0 +1,200 @@
+sfl 1.6
+
+// Brutalist Block: a concrete housing slab with a grid of deep balconies,
+// in the palette Concrete & Rust.
+
+Style flat { stroke: none; seams: false; cornerRadius: 0; shadow: false }
+
+Model brutalist_block {
+  Container paper {
+    kind: frame
+    layout {
+      position: 0, 0
+      size: 300, 400
+    }
+    style {
+      fill: "#EDE6DA"
+      stroke: none
+      cornerRadius: 0
+      showLabel: false
+      shadow: false
+      clip: true
+    }
+
+    Isometric ground : flat {
+      layout {
+        position: -5.88, 255.0
+        size: 180, 6, 160
+      }
+      style {
+        fill: "#DCD4C6"
+      }
+    }
+
+    Isometric slab : flat {
+      layout {
+        position: 72.06, 103.0
+        size: 110, 182, 70
+      }
+      style {
+        fill: "#CFC9BE"
+      }
+    }
+
+    Isometric roof : flat {
+      layout {
+        position: 78.99, 101.0
+        size: 102, 6, 62
+      }
+      style {
+        fill: "#A8A298"
+      }
+    }
+
+    Isometric lift : flat {
+      layout {
+        position: 120.56, 94.0
+        size: 30, 18, 24
+      }
+      style {
+        fill: "#A8A298"
+      }
+    }
+
+    Repeat balconies {
+      columns: 4
+      rows: 7
+      origin: -34, 10
+      step: 17, 24
+      seed: 5
+
+      Isometric door : flat {
+        layout {
+          position: 150 + (50 - x - 12) * 0.866, 335 + (53 + x) * 0.5 - 14 - y - 6
+          size: 1, 14, 9
+        }
+        style {
+          fill: pick("#C8553D", "#6B665F", "#6B665F")
+        }
+      }
+
+      Isometric balcony : flat {
+        layout {
+          position: 150 + (50 - x - 15) * 0.866, 335 + (50 + x) * 0.5 - 4 - y
+          size: 12, 4, 15
+        }
+        style {
+          fill: "#A8A298"
+        }
+      }
+
+      Isometric rail : flat {
+        layout {
+          position: 150 + (61 - x - 15) * 0.866, 335 + (61 + x) * 0.5 - 12 - y
+          size: 1, 8, 15
+        }
+        style {
+          fill: "#CFC9BE"
+        }
+      }
+    }
+
+    Repeat windows {
+      columns: 6
+      rows: 7
+      origin: -52, 16
+      step: 17, 24
+
+      Isometric window : flat {
+        layout {
+          position: 150 + (x - 31) * 0.866, 335 + (x + 30) * 0.5 - 12 - y
+          size: 11, 12, 1
+        }
+        style {
+          fill: "#6B665F"
+        }
+      }
+    }
+
+    Text title {
+      text: "BRUTAL"
+      layout {
+        position: 24, 26
+        size: 252, 40
+      }
+      style {
+        textColor: "#6B665F"
+        fontSize: 36
+        fontWeight: 900
+        textAlign: left
+        letterSpacing: 4
+      }
+    }
+
+    Text caption {
+      text: "Concrete & Rust"
+      layout {
+        position: 24, 66
+        size: 252, 20
+      }
+      style {
+        textColor: "#6B665F"
+        fontSize: 12
+        fontWeight: 600
+        textAlign: left
+      }
+    }
+
+    Shape swatch_1 {
+      text: ""
+      layout {
+        position: 24, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#CFC9BE"
+        stroke: none
+      }
+    }
+
+    Shape swatch_2 {
+      text: ""
+      layout {
+        position: 40, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#A8A298"
+        stroke: none
+      }
+    }
+
+    Shape swatch_3 {
+      text: ""
+      layout {
+        position: 56, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#6B665F"
+        stroke: none
+      }
+    }
+
+    Shape swatch_4 {
+      text: ""
+      layout {
+        position: 72, 372
+        size: 10, 10
+      }
+      style {
+        shape: circle
+        fill: "#C8553D"
+        stroke: none
+      }
+    }
+  }
+}
