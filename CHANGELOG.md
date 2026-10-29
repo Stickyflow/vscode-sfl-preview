@@ -19,6 +19,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Selection looks like the StickyFlow-Web Playground: a rounded ring with a
   soft glow, round corner handles and floating "+" bubbles.
 - The Route button sets `route:` with stickyflow.js's `applyPropertyChange`.
+- The toolbar sits on its own surface in VS Code's editor widget colors, so
+  its buttons stay readable on any canvas, including white style templates.
 
 ### Removed
 
