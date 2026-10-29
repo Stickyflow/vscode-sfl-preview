@@ -66,22 +66,32 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     ${interFontFaces}
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--sf-canvas, var(--vscode-editor-background)); }
     stickyflow-diagram { width: 100%; height: 100%; display: block; }
+    /* The page background follows the diagram's canvas (--sf-canvas), which
+       can be anything from white to black, so the toolbar brings its own
+       surface: the editor widget colors VS Code uses for its find widget. */
     .sf-toolbar {
       position: fixed; top: 8px; right: 8px; z-index: 10;
-      display: flex; gap: 4px;
+      display: flex; gap: 2px;
+      padding: 3px;
+      background: var(--vscode-editorWidget-background, #252526);
+      color: var(--vscode-editorWidget-foreground, var(--vscode-foreground, #ccc));
+      border: 1px solid var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.35));
+      border-radius: 6px;
+      box-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.36));
       font-family: var(--vscode-font-family, sans-serif);
     }
     .sf-toolbar button {
       font-size: 13px;
       line-height: 1;
-      background: var(--vscode-button-secondaryBackground, #3a3d41);
-      color: var(--vscode-button-secondaryForeground, #fff);
-      border: 1px solid var(--vscode-contrastBorder, transparent);
+      background: transparent;
+      color: inherit;
+      border: 1px solid transparent;
       border-radius: 4px;
       padding: 5px 9px;
       cursor: pointer;
     }
-    .sf-toolbar button:hover { background: var(--vscode-button-secondaryHoverBackground, #45494e); }
+    .sf-toolbar button:hover { background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31)); }
+    .sf-toolbar button:focus-visible { outline: 1px solid var(--vscode-focusBorder, #007fd4); outline-offset: -1px; }
     .sf-toolbar button[hidden] { display: none; }
     .sf-toolbar button[aria-pressed="true"] {
       background: var(--vscode-button-background, #0e639c);
@@ -90,8 +100,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     .sf-toolbar .sf-sep {
       width: 1px;
       align-self: stretch;
-      background: var(--vscode-contrastBorder, rgba(128, 128, 128, 0.4));
-      margin: 2px 2px;
+      background: var(--vscode-editorWidget-border, rgba(128, 128, 128, 0.35));
+      margin: 3px 2px;
     }
   </style>
 </head>
