@@ -12,6 +12,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- The new flat violet StickyFlow logo, the same as stickyflow.org, replaces
+  the blue-to-purple one as the extension icon and the preview tab icon.
+
 - Renders with stickyflow.js 0.3.0 from npm (`stickyflow`, pinned in
   `package.json`) instead of a copy of a local `stickyflow.js/dist`, so the
   preview supports everything 0.3 does (`Text`, `Widget`, `Shader`,
