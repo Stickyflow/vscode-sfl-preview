@@ -842,7 +842,7 @@
 │  ├─ toon.ts               Pure: canvas state → TOON for "Export TOON"
 │  ├─ canvas.ts             Style template canvas color → page background
 │  ├─ placement.ts          Pure: where new 2D objects land
-│  ├─ isometric.ts          Pure: cube copies and Connection faces
+│  ├─ isometric.ts          Pure: cube centers and Connection faces
 │  ├─ moves.ts              Pure: gesture batching
 │  ├─ ids.ts                Pure: fresh block ids
 │  ├─ panControls.ts        Drag and wheel panning fed to the viewer
@@ -891,13 +891,13 @@
                   <tr><td><code>host.ts</code></td><td><code>HostPort</code>, <code>asHostMessage()</code></td><td>The <code>sfl/*</code> messages in both directions as types, and the only <code>postMessage</code> call.</td></tr>
                   <tr><td><code>session.ts</code></td><td><code>DocumentSession</code>, <code>PreviewContext</code></td><td>Holds the current text. <code>commit()</code> for canvas edits (no highlight, sent to the host), <code>receive()</code> for host edits (highlighted, not echoed).</td></tr>
                   <tr><td><code>editMode.ts</code></td><td><code>createEditMode()</code></td><td>The Editing toggle. Owns the <code>bindEditing()</code> session, hides resize handles and "+" bubbles while off, notifies the other features.</td></tr>
-                  <tr><td><code>editActions.ts</code></td><td><code>bindEditActions()</code></td><td>Turns edit gestures into patches: text, move, resize, reconnect, properties, sankey, delete, the "+" bubbles (2D and isometric) and bubble-to-target links.</td></tr>
+                  <tr><td><code>editActions.ts</code></td><td><code>bindEditActions()</code></td><td>Turns edit gestures into patches: text, move, resize, reconnect, properties, sankey, delete, the "+" bubbles through stickyflow.js's <code>applyQuickDuplicateChange()</code> (2D and isometric, as in Atlas) and bubble-to-target links.</td></tr>
                   <tr><td><code>addEntity.ts</code>, <code>linkTool.ts</code>, <code>routeButton.ts</code></td><td><code>bind*()</code></td><td>"+ Entity", "+ Link" (a Link between 2D objects, a face-attached Connection between cubes) and the Route button.</td></tr>
                   <tr><td><code>selectionSync.ts</code></td><td><code>bindSelectionSync()</code></td><td>Canvas ↔ editor selection, skipping an id it just sent or received.</td></tr>
                   <tr><td><code>canvas.ts</code></td><td><code>canvasColor()</code>, <code>paintCanvas()</code></td><td>Reads <code>Style tpl_canvas { fill }</code> from the text and paints it behind the viewer; export uses it as the background.</td></tr>
                   <tr><td><code>exportDiagram.ts</code></td><td><code>exportDiagram()</code></td><td>Full-bounds SVG through <code>render()</code>, PNG through an offscreen canvas at 2x.</td></tr>
                   <tr><td><code>toon.ts</code></td><td><code>diagramToToon()</code></td><td>"Export TOON": nodes, links, connections and groups from <code>sflToCanvasState()</code> as TOON tables, unused columns dropped. Semantics only; the .sfl stays the full-fidelity format.</td></tr>
-                  <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, gesture batching, fresh ids.</td></tr>
+                  <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube centers and Connection faces, gesture batching, fresh ids.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
                   <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight. Stays until stickyflow.js's <code>applyPropertyChange</code> indents a property it inserts into a multi-line block correctly.</td></tr>
                 </tbody>
