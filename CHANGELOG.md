@@ -12,6 +12,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- An edit on the canvas replaces only the changed part of the document
+  instead of the whole text, so the cursor and folded regions stay put.
+
 - The new flat violet StickyFlow logo, the same as stickyflow.org, replaces
   the blue-to-purple one as the extension icon and the preview tab icon.
 

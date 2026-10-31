@@ -4,6 +4,7 @@
 // existing panel, same as VS Code's built-in Markdown preview.
 import * as path from 'node:path';
 import * as vscode from 'vscode';
+import { changedRange } from './changedRange';
 import { getWebviewHtml } from './getWebviewHtml';
 import { sflToMarkdown } from './markdownExport';
 import { findOwnerRange, findEnclosingOwnerId } from './sflOwnerBlocks';
@@ -186,19 +187,19 @@ function reportSceneDiff(added: number, removed: number, changed: number): void 
 }
 
 // Writes an edit-mode change (drag-to-move/resize, text edit, link
-// reconnect, delete — already turned into full new SFL text by the
+// reconnect, delete, already turned into full new SFL text by the
 // webview's `applyXChange` patchers) back into the real document as a
 // standard WorkspaceEdit, so it lands on the normal undo stack like any
-// other edit. Whole-document replace is deliberate, not a diff: the
-// patchers already preserve everything untouched (comments, formatting,
-// unrelated blocks — see stickyflow.js's patchSfl.ts), so there's no
-// narrower range to compute that would be worth the complexity.
+// other edit. Only the span between the first and the last changed
+// character is replaced: a drag usually touches one `position:` line, and
+// replacing the whole document would move the cursor and drop folding.
 async function applyEditToDocument(uri: vscode.Uri, newSource: string): Promise<void> {
   const document = await vscode.workspace.openTextDocument(uri);
-  if (document.getText() === newSource) return;
-  const fullRange = new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length));
+  const change = changedRange(document.getText(), newSource);
+  if (!change) return;
+  const range = new vscode.Range(document.positionAt(change.start), document.positionAt(change.end));
   const edit = new vscode.WorkspaceEdit();
-  edit.replace(uri, fullRange, newSource);
+  edit.replace(uri, range, change.text);
   await vscode.workspace.applyEdit(edit);
 }
 
