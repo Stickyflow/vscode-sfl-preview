@@ -99,7 +99,7 @@
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.90.0",
     "@vscode/vsce": "^3.9.2",
-    "stickyflow": "0.12.1",
+    "stickyflow": "0.12.2",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
   }
