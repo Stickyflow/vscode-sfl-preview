@@ -4,7 +4,7 @@
 // rendered SVG directly.
 
 import { isIsometricDirection, isometricCopy } from './isometric.js';
-import { createBatcher, withoutNestedMoves } from './moves.js';
+import { createBatcher } from './moves.js';
 import { besideBox, isLinkable, NEW_ENTITY_STYLE, OPPOSITE_SIDE } from './placement.js';
 import type { PreviewContext } from './session.js';
 import type { EditingSession, LinkToEvent, MoveChangeEvent, PropertyChangeEvent, QuickDuplicateEvent, Side } from './stickyflow.js';
@@ -13,12 +13,9 @@ import type { EditingSession, LinkToEvent, MoveChangeEvent, PropertyChangeEvent,
 export function bindEditActions(ctx: PreviewContext, editing: EditingSession): () => void {
   const { doc, interaction: ix } = ctx;
 
-  const moves = createBatcher<MoveChangeEvent>((events) => {
-    const parents = new Map(doc.objects().map((o) => [o.id, o.parentFrameId]));
-    let next = doc.source;
-    for (const move of withoutNestedMoves(events, (id) => parents.get(id))) next = ix.applyMoveChange(next, move);
-    doc.commit(next);
-  });
+  // One drag emits one moveChange per moved owner. applyMoveChanges writes
+  // them in one pass and skips a child whose frame moves in the same drag.
+  const moves = createBatcher<MoveChangeEvent>((events) => doc.commit(ix.applyMoveChanges(doc.source, events)));
 
   // A dragged isometric label emits labelOffsetX and labelOffsetY as two
   // synchronous propertyChange events: one drag, one edit.
