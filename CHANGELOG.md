@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+This section collects everything since 0.1.1. Versions 0.2.0 to 0.4.0 were
+published from packaged .vsix files without a section of their own.
+
 ### Added
 
 - **SFL: Open Preview** and **SFL: Open Preview to the Side** in the
@@ -18,7 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The new flat violet StickyFlow logo, the same as stickyflow.org, replaces
   the blue-to-purple one as the extension icon and the preview tab icon.
 
-- Renders with stickyflow.js 0.12.1 from npm (`stickyflow`, pinned in
+- Renders with stickyflow.js 0.12.2 from npm (`stickyflow`, pinned in
   `package.json`) instead of a copy of a local `stickyflow.js/dist`, so the
   preview supports everything 0.3 does (`Text`, `Widget`, `Shader`,
   `DataSource`, bindings, handlers, the new chart settings).
