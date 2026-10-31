@@ -3,9 +3,9 @@
 // apply*/insert* functions and commits the result; nothing here touches the
 // rendered SVG directly.
 
-import { isIsometricDirection, isometricCopy } from './isometric.js';
+import { isIsometricDirection } from './isometric.js';
 import { createBatcher } from './moves.js';
-import { besideBox, isLinkable, NEW_ENTITY_STYLE, OPPOSITE_SIDE } from './placement.js';
+import { besideBox, isLinkable, NEW_ENTITY_STYLE } from './placement.js';
 import type { PreviewContext } from './session.js';
 import type { EditingSession, LinkToEvent, MoveChangeEvent, PropertyChangeEvent, QuickDuplicateEvent, Side } from './stickyflow.js';
 
@@ -46,44 +46,33 @@ export function bindEditActions(ctx: PreviewContext, editing: EditingSession): (
   };
 }
 
-// The "+" bubbles around a selected object. stickyflow.js has no patcher for
-// this, so it's built here: a copy of the object in the clicked direction,
-// joined to it (a Link for 2D shapes, a Connection between cubes). The bubble
-// is an "add connected next step" affordance, not a plain copy; a source that
-// can't be linked gets a bare copy.
+// The "+" bubbles around a selected object: a copy in the clicked direction,
+// joined to it. stickyflow.js's applyQuickDuplicateChange does this the same
+// way as Atlas: the copy keeps the text and look of the object, the new Link
+// looks like the object's other links, and an isometric object gets a
+// Connection between the touching faces. It copies any 2D object as a shape
+// and always links it, so an object the canvas can't link cleanly (path,
+// chart, text) still gets a plain new entity next to it and no link.
 function quickDuplicate(ctx: PreviewContext, e: QuickDuplicateEvent): void {
   const { doc, interaction: ix } = ctx;
-  const source = doc.objectById(e.owner.id);
-  if (!source) return;
+  const isometric = isIsometricDirection(e.direction);
 
-  if (isIsometricDirection(e.direction)) {
-    const copy = isometricCopy(source, e.direction);
-    const id = doc.nextId('object');
-    const fill = source.props?.fill;
-    const next = ix.insertCanvasObject(doc.source, {
-      id,
-      kind: 'isometric',
-      text: 'New object',
-      x: copy.x,
-      y: copy.y,
-      width: copy.width,
-      height: copy.height,
-      depth: copy.depth,
-      body: fill ? ['style {', `    fill: ${JSON.stringify(fill)}`, '}'].join('\n') : undefined,
-    });
+  if (isometric || isLinkable(e.owner.role)) {
+    const shapeId = doc.nextId(isometric ? 'object' : 'entity');
+    const linkId = doc.nextId(isometric ? 'connection' : 'link');
+    const next = ix.applyQuickDuplicateChange(doc.source, e, { shapeId, linkId });
     if (next === doc.source) return;
-    doc.commit(ix.insertConnection(next, { id: doc.nextId('connection', next), fromId: source.id, toId: id, fromFace: copy.fromFace, toFace: copy.toFace }));
-    ctx.viewer.select([id]);
+    doc.commit(next);
+    ctx.viewer.select([shapeId]);
     return;
   }
 
-  const side: Side = e.direction;
+  const source = doc.objectById(e.owner.id);
+  if (!source) return;
+  const side: Side = e.direction as Side;
   const id = doc.nextId('entity');
-  let next = ix.insertCanvasObject(doc.source, { id, kind: 'shape', text: 'New entity', ...besideBox(source, side), body: NEW_ENTITY_STYLE });
+  const next = ix.insertCanvasObject(doc.source, { id, kind: 'shape', text: 'New entity', ...besideBox(source, side), body: NEW_ENTITY_STYLE });
   if (next === doc.source) return;
-  if (isLinkable(e.owner.role)) {
-    next = ix.insertLink(next, { id: doc.nextId('link', next), fromId: e.owner.id, toId: id, fromSide: side, toSide: OPPOSITE_SIDE[side] });
-  }
   doc.commit(next);
   ctx.viewer.select([id]);
 }

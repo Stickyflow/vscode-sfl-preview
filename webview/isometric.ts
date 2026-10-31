@@ -7,40 +7,22 @@ import type { CanvasObject, IsometricFace } from './stickyflow.js';
 
 export const ISOMETRIC_ROLE = 'isometric';
 
-// Screen-space unit vectors of the three isometric axes, matching
+// Screen-space angle of the width and depth axes, matching
 // isometricFaces() in stickyflow.js/src/model/isometricObject/geometry.ts
-// (30° axes: width runs down-right, depth down-left, height straight down).
+// (30° axes: width runs down-right, depth down-left).
 const ISO_COS = Math.cos(Math.PI / 6);
 const ISO_SIN = Math.sin(Math.PI / 6);
-const ISO_AXES = {
-  width: { x: ISO_COS, y: ISO_SIN },
-  depth: { x: -ISO_COS, y: ISO_SIN },
-  height: { x: 0, y: 1 },
-};
-
-type Axis = keyof typeof ISO_AXES;
 
 export type IsometricDirection =
   | 'iso-width-pos' | 'iso-width-neg'
   | 'iso-depth-pos' | 'iso-depth-neg'
   | 'iso-height-pos' | 'iso-height-neg';
 
-// The six cube-face "+" bubbles: which axis the copy is pushed along, and
-// which faces the new Connection joins (source face, then facing face).
-const ISO_DUPLICATE: Record<IsometricDirection, { axis: Axis; sign: 1 | -1; fromFace: IsometricFace; toFace: IsometricFace }> = {
-  'iso-width-pos': { axis: 'width', sign: 1, fromFace: 'right', toFace: 'left' },
-  'iso-width-neg': { axis: 'width', sign: -1, fromFace: 'left', toFace: 'right' },
-  'iso-depth-pos': { axis: 'depth', sign: 1, fromFace: 'front', toFace: 'back' },
-  'iso-depth-neg': { axis: 'depth', sign: -1, fromFace: 'back', toFace: 'front' },
-  'iso-height-pos': { axis: 'height', sign: 1, fromFace: 'bottom', toFace: 'top' },
-  'iso-height-neg': { axis: 'height', sign: -1, fromFace: 'top', toFace: 'bottom' },
-};
-
-const DUPLICATE_GAP = 40;
 const DEFAULT_DEPTH = 24;
 
+/** One of the six cube-face "+" bubbles, as opposed to a 2D side. */
 export function isIsometricDirection(direction: string): direction is IsometricDirection {
-  return direction in ISO_DUPLICATE;
+  return direction.startsWith('iso-');
 }
 
 export function isometricDepth(object: CanvasObject): number {
@@ -68,33 +50,4 @@ export function connectionFaces(from: CanvasObject, to: CanvasObject): { fromFac
     return alongWidth >= 0 ? { fromFace: 'right', toFace: 'left' } : { fromFace: 'left', toFace: 'right' };
   }
   return alongDepth >= 0 ? { fromFace: 'front', toFace: 'back' } : { fromFace: 'back', toFace: 'front' };
-}
-
-export interface IsometricCopy {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  depth: number;
-  fromFace: IsometricFace;
-  toFace: IsometricFace;
-}
-
-/** A cube-face "+" bubble: a copy of the cube pushed one full length (plus a
- *  gap) along that face's axis, and the faces the joining Connection uses. */
-export function isometricCopy(source: CanvasObject, direction: IsometricDirection): IsometricCopy {
-  const plan = ISO_DUPLICATE[direction];
-  const depth = isometricDepth(source);
-  const length = { width: source.width, depth, height: source.height }[plan.axis];
-  const step = (length + DUPLICATE_GAP) * plan.sign;
-  const axis = ISO_AXES[plan.axis];
-  return {
-    x: Math.round(source.x + axis.x * step),
-    y: Math.round(source.y + axis.y * step),
-    width: source.width,
-    height: source.height,
-    depth,
-    fromFace: plan.fromFace,
-    toFace: plan.toFace,
-  };
 }
