@@ -15,7 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The new flat violet StickyFlow logo, the same as stickyflow.org, replaces
   the blue-to-purple one as the extension icon and the preview tab icon.
 
-- Renders with stickyflow.js 0.10.0 from npm (`stickyflow`, pinned in
+- Renders with stickyflow.js 0.12.1 from npm (`stickyflow`, pinned in
   `package.json`) instead of a copy of a local `stickyflow.js/dist`, so the
   preview supports everything 0.3 does (`Text`, `Widget`, `Shader`,
   `DataSource`, bindings, handlers, the new chart settings).
@@ -24,8 +24,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The Route button sets `route:` with stickyflow.js's `applyPropertyChange`.
 - The toolbar sits on its own surface in VS Code's editor widget colors, so
   its buttons stay readable on any canvas, including white style templates.
+- A drag is written with stickyflow.js's `applyMoveChanges`, which reads the
+  document once for all moved objects. Still one edit and one undo step.
+- A text is picked and dragged by its whole box, not only its letters
+  (stickyflow.js 0.11.1).
 
 ### Removed
+
+- `withoutNestedMoves` in `webview/moves.ts`. `applyMoveChanges` already
+  skips an object whose frame moves in the same drag.
 
 - `webview/linkRoute.ts`, the preview's own `route:` patcher. stickyflow.js
   0.3.0 indents a property it inserts into a multi-line block correctly, which

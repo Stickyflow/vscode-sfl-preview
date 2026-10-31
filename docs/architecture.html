@@ -783,8 +783,8 @@
                 <span class="timeline-index">02</span>
                 <div>
                   <h3>Patch the text</h3>
-                  <p><code>withoutNestedMoves()</code> drops moves whose ancestor frame also moved (children are relative to their parent), then the rest fold through <code>applyMoveChange()</code> into one new source string.</p>
-                  <span class="function-path">moves.ts → session.objects() → applyMoveChange()</span>
+                  <p>stickyflow.js's <code>applyMoveChanges()</code> writes all moves of the gesture into one new source string in one pass. It skips an object whose frame moves in the same drag, since children are relative to their parent.</p>
+                  <span class="function-path">editActions.ts → applyMoveChanges()</span>
                 </div>
               </article>
               <article class="timeline-step">
@@ -843,7 +843,7 @@
 │  ├─ canvas.ts             Style template canvas color → page background
 │  ├─ placement.ts          Pure: where new 2D objects land
 │  ├─ isometric.ts          Pure: cube copies and Connection faces
-│  ├─ moves.ts              Pure: nested-move filter, gesture batching
+│  ├─ moves.ts              Pure: gesture batching
 │  ├─ ids.ts                Pure: fresh block ids
 │  ├─ panControls.ts        Drag and wheel panning fed to the viewer
 │  └─ linkRoute.ts          Route cycling as a pure SFL patch
@@ -897,7 +897,7 @@
                   <tr><td><code>canvas.ts</code></td><td><code>canvasColor()</code>, <code>paintCanvas()</code></td><td>Reads <code>Style tpl_canvas { fill }</code> from the text and paints it behind the viewer; export uses it as the background.</td></tr>
                   <tr><td><code>exportDiagram.ts</code></td><td><code>exportDiagram()</code></td><td>Full-bounds SVG through <code>render()</code>, PNG through an offscreen canvas at 2x.</td></tr>
                   <tr><td><code>toon.ts</code></td><td><code>diagramToToon()</code></td><td>"Export TOON": nodes, links, connections and groups from <code>sflToCanvasState()</code> as TOON tables, unused columns dropped. Semantics only; the .sfl stays the full-fidelity format.</td></tr>
-                  <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, nested-move filtering and gesture batching, fresh ids.</td></tr>
+                  <tr><td><code>placement.ts</code>, <code>isometric.ts</code>, <code>moves.ts</code>, <code>ids.ts</code></td><td>Pure functions</td><td>Where new objects land, cube geometry and Connection faces, gesture batching, fresh ids.</td></tr>
                   <tr><td><code>panControls.ts</code></td><td><code>bindPanControls(svg)</code></td><td>Middle-drag, background drag and wheel panning, replayed through the viewer's own pan path.</td></tr>
                   <tr><td><code>linkRoute.ts</code></td><td><code>applyRouteChange()</code>, <code>nextRoute()</code></td><td>Cycles a link's <code>route:</code> between orthogonal, curved and straight. Stays until stickyflow.js's <code>applyPropertyChange</code> indents a property it inserts into a multi-line block correctly.</td></tr>
                 </tbody>
@@ -908,13 +908,13 @@
           <section id="build">
             <div class="section-head">
               <h2>Build pipeline</h2>
-              <p><code>npm run compile</code> runs three steps. stickyflow.js must be built first in its sibling checkout.</p>
+              <p><code>npm run compile</code> runs three steps. stickyflow.js comes from npm, pinned to an exact version in <code>package.json</code>.</p>
             </div>
             <div class="grid">
               <article class="card">
                 <span class="card-number">B1</span>
                 <h3>Copy the renderer</h3>
-                <p>The whole <code>dist/</code> tree is copied, because the ESM entries import sibling <code>chunk-*.js</code> files by relative path. <code>SOURCE.json</code> records the stickyflow.js version, branch and commit that was copied.</p>
+                <p>The whole <code>dist/</code> tree of <code>node_modules/stickyflow</code> is copied, because the ESM entries import sibling <code>chunk-*.js</code> files by relative path. <code>SOURCE.json</code> records the stickyflow.js version that was copied.</p>
                 <span class="path">npm run copy-media</span>
               </article>
               <article class="card">
