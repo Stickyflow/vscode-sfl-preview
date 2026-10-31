@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-31
+
+This section collects everything since 0.1.1. Versions 0.2.0 to 0.4.0 were
+published from packaged .vsix files without a section of their own.
+
 ### Added
 
 - **SFL: Open Preview** and **SFL: Open Preview to the Side** in the
