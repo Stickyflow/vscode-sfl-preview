@@ -30,8 +30,6 @@ export const NEW_ENTITY_STYLE = [
 /** Gap between an object and the copy a "+" bubble creates next to it. */
 export const DUPLICATE_GAP = 40;
 
-export const OPPOSITE_SIDE: Record<Side, Side> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' };
-
 export interface Box {
   x: number;
   y: number;

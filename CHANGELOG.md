@@ -28,6 +28,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   document once for all moved objects. Still one edit and one undo step.
 - A text is picked and dragged by its whole box, not only its letters
   (stickyflow.js 0.11.1).
+- The "+" bubbles use stickyflow.js's `applyQuickDuplicateChange`, as Atlas
+  does: the copy keeps the text and look of the object (it used to be a
+  white "New entity"), lands 200 units away instead of 40, stays in the
+  object's frame, and the new link looks like the object's other links.
+  A path, chart or text still gets a plain new entity and no link.
 
 ### Removed
 
