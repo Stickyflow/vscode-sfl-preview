@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-11
+
+### Changed
+
+- The preview renders with stickyflow.js 0.19.0 (was 0.12.2). Documents can
+  use the blocks of SFL 1.8 to 1.11: `Parameters`, `Scene`, `Mesh`,
+  `Canvas`, `Light` and `Ground`.
+- Rounded corners of a `Path` are drawn as circular arcs.
+
 ## [0.5.0] - 2026-10-31
 
 This section collects everything since 0.1.1. Versions 0.2.0 to 0.4.0 were
