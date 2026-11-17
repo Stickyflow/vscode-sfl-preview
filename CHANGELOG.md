@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-11-17
+
+### Changed
+
+- The preview renders with stickyflow.js 0.20.5 (was 0.19.0). Documents can
+  use `Solid`, `Facets` and `Sketch` in a Scene, `Cut` and `Add` on a
+  `Symbol`, and the new shader programs `grain`, `worn` and `cityMap`.
+
 ## [0.6.0] - 2026-11-11
 
 ### Changed
