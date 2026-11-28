@@ -92,6 +92,14 @@ your file. Toggle **Editing: On** in the toolbar, then:
 Every change becomes a normal text edit in the `.sfl` file, so it shows up
 in the undo stack and in your diff.
 
+### 3D scenes
+
+A `Scene` draws glTF models, terrain height pictures and environment maps. A
+model named by a relative path, such as `asset: "models/robot.glb"`, is read
+from the folder of the `.sfl` file, the same way a picture next to the file
+is. A leading slash counts from that folder too. Files outside it, and web
+addresses, do not load.
+
 ### Isometric diagrams
 
 `Isometric` blocks draw 3D objects and `Connection` blocks join them face to

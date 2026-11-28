@@ -6,7 +6,7 @@
 
 import type { HostPort } from './host.js';
 import { nextId } from './ids.js';
-import type { CanvasObject, CoreApi, InteractionApi, StickyflowDiagram, Viewer } from './stickyflow.js';
+import type { CanvasObject, CoreApi, DiagramHost, InteractionApi, Viewer } from './stickyflow.js';
 
 // Second change-highlight color, for updates the host's
 // looksLikeExternalRewrite() flags as probably not ordinary in-editor typing
@@ -35,7 +35,7 @@ export interface DocumentSession {
 }
 
 export interface PreviewContext {
-  el: StickyflowDiagram;
+  el: DiagramHost;
   viewer: Viewer;
   interaction: InteractionApi;
   core: CoreApi;

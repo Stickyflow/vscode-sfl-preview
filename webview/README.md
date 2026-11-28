@@ -4,7 +4,7 @@ Browser **ES modules** that run *inside* the preview webview (not the extension
 host). Authored in TypeScript, compiled by `tsconfig.webview.json` to
 `media/webview/*.js` (git-ignored, like `media/stickyflow/`). The only inline
 script left in `src/getWebviewHtml.ts` is a bootstrap: it imports stickyflow.js's
-`interaction` and core modules as namespaces and passes them to `startPreview()`
+`viewer`, `interaction` and core modules as namespaces and passes them to `startPreview()`
 in `main.ts`.
 
 Rules for anything in here:
@@ -31,8 +31,9 @@ Rules for anything in here:
 
 | File | Purpose |
 | --- | --- |
-| `main.ts` | `startPreview()`: the composition root. Creates the host port and document session, binds every feature to the viewer, routes `sfl/update` / `sfl/select` from the host. Waits for a viewer if the first text didn't render. |
-| `stickyflow.ts` | Type-only port to stickyflow.js (`InteractionApi`, `CoreApi`, `Viewer`, event types). |
+| `main.ts` | `startPreview()`: the composition root. Creates the host port and document session, binds every feature to the viewer, routes `sfl/update` / `sfl/select` from the host. Mounts the viewer with `createViewer()` (`mountStage()` gives the host element its shadow root), and remounts on updates until a text renders. |
+| `assets.ts` | Pure: `resolveAssetIn()`, the viewer's `resolveAsset` hook. A relative Mesh asset resolves against the .sfl file's folder, a web address does not load. |
+| `stickyflow.ts` | Type-only port to stickyflow.js (`ViewerApi`, `InteractionApi`, `CoreApi`, `Viewer`, event types). |
 | `host.ts` | `HostPort` and the `sfl/*` message types, both directions. |
 | `session.ts` | `DocumentSession` (current text, `commit` / `receive`, canvas objects, fresh ids) and the `PreviewContext` every feature gets. |
 | `handleSkin.ts` | The StickyFlow-Web Playground's selection look (rounded ring, round handles, floating "+" bubbles) as an adopted stylesheet. |

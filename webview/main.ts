@@ -3,6 +3,7 @@
 // startPreview() with it; everything else is wired from here.
 
 import { bindAddEntity } from './addEntity.js';
+import { resolveAssetIn } from './assets.js';
 import { canvasColor, paintCanvas } from './canvas.js';
 import { bindEditActions } from './editActions.js';
 import { createEditMode } from './editMode.js';
@@ -14,23 +15,47 @@ import { bindPanControls } from './panControls.js';
 import { bindRouteButton } from './routeButton.js';
 import { bindSelectionSync } from './selectionSync.js';
 import { createDocumentSession, type PreviewContext } from './session.js';
-import type { CoreApi, InteractionApi, StickyflowDiagram, Viewer } from './stickyflow.js';
+import type { CoreApi, DiagramHost, InteractionApi, Viewer, ViewerApi } from './stickyflow.js';
 
 export interface PreviewOptions {
-  el: StickyflowDiagram;
+  el: HTMLElement;
   initialSource: string;
+  viewer: ViewerApi;
   interaction: InteractionApi;
   core: CoreApi;
   vscodeApi: VsCodeApi;
+  /** Webview URI of the .sfl file's folder, ending in "/", or null when the
+   *  document has no file. Mesh assets resolve against it. */
+  documentFolder: string | null;
   /** The bundled Inter subsets, embedded into exports. */
   fonts: BundledFont[];
 }
 
-export function startPreview({ el, initialSource, interaction, core, vscodeApi, fonts }: PreviewOptions): void {
+// The viewer's own look inside its shadow root, as the <stickyflow-diagram>
+// element had it: the selection ring, pointer cursors on entities and links,
+// and the error line a text that does not render shows.
+const STAGE_STYLE = `
+  :host { display: block; position: relative; }
+  .sf-container { width: 100%; height: 100%; }
+  svg { display: block; max-width: 100%; }
+  .sf-error { color: #b91c1c; font: 13px/1.4 system-ui, sans-serif; padding: 8px; white-space: pre-wrap; }
+  [data-sf-role="entity"], [data-sf-role="link"] { cursor: pointer; }
+  [data-sf-selected] { stroke: #2563eb !important; stroke-width: 4 !important; }
+`;
+
+export function startPreview({
+  el,
+  initialSource,
+  viewer: viewerApi,
+  interaction,
+  core,
+  vscodeApi,
+  documentFolder,
+  fonts,
+}: PreviewOptions): void {
   const host = createHostPort(vscodeApi);
   // The text before a viewer exists; afterwards the document session owns it.
   let source = initialSource;
-  el.source = source;
   const currentSource = () => preview?.doc.source ?? source;
   const repaint = (text: string) => paintCanvas(canvasColor(core, text));
   repaint(source);
@@ -50,11 +75,44 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi, 
   });
   button('sf-pick-template').addEventListener('click', () => host.pickTemplate());
 
-  // The web component has no viewer when the text it was given doesn't
-  // render (it shows the error instead). Until a later update renders, keep
-  // remounting through the `source` setter; once a viewer exists, wire the
-  // interactive features to it and hand updates to the document session.
-  let preview: ReturnType<typeof attach> | null = el.viewer ? attach(el.viewer) : null;
+  const { diagram, stage } = mountStage(el);
+  // Webview URIs are absolute; resolving against the page keeps a relative one usable too.
+  const folderUrl = documentFolder === null ? null : new URL(documentFolder, document.baseURI).toString();
+  const resolveAsset = resolveAssetIn(folderUrl);
+
+  // Draws `text` in the stage, replacing what was there. The viewer is null
+  // when the text does not render (the stage shows the error instead). Until a
+  // later update renders, every update remounts here; once a viewer exists,
+  // the interactive features are wired to it and updates go to the document
+  // session.
+  const mount = (text: string): Viewer | null => {
+    diagram.viewer?.destroy();
+    diagram.viewer = null;
+    diagram.source = text;
+    stage.replaceChildren();
+    try {
+      const viewer = viewerApi.createViewer({
+        container: stage,
+        source: text,
+        interactive: true,
+        resolveAsset,
+      });
+      diagram.viewer = viewer;
+      return viewer;
+    } catch (error) {
+      const box = document.createElement('div');
+      box.className = 'sf-error';
+      box.textContent = `stickyflow: ${error instanceof Error ? error.message : String(error)}`;
+      stage.replaceChildren(box);
+      return null;
+    }
+  };
+
+  let preview: ReturnType<typeof attach> | null = null;
+  {
+    const viewer = mount(source);
+    if (viewer) preview = attach(viewer);
+  }
 
   window.addEventListener('message', (event) => {
     const message = asHostMessage(event.data);
@@ -65,8 +123,8 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi, 
       } else if (message.source !== source) {
         source = message.source;
         repaint(source);
-        el.source = source;
-        if (el.viewer) preview = attach(el.viewer);
+        const viewer = mount(source);
+        if (viewer) preview = attach(viewer);
       }
     } else if (message.type === 'sfl/transient') {
       preview?.doc.showTransient(message.source);
@@ -77,7 +135,7 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi, 
 
   function attach(viewer: Viewer) {
     const doc = createDocumentSession(viewer, core, host, source);
-    const ctx: PreviewContext = { el, viewer, interaction, core, host, doc };
+    const ctx: PreviewContext = { el: diagram, viewer, interaction, core, host, doc };
     doc.onChange(repaint);
 
     bindNavigation(viewer);
@@ -94,6 +152,22 @@ export function startPreview({ el, initialSource, interaction, core, vscodeApi, 
 
     return { doc, selectFromHost: sync.selectFromHost };
   }
+}
+
+/** Gives the host element the shadow root and stage the viewer draws into,
+ *  so the adopted stylesheets of edit mode and the handle skin apply to the
+ *  viewer's SVG the way they did with the web component. */
+function mountStage(el: HTMLElement): { diagram: DiagramHost; stage: HTMLElement } {
+  const root = el.shadowRoot ?? el.attachShadow({ mode: 'open' });
+  const style = document.createElement('style');
+  style.textContent = STAGE_STYLE;
+  const stage = document.createElement('div');
+  stage.className = 'sf-container';
+  root.append(style, stage);
+  const diagram = el as DiagramHost;
+  diagram.source = null;
+  diagram.viewer = null;
+  return { diagram, stage };
 }
 
 /** Pan and zoom. Independent of edit mode: navigation, not editing. */

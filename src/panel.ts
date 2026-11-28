@@ -25,6 +25,10 @@ export class SflPreviewPanel {
       return;
     }
 
+    // The .sfl file's folder is a local resource root too, so a Mesh's
+    // relative asset (glTF, texture, terrain heights) can be loaded from it.
+    // Nothing above that folder is readable by the webview.
+    const folder = documentFolder(document.uri);
     const panel = vscode.window.createWebviewPanel(
       VIEW_TYPE,
       `Preview: ${baseName(document.fileName)}`,
@@ -32,7 +36,7 @@ export class SflPreviewPanel {
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media')],
+        localResourceRoots: [vscode.Uri.joinPath(extensionUri, 'media'), ...(folder ? [folder] : [])],
       },
     );
     // Same logo vscode-sfl uses for the .sfl file icon (icons/sfl-icon-theme.json,
@@ -85,7 +89,12 @@ export class SflPreviewPanel {
     document: vscode.TextDocument,
   ) {
     this.key = document.uri.toString();
-    this.panel.webview.html = getWebviewHtml(this.panel.webview, extensionUri, document.getText());
+    this.panel.webview.html = getWebviewHtml(
+      this.panel.webview,
+      extensionUri,
+      document.getText(),
+      documentFolder(document.uri),
+    );
     this.panel.webview.onDidReceiveMessage((message) => {
       if (message?.type === 'sfl/edit' && typeof message.source === 'string') {
         void applyEditToDocument(document.uri, message.source);
@@ -168,6 +177,12 @@ export class SflPreviewPanel {
 
 function baseName(fileName: string): string {
   return fileName.split(/[\\/]/).pop() ?? fileName;
+}
+
+// The folder of a document saved on disk; null for an untitled one, which
+// has no folder for a Mesh's relative asset to be read from.
+function documentFolder(uri: vscode.Uri): vscode.Uri | null {
+  return uri.scheme === 'file' ? vscode.Uri.file(path.dirname(uri.fsPath)) : null;
 }
 
 // Plain-text, unambiguous confirmation that change-highlighting's diff
