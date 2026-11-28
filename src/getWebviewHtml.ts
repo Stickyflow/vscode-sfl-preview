@@ -1,16 +1,16 @@
-// Builds the webview's HTML shell: the toolbar, the <stickyflow-diagram>
-// element, and a short module bootstrap. All behavior lives in the typed
-// modules under webview/ (compiled to media/webview/, see webview/README.md).
+// Builds the webview's HTML shell: the toolbar, the diagram host, and a short
+// module bootstrap. All behavior lives in the typed modules under webview/
+// (compiled to media/webview/, see webview/README.md).
 //
 // Script loading:
-//  - stickyflow-diagram.global.js (the IIFE from stickyflow.js's dist, copied
-//    into media/stickyflow/ by scripts/copy-media.mjs) is a plain <script src>
-//    that self-registers the <stickyflow-diagram> custom element.
-//  - the bootstrap imports stickyflow.js's ESM `interaction` tier and core as
-//    whole namespaces and hands them to startPreview() (webview/main.ts). The
-//    webview modules only see them through the types in webview/stickyflow.ts,
-//    so a renamed or removed export upstream fails `npm run compile` instead
-//    of breaking the panel at runtime.
+//  - the bootstrap imports stickyflow.js's ESM `viewer`, `interaction` and
+//    core tiers as whole namespaces and hands them to startPreview()
+//    (webview/main.ts). The viewer is created there with createViewer(), not
+//    by a <stickyflow-diagram> element: only createViewer() takes the
+//    resolveAsset hook that maps a Mesh's relative asset path to a webview URI
+//    of the .sfl file's folder. The webview modules only see the namespaces
+//    through the types in webview/stickyflow.ts, so a renamed or removed export
+//    upstream fails `npm run compile` instead of breaking the panel at runtime.
 import * as vscode from 'vscode';
 
 /** The bundled Inter subsets (copied into media/fonts/ by
@@ -27,9 +27,19 @@ const INTER_FACES = [
   },
 ];
 
-export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri, initialSource: string): string {
+/**
+ * `documentFolder` is the folder of the .sfl file, or null for a document that
+ * has no file on disk. The panel lists it as a local resource root, and the
+ * bootstrap resolves a Mesh's relative asset path against its webview URI.
+ */
+export function getWebviewHtml(
+  webview: vscode.Webview,
+  extensionUri: vscode.Uri,
+  initialSource: string,
+  documentFolder: vscode.Uri | null,
+): string {
   const mediaRoot = vscode.Uri.joinPath(extensionUri, 'media', 'stickyflow');
-  const diagramScriptUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'stickyflow-diagram.global.js'));
+  const viewerModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'viewer', 'index.js'));
   const interactionModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'interaction', 'index.js'));
   const coreModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(mediaRoot, 'index.js'));
   // This extension's own webview modules (compiled from webview/ by
@@ -38,6 +48,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   // trust to the modules it imports in turn.
   const webviewRoot = vscode.Uri.joinPath(extensionUri, 'media', 'webview');
   const mainModuleUri = webview.asWebviewUri(vscode.Uri.joinPath(webviewRoot, 'main.js'));
+  const folderUrl = documentFolder ? withTrailingSlash(webview.asWebviewUri(documentFolder).toString()) : null;
   const nonce = getNonce();
   // Escape `<` so the JSON blob can't break out of the surrounding <script> tag.
   const initialSourceJson = JSON.stringify(initialSource).replace(/</g, '\\u003c');
@@ -55,17 +66,23 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
 <head>
   <meta charset="UTF-8" />
   <!-- 'strict-dynamic': stickyflow.js's ESM build is code-split, so
-       interaction/index.js and index.js each import sibling ../chunk-*.js
-       files. A bare nonce authorises an element, not a fetch, so those
-       transitive imports would be blocked and the whole module script — every
-       edit-mode gesture — would fail to load while the diagram still renders.
-       font-src / connect-src: the bundled Inter, as @font-face and fetched
-       by exportDiagram.ts to embed into exports. -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource} data:; connect-src ${webview.cspSource}; script-src 'nonce-${nonce}' 'strict-dynamic';" />
+       viewer/index.js, interaction/index.js and index.js each import sibling
+       ../chunk-*.js files. A bare nonce authorises an element, not a fetch, so
+       those transitive imports would be blocked and the whole module script,
+       every edit-mode gesture included, would fail to load while the diagram
+       still renders.
+       font-src / connect-src: the bundled Inter, as @font-face and fetched by
+       exportDiagram.ts to embed into exports. connect-src also carries the Mesh
+       assets: the viewer fetches them from the document's folder (a local
+       resource root, see panel.ts) and data: ones inline in the document.
+       Not added: worker-src and blob:. stickyflow.js 0.23 starts no worker,
+       its WebGL2 needs no CSP entry, and the PNG export rasterizes a data:
+       SVG through an <img>. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} data:; style-src ${webview.cspSource} 'unsafe-inline'; font-src ${webview.cspSource} data:; connect-src ${webview.cspSource} data:; script-src 'nonce-${nonce}' 'strict-dynamic';" />
   <style>
     ${interFontFaces}
     html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; background: var(--sf-canvas, var(--vscode-editor-background)); }
-    stickyflow-diagram { width: 100%; height: 100%; display: block; }
+    #diagram { width: 100%; height: 100%; display: block; }
     /* The page background follows the diagram's canvas (--sf-canvas), which
        can be anything from white to black, so the toolbar brings its own
        surface: the editor widget colors VS Code uses for its find widget. */
@@ -106,7 +123,7 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
   </style>
 </head>
 <body>
-  <stickyflow-diagram id="diagram" interactive="true"></stickyflow-diagram>
+  <div id="diagram"></div>
   <div class="sf-toolbar">
     <button id="sf-zoom-out" title="Zoom out">&minus;</button>
     <button id="sf-zoom-in" title="Zoom in">+</button>
@@ -124,8 +141,8 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     <button id="sf-export-md" title="Export the diagram as a Markdown note with a fenced sfl block">Export MD</button>
     <button id="sf-export-toon" title="Export the diagram's nodes and links as TOON, a compact format for LLM prompts">Export TOON</button>
   </div>
-  <script nonce="${nonce}" src="${diagramScriptUri}"></script>
   <script type="module" nonce="${nonce}">
+    import * as viewer from '${viewerModuleUri}';
     import * as interaction from '${interactionModuleUri}';
     import * as core from '${coreModuleUri}';
     import { startPreview } from '${mainModuleUri}';
@@ -133,14 +150,20 @@ export function getWebviewHtml(webview: vscode.Webview, extensionUri: vscode.Uri
     startPreview({
       el: document.getElementById('diagram'),
       initialSource: ${initialSourceJson},
+      viewer,
       interaction,
       core,
+      documentFolder: ${JSON.stringify(folderUrl)},
       vscodeApi: acquireVsCodeApi(),
       fonts: ${JSON.stringify(interFaces).replace(/</g, '\\u003c')},
     });
   </script>
 </body>
 </html>`;
+}
+
+function withTrailingSlash(url: string): string {
+  return url.endsWith('/') ? url : `${url}/`;
 }
 
 function getNonce(): string {

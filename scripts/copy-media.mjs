@@ -1,8 +1,8 @@
 // Copies the stickyflow.js dist/ tree from the pinned `stickyflow` npm
 // package (devDependency) into media/stickyflow/ so the
-// webview can load it with no bundler of its own: the IIFE
-// (stickyflow-diagram.global.js, a plain <script src>) for the
-// <stickyflow-diagram> custom element, the ESM `interaction` tier
+// webview can load it with no bundler of its own: the ESM `viewer` tier
+// (dist/viewer/index.js, createViewer(), which takes the resolveAsset hook
+// for Mesh assets), the ESM `interaction` tier
 // (dist/interaction/index.js) for edit-mode, and the ESM core
 // (dist/index.js, `render()`) used for SVG/PNG export — all loaded as
 // <script type="module"> imports. The whole tree is copied (not just those

@@ -883,7 +883,7 @@
               <table>
                 <thead><tr><th>Piece</th><th>Source</th><th>Responsibility</th></tr></thead>
                 <tbody>
-                  <tr><td><code>&lt;stickyflow-diagram interactive&gt;</code></td><td><code>media/stickyflow/stickyflow-diagram.global.js</code></td><td>Viewer with camera and selection, mounted once and updated in place.</td></tr>
+                  <tr><td><code>createViewer()</code></td><td><code>media/stickyflow/viewer/index.js</code></td><td>Viewer with camera and selection, mounted once and updated in place. Takes a <code>resolveAsset</code> hook, so a Mesh&#39;s relative asset path reads from the .sfl file&#39;s folder.</td></tr>
                   <tr><td>Interaction tier</td><td><code>media/stickyflow/interaction/index.js</code></td><td><code>bindEditing()</code> gestures and the pure <code>apply*Change</code>, <code>insertCanvasObject</code>, <code>insertLink</code> patchers.</td></tr>
                   <tr><td>Core</td><td><code>media/stickyflow/index.js</code></td><td><code>render()</code> for full-bounds SVG and PNG export, <code>sflToCanvasState()</code> for frame hierarchy.</td></tr>
                   <tr><td><code>main.ts</code></td><td><code>startPreview()</code></td><td>Composition root: host port, document session, every feature bound to the viewer, host messages routed. If the first text doesn't render there's no viewer yet, so it remounts on each update until one appears.</td></tr>
@@ -1100,7 +1100,7 @@
           }
           Shape prev_webview : PrevNode {
             kind: process
-            text: "Webview\n<stickyflow-diagram>"
+            text: "Webview\nstickyflow viewer"
             layout { position: 270, 252; size: 210, 60 }
           }
           Shape prev_client : PrevNode {

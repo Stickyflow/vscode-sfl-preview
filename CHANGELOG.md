@@ -5,6 +5,29 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-28
+
+### Added
+
+- Mesh assets of a `Scene` load from the folder of the `.sfl` file. A glTF
+  model, a terrain's height picture or an environment named by a relative path
+  (`asset: "models/robot.glb"`, or with a leading slash) is read from there.
+  That folder is now a local resource root of the preview, and nothing above
+  it is readable. Web addresses do not load.
+
+### Changed
+
+- The preview renders with stickyflow.js 0.23.2 (was 0.20.5). Documents can use
+  what 0.20.6 to 0.23.2 added: more than one light in a Scene, `Terrain`, haze,
+  a `Repeat` over the rows of a table, a `Use` with its own layout, and the
+  SFL 1.11 and 1.12 words (`mirror`, `elevation`, `sequence`, `chamfer`,
+  `fillet`). A handler reads the values from before it (SFL 1.12).
+- The diagram is drawn with stickyflow.js's `createViewer()` instead of the
+  `<stickyflow-diagram>` element, which takes no hook for asset addresses.
+  Editing, selection and exports work as before.
+- The webview's CSP lets `data:` URIs load in `connect-src`, for inline Mesh
+  assets. Nothing else was added.
+
 ## [0.7.0] - 2026-11-17
 
 ### Changed
